@@ -1,0 +1,121 @@
+<!-- Task Detail -->
+
+<div class="page-header">
+  <div class="flex items-center gap-md">
+    <button class="btn-icon" onclick="loadScreen('task-board')"><i class="codicon codicon-arrow-left"></i></button>
+    <h2>Task 4: Create payment intent endpoint</h2>
+    <span class="badge badge-accent">In Progress</span>
+    <span class="badge">Size: M</span>
+  </div>
+</div>
+
+<!-- Task Info -->
+<div class="card mb-lg">
+  <p style="font-size: var(--font-body-size);">Create a POST endpoint at <code class="font-mono">/api/payments/intent</code> that accepts an amount and currency, validates the input using Zod, creates a Stripe PaymentIntent, and returns the client secret.</p>
+
+  <div class="divider"></div>
+
+  <div class="flex gap-lg" style="font-size: var(--font-small-size);">
+    <div>
+      <span class="text-secondary">Dependencies:</span>
+      <span>Task 2, Task 3</span>
+    </div>
+    <div>
+      <span class="text-secondary">Phase:</span>
+      <span>Core Payment Flow</span>
+    </div>
+    <div>
+      <span class="text-secondary">TDD Phase:</span>
+      <span style="color: var(--color-success);"><i class="codicon codicon-circle-filled" style="font-size:10px;"></i> GREEN</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab is-active">Acceptance Criteria</div>
+  <div class="tab">Changed Files</div>
+  <div class="tab">Test Evidence</div>
+  <div class="tab">Agent Log</div>
+</div>
+
+<!-- Acceptance Criteria -->
+<div class="card mb-lg">
+  <div class="checklist">
+    <div class="checklist-item">
+      <i class="codicon codicon-pass-filled checklist-icon is-done"></i>
+      <span>POST <code class="font-mono">/api/payments/intent</code> accepts <code class="font-mono">{ amount: number, currency: string }</code></span>
+    </div>
+    <div class="checklist-item">
+      <i class="codicon codicon-pass-filled checklist-icon is-done"></i>
+      <span>Input validated with Zod schema — rejects invalid amounts and unsupported currencies</span>
+    </div>
+    <div class="checklist-item">
+      <i class="codicon codicon-circle-filled checklist-icon" style="color: var(--color-accent); font-size:10px;"></i>
+      <span>Creates Stripe PaymentIntent and returns <code class="font-mono">{ clientSecret: string }</code></span>
+    </div>
+    <div class="checklist-item">
+      <i class="codicon codicon-circle-outline checklist-icon is-pending"></i>
+      <span>Returns 422 with structured error for validation failures</span>
+    </div>
+    <div class="checklist-item">
+      <i class="codicon codicon-circle-outline checklist-icon is-pending"></i>
+      <span>Returns 500 with generic error for Stripe API failures (no internal details exposed)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Files Changed -->
+<div class="section-header">
+  <span class="section-title">Files Changed</span>
+  <span class="text-secondary" style="font-size: var(--font-caption-size);">2 files</span>
+</div>
+<div class="card card-compact mb-lg">
+  <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+    <div class="flex items-center gap-md" style="font-size: var(--font-small-size);">
+      <i class="codicon codicon-file" style="color: var(--color-success); font-size:14px;"></i>
+      <span class="font-mono">src/routes/payment.ts</span>
+      <span class="text-success" style="font-size: var(--font-caption-size);">+48</span>
+      <span class="text-error" style="font-size: var(--font-caption-size);">-0</span>
+    </div>
+    <div class="flex items-center gap-md" style="font-size: var(--font-small-size);">
+      <i class="codicon codicon-file" style="color: var(--color-success); font-size:14px;"></i>
+      <span class="font-mono">tests/routes/payment.test.ts</span>
+      <span class="text-success" style="font-size: var(--font-caption-size);">+32</span>
+      <span class="text-error" style="font-size: var(--font-caption-size);">-0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Test Evidence -->
+<div class="section-header">
+  <span class="section-title">Test Evidence</span>
+  <span class="badge badge-success">1 passing</span>
+</div>
+<div class="card card-compact mb-lg" style="font-family: var(--font-code-family); font-size: var(--font-code-size);">
+  <div style="color: var(--color-success);">  ✓ creates payment intent with valid amount (12ms)</div>
+  <div class="text-secondary mt-sm">  1 passing (12ms)</div>
+</div>
+
+<!-- Agent Decisions -->
+<div class="section-header">
+  <span class="section-title">Agent Decisions</span>
+</div>
+<div class="card card-compact">
+  <div style="display: flex; flex-direction: column; gap: var(--space-md); font-size: var(--font-small-size);">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-lightbulb" style="color: var(--color-warning); font-size:14px;"></i>
+      <div>
+        <div>Using Zod for payment amount validation</div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Consistent with existing validation patterns in <code class="font-mono">src/lib/validation.ts</code></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-lightbulb" style="color: var(--color-warning); font-size:14px;"></i>
+      <div>
+        <div>Amount stored in cents (integer), not dollars (float)</div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Per Stripe docs recommendation — <span class="text-accent">stripe.com/docs/currencies</span></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,449 @@
+# Engineering Workspace — Design Decisions Record
+
+**Project:** Code Studio Engineering Workspace Extension  
+**Created:** 10 July 2026  
+**Status:** Design Phase  
+
+This document records all design decisions made during the analysis and prototyping phase. Each decision includes the context, the decision, the rationale, and alternatives considered.
+
+---
+
+## DD-001: Adaptive Process Depth
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The extension needs to support work ranging from a one-line typo fix to a full greenfield feature. Forcing every task through a full SDLC would feel like overhead; skipping engineering practices for complex work produces fragile software.
+
+**Decision:** Implement four process levels that automatically calibrate engineering rigor based on task type, complexity, and risk:
+
+| Level | Trigger | Steps | Approvals |
+|---|---|---|---|
+| **Light** | Single-file fix, config change, docs | Context → Plan → Implement → Test → Commit | 0 |
+| **Standard** | Multi-file feature, bug fix, refactor | Spec → Plan → Tasks → Build → Test → Review | 2 (spec + review) |
+| **Thorough** | New architecture, API design, major feature | Full lifecycle + Security + Performance + Docs | 3-4 |
+| **Guarded** | DB migration, auth changes, deployment | All Thorough + explicit approval at every decision | Multiple |
+
+The system auto-detects the level; the user can always override up or down.
+
+**Rationale:** The binding constraint is user adoption risk. If the extension feels like overhead, developers will close it and go back to chat. Adaptive depth ensures minimal ceremony for simple tasks and proper rigor for complex ones — without the user deciding "how much process do I need?"
+
+**Alternatives Considered:**
+- *Single fixed workflow for all tasks* — Rejected: too heavy for simple tasks, drives users away
+- *User always chooses the level* — Rejected: adds friction; most users don't know what level they need
+- *No process levels, just optional stages* — Rejected: too unstructured; defeats the purpose of guided engineering
+
+---
+
+## DD-002: Git-Tracked Workflow State
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** Workflow state (current stage, task progress, approvals, artifacts) needs to persist across Code Studio restarts, session changes, and team handoffs. Options: database, cloud service, local storage, or filesystem.
+
+**Decision:** All workflow state, artifacts, and context live in `.codestudio/` in the workspace filesystem and are committed to git alongside the code.
+
+```
+.codestudio/
+├── context.md              # Project context (rules file)
+├── config.json             # Extension settings
+├── workflows/
+│   └── current/
+│       ├── workflow.json   # Current workflow state
+│       ├── objective.md    # Statement of intent
+│       └── events.jsonl    # Append-only audit log
+├── artifacts/
+│   ├── specs/
+│   ├── plans/
+│   ├── adrs/
+│   ├── reviews/
+│   └── reports/
+└── archive/
+    ├── index.json          # History index
+    └── YYYY-MM/            # Archived completed workflows
+```
+
+**Rationale:**
+1. **Team resumability** — Any team member who pulls the branch gets the full engineering state
+2. **Branch-scoped** — Each feature branch has its own workflow; switching branches switches state
+3. **PR reviewability** — Reviewers see the full engineering story in the `.codestudio/` directory
+4. **Audit trail** — `events.jsonl` records every action, decision, and approval
+5. **No external dependencies** — Works offline, air-gapped, with any git hosting
+6. **Commit strategy** — Workflow state changes are committed alongside the code changes they describe, keeping code and engineering state in lockstep
+
+**Alternatives Considered:**
+- *SQLite database in workspace* — Rejected: not human-readable, merge conflicts are unresolvable, can't review in PRs
+- *Cloud service / API* — Rejected: adds external dependency, doesn't work offline, privacy concerns
+- *VS Code globalState / workspaceState* — Rejected: not shareable across team, not in git, lost on extension reinstall
+- *Local storage only (not committed)* — Rejected: not shareable, not resumable by teammates
+
+---
+
+## DD-003: One Active Work Request at a Time
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** Should the extension support multiple concurrent work requests (like a backlog/kanban) or focus on one at a time?
+
+**Decision:** The extension handles **one active work request per branch**. When the workflow completes and the branch merges, the task board is cleared and the extension is ready for the next request.
+
+**Rationale:**
+- The extension is an **engineering execution tool**, not a project management tool
+- Tasks are temporary execution plans generated from a spec, not a permanent backlog
+- Multiple concurrent workflows would require complex state management, conflict resolution, and UI that resembles Jira — exactly what we're avoiding
+- Developers already use branches for isolation; one workflow per branch is natural
+- Deciding *which* work to do next is the human's job (or the PM tool's job); the extension picks up after that decision
+
+**What the extension is NOT:**
+- Not a backlog manager (no sprint planning, no prioritization)
+- Not a project tracker (no Gantt charts, no time estimates, no resource allocation)
+- Not a team coordination tool (no assignments, no workload balancing)
+
+**Alternatives Considered:**
+- *Multiple concurrent workflows* — Rejected: turns the extension into a PM tool; violates the "not a project management tool" constraint
+- *Queue of work requests* — Rejected: adds backlog management complexity; the user can just start a new request when the current one finishes
+
+---
+
+## DD-004: History Tiering Strategy
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** Completed workflows are archived in `.codestudio/archive/`. Over time (months/years), this directory grows unbounded. At 10,000+ entries, repo bloat becomes a real problem — slow clones, slow `git status`, large `.codestudio/` directory.
+
+**Decision:** Three-tier history with automatic compaction:
+
+| Tier | What's Stored | Size Per Entry | When |
+|---|---|---|---|
+| **Hot** | ALL artifacts (spec, plan, ADRs, reviews, audit log) | ~100-500 KB | Last N work requests (default: 20) |
+| **Warm** | `summary.md` only (objective, decisions, stats, approvals) | ~2 KB | Older than N entries |
+| **Cold** | Summary without audit log | ~1 KB | Older than M months (default: 6) |
+
+**Key rules:**
+- **Nothing is ever deleted** — compaction removes files from the working tree but they remain in git history forever
+- **One-click restore** — any compacted entry can be restored via `git checkout <sha>`
+- **Auto-compaction** — runs when a new entry is archived and the hot tier exceeds the limit
+- **Configurable** — users can adjust hot tier size and cold tier threshold in Settings
+
+**Size projections:**
+
+| Entries | .codestudio/ Size |
+|---|---|
+| 100 | ~6.2 MB |
+| 1,000 | ~7.5 MB |
+| 10,000 | ~16.5 MB |
+
+**Rationale:** Git repos should stay lean. Full artifacts are valuable for recent work (debugging, reference) but unnecessary for 6-month-old entries. The tiering strategy keeps the repo under ~20 MB even at massive scale while preserving full recoverability.
+
+**Alternatives Considered:**
+- *Keep everything forever* — Rejected: repo bloat at scale; 10,000 × 300KB = 3 GB
+- *Delete old history* — Rejected: loses valuable engineering context; can't answer "why did we build it this way?"
+- *External storage for history* — Rejected: adds dependency; breaks the "everything in git" principle
+- *Git LFS for large artifacts* — Considered for future: could move `events.jsonl` to LFS if repos get very large
+
+---
+
+## DD-005: History Index File
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The History screen needs to display all completed work requests with metadata (objective, process level, stats, artifacts). Without an index, the extension would scan the entire `archive/` directory and read every file to render the list.
+
+**Decision:** Maintain a single `archive/index.json` file that contains metadata for all history entries.
+
+```jsonc
+{
+  "version": 1,
+  "totalEntries": 7,
+  "totalTasks": 49,
+  "totalTests": 109,
+  "totalLines": 5200,
+  "totalADRs": 5,
+  "entries": [
+    {
+      "id": "stripe-payments",
+      "objective": "Add Stripe payment integration",
+      "processLevel": "standard",
+      "status": "merged",
+      "tier": "hot",
+      "branch": "feature/stripe-payments",
+      "pr": "#47",
+      "startedAt": "2026-07-08T12:00:00Z",
+      "completedAt": "2026-07-08T16:23:00Z",
+      "duration": "4h 23m",
+      "tasks": 8,
+      "files": 12,
+      "lines": 340,
+      "tests": 24,
+      "commits": 8,
+      "artifacts": ["spec", "plan", "adr-005", "review", "security"],
+      "path": "2026-07/stripe-payments"
+    }
+    // ... newest first
+  ]
+}
+```
+
+**Update rules:**
+- New entry archived → prepend to `entries[]`, update totals
+- Tier change (hot → warm) → update `tier` field
+- User restores compacted entry → update `tier` back to `"hot"`
+- Index is committed to git alongside archive changes
+
+**Size at scale:** ~300 KB at 1,000 entries, ~3 MB at 10,000 entries.
+
+**Rationale:**
+- O(1) file read to render History screen vs O(n) directory scan
+- Pre-computed totals for project stats
+- All metadata available for filtering/searching without reading individual files
+- Simple append-prepend structure — no complex merging
+
+**Alternatives Considered:**
+- *No index, scan directory* — Rejected: O(n) reads on every History screen open; slow at 100+ entries
+- *SQLite index* — Rejected: not human-readable, merge conflicts, overkill for this use case
+- *Yearly index files (index-2026.json)* — Considered for future: only needed if single index exceeds ~5 MB (unlikely before 15,000+ entries)
+
+---
+
+## DD-006: VS Code Native Design Language
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The extension UI needs a visual design. Options: custom design system, existing component library, or VS Code's native design language.
+
+**Decision:** Use VS Code's actual dark theme colors, font stack, icon library, and layout patterns:
+
+- **Colors:** VS Code dark theme (`#1E1E1E` background, `#252526` sidebar, `#0078D4` accent, `#CCCCCC` text)
+- **Fonts:** Segoe UI at 13px body (VS Code's UI font), JetBrains Mono for code values
+- **Icons:** Codicons (VS Code's native icon font)
+- **Layout:** Activity bar (48px) + Sidebar (220px) + Editor area — matching VS Code's actual layout
+- **Spacing:** 4px base grid (VS Code's compact density)
+- **Borders:** 1px solid `#3C3C3C` (no shadows — VS Code uses borders, not elevation)
+- **Border radius:** Maximum 6px (VS Code uses minimal rounding)
+
+**Rationale:** The extension must feel like a native part of Code Studio, not a separate web app embedded in a panel. Using VS Code's exact design tokens ensures visual consistency and reduces the "this is a foreign tool" perception that drives adoption risk.
+
+**Alternatives Considered:**
+- *Custom design system* — Rejected: would look foreign inside the IDE; increases adoption friction
+- *Syncfusion component library* — Considered for future: useful for complex components (charts, grids) but the base design must match VS Code
+- *Light theme primary* — Rejected: developers overwhelmingly prefer dark themes; dark-first matches Code Studio's default
+
+---
+
+## DD-007: Skills Are Invisible to Users
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The extension is powered by 24 engineering skills from the agent-skills repository. Should users see skill names, configure individual skills, or interact with skills directly?
+
+**Decision:** Skills are invisible plumbing. Users never see skill names, skill files, or skill configuration. They see:
+- **Workflow stages** (not "spec-driven-development" but "Define")
+- **Quality gates** (not "code-review-and-quality" but "Code Review")
+- **Agent actions** (not "incremental-implementation" but "Implementing Task 4")
+
+The workflow engine maps tasks to skills automatically based on task type, complexity, and detected context.
+
+**Rationale:**
+- Skill names are implementation details that add cognitive load without value
+- Users care about outcomes (spec, plan, review), not the process that produced them
+- Exposing skills turns the extension into a developer tool for power users only — violating the "new developers" target
+- Advanced users who want skill-level control can use the CLI or chat commands (V2)
+
+**Alternatives Considered:**
+- *Expose all skills in the UI* — Rejected: overwhelming for new users; turns the extension into a skill management tool
+- *Show skills in Advanced Mode only* — Accepted for V2: advanced users can see which skills are active and enable/disable them
+- *Let users invoke skills directly* — Accepted for V2 via CLI: `codestudio skill run security-and-hardening`
+
+---
+
+## DD-008: Event Sourcing for Audit Trail
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The extension needs to track all actions, decisions, and approvals for auditability and resumability. Options: update a state file in place, or append events to a log.
+
+**Decision:** Use event sourcing with an append-only `events.jsonl` file. Every action is recorded as an event:
+
+```jsonl
+{"ts":"2026-07-08T12:00:00Z","type":"workflow.started","data":{"objective":"Add Stripe payments","processLevel":"standard"}}
+{"ts":"2026-07-08T12:15:00Z","type":"artifact.generated","data":{"type":"spec","path":"artifacts/specs/stripe-payment-spec.md"}}
+{"ts":"2026-07-08T12:15:30Z","type":"approval.requested","data":{"artifact":"spec","level":"explicit"}}
+{"ts":"2026-07-08T12:16:00Z","type":"approval.granted","data":{"artifact":"spec","by":"user","comment":"Add webhook verification note"}}
+{"ts":"2026-07-08T12:30:00Z","type":"task.started","data":{"taskId":1,"title":"Add Stripe SDK dependency"}}
+{"ts":"2026-07-08T12:35:00Z","type":"task.completed","data":{"taskId":1,"files":1,"tests":1,"commit":"a1b2c3d"}}
+```
+
+The `workflow.json` file is the **derived state** — it can be reconstructed from `events.jsonl` at any time.
+
+**Rationale:**
+- **Append-only** — no merge conflicts in git (each team member appends, never edits existing lines)
+- **Full audit trail** — every action is recorded with timestamp, type, and data
+- **Resumable** — if `workflow.json` is corrupted, replay events to reconstruct state
+- **Debuggable** — when something goes wrong, the event log shows exactly what happened
+- **JSONL format** — one JSON object per line; easy to parse, grep, and stream
+
+**Alternatives Considered:**
+- *Update workflow.json in place only* — Rejected: loses history of how state changed; merge conflicts when multiple people work
+- *SQLite event store* — Rejected: not human-readable, not git-friendly
+- *Structured log file (plain text)* — Rejected: not machine-parseable; can't reconstruct state
+
+---
+
+## DD-009: Branch-Scoped Workflows
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** A developer might work on multiple features across different branches. How should workflow state relate to git branches?
+
+**Decision:** Each branch has its own `.codestudio/workflows/current/` directory. Switching branches switches workflow state automatically.
+
+```
+main (no active workflow)
+├── feature/stripe-payments
+│   └── .codestudio/workflows/current/  ← BUILD stage, task 4/8
+├── feature/user-auth
+│   └── .codestudio/workflows/current/  ← DEFINE stage, spec pending
+└── fix/duplicate-tasks
+    └── .codestudio/workflows/current/  ← VERIFY stage (Light process)
+```
+
+**Merge behavior:**
+- When a feature branch merges to main, `.codestudio/workflows/current/` is cleared
+- Artifacts move to `.codestudio/archive/` with a new entry in `index.json`
+- `context.md` persists on main as the living project context
+
+**Rationale:** Git branches already provide isolation for code changes. Workflow state should follow the same model — each branch is an independent engineering context. This is natural for developers and requires no additional mental model.
+
+**Alternatives Considered:**
+- *Single workflow state on main, shared across branches* — Rejected: conflicts when multiple features are in progress
+- *Workflow state stored outside git (e.g., cloud)* — Rejected: breaks the "everything in git" principle; adds external dependency
+- *Workflow state in a separate branch (e.g., `codestudio-state`)* — Rejected: adds complexity; state should live with the code it describes
+
+---
+
+## DD-010: Approval Levels with Smart Defaults
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The extension needs human approval at certain points, but too many approvals cause fatigue and users start clicking "approve" without reading.
+
+**Decision:** Four approval levels with smart defaults to minimize interruptions:
+
+| Level | Description | User Action | Default Behavior |
+|---|---|---|---|
+| **Informational** | Agent made a low-risk decision | None | Auto-dismiss after 10s; logged |
+| **Review Required** | Artifact generated that should be reviewed | Review; auto-proceeds after timeout | 5-minute timeout (configurable) |
+| **Explicit Approval** | Cannot proceed without user's "yes" | Must click Approve/Reject | Blocks workflow |
+| **Restricted Operation** | Destructive/irreversible action | Must confirm with full context | Blocks; re-confirm after restart |
+
+**Fatigue mitigation:**
+1. Process level determines approval count (Light: 0, Standard: 2, Thorough: 3-4)
+2. Informational items are batched in the Activity panel, not interrupting
+3. "Trust this pattern" option reduces future approvals of the same type
+4. Review Required auto-proceeds after configurable timeout
+
+**Rationale:** The #1 adoption risk is approval fatigue. The tiered system ensures critical decisions get human attention while routine decisions don't interrupt flow.
+
+**Alternatives Considered:**
+- *Approve everything* — Rejected: defeats the purpose; agents make mistakes that need human review
+- *Approve nothing (fully autonomous)* — Rejected: too risky for security-sensitive, destructive, or architectural decisions
+- *Single approval level for everything* — Rejected: either too many approvals (fatigue) or too few (risk)
+
+---
+
+## DD-011: Temporary Task Board, Not Permanent Backlog
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The Task Board shows tasks for the current work request. Should it also maintain a backlog of future work?
+
+**Decision:** The Task Board is a **temporary execution plan** that exists only for the duration of the current work request. When the workflow completes and merges, the board is cleared.
+
+**Lifecycle:**
+```
+Work request starts → Tasks generated from spec → Agent executes → Merge → Board empty
+```
+
+**What the Task Board is:**
+- A dependency-ordered execution plan for the current work request
+- Generated automatically from the spec by the planning skill
+- Temporary — tasks live for hours/days, not weeks/months
+
+**What the Task Board is NOT:**
+- A backlog of all work across the project
+- A sprint board with assignments and estimates
+- A kanban board for ongoing work management
+
+**Rationale:** Maintaining a backlog turns the extension into a project management tool — the exact anti-pattern identified in the analysis. The extension's value is executing one piece of work properly, not managing all work.
+
+**Alternatives Considered:**
+- *Persistent backlog across work requests* — Rejected: becomes Jira; violates "not a PM tool" constraint
+- *"Noticed but not touching" items as future tasks* — Considered for V2: agent can suggest follow-up work requests, but they go to the PM tool, not the extension's backlog
+
+---
+
+## DD-012: `.codestudio/` Directory Naming
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The extension needs a directory in the workspace to store state, artifacts, and configuration. What should it be named?
+
+**Decision:** `.codestudio/` — a hidden directory (dot-prefix) at the workspace root.
+
+**Rationale:**
+- **Dot-prefix** — hidden by default in file explorers; doesn't clutter the project
+- **codestudio** — clearly identifies the tool that owns this directory; no ambiguity
+- **Workspace root** — easy to find; consistent location across all projects
+- **Precedent** — follows the pattern of `.github/`, `.vscode/`, `.claude/`, `.cursor/`
+
+**Alternatives Considered:**
+- `.forge/` (internal codename) — Rejected: codename may change; use the product name
+- `.engineering/` — Rejected: too generic; could conflict with other tools
+- `.sdlc/` — Rejected: too technical; not immediately recognizable
+- `codestudio/` (no dot) — Rejected: visible in file explorer; clutters the project
+
+---
+
+## DD-013: Summary Auto-Generation on Archive
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** When a workflow completes and is archived, the full artifacts (spec, plan, reviews, audit log) are preserved. But for quick reference and for compacted (warm/cold tier) entries, a concise summary is needed.
+
+**Decision:** Auto-generate a `summary.md` file when a workflow is archived. The summary contains:
+
+- Objective (one line)
+- Process level and duration
+- Task count, file count, line count, test count
+- Key decisions made (extracted from events.jsonl)
+- Approval history (who approved what, when)
+- Commit list with messages
+- Artifacts list with links
+
+The summary is ~2 KB and serves as the **sole artifact** for warm/cold tier entries.
+
+**Rationale:** The summary is the "engineering receipt" — a quick-reference document that answers "what happened?" without reading the full spec, plan, and audit log. It's also the minimum viable artifact for compacted history entries.
+
+**Alternatives Considered:**
+- *No summary, just keep all artifacts* — Rejected: doesn't solve the compaction problem; no quick-reference option
+- *User writes the summary* — Rejected: adds friction; the extension has all the data to generate it automatically
+- *Summary in index.json only* — Rejected: index entries are too terse; summary.md provides human-readable detail
+
+---
+
+## Decision Index
+
+| ID | Decision | Status |
+|---|---|---|
+| DD-001 | Adaptive Process Depth (Light/Standard/Thorough/Guarded) | Accepted |
+| DD-002 | Git-Tracked Workflow State (.codestudio/ in repo) | Accepted |
+| DD-003 | One Active Work Request at a Time (not a backlog) | Accepted |
+| DD-004 | History Tiering Strategy (Hot/Warm/Cold) | Accepted |
+| DD-005 | History Index File (archive/index.json) | Accepted |
+| DD-006 | VS Code Native Design Language (colors, fonts, icons) | Accepted |
+| DD-007 | Skills Are Invisible to Users | Accepted |
+| DD-008 | Event Sourcing for Audit Trail (events.jsonl) | Accepted |
+| DD-009 | Branch-Scoped Workflows | Accepted |
+| DD-010 | Approval Levels with Smart Defaults | Accepted |
+| DD-011 | Temporary Task Board, Not Permanent Backlog | Accepted |
+| DD-012 | .codestudio/ Directory Naming | Accepted |
+| DD-013 | Summary Auto-Generation on Archive | Accepted |

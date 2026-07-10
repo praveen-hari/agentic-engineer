@@ -1,0 +1,186 @@
+<!-- Agent Activity — Real-time View -->
+
+<div class="page-header">
+  <div class="flex items-center gap-md">
+    <h2>Agent Activity</h2>
+    <span class="badge badge-accent"><i class="codicon codicon-circle-filled" style="font-size:8px;"></i> Live</span>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-secondary btn-sm"><i class="codicon codicon-debug-pause" style="font-size:12px;"></i> Pause</button>
+  </div>
+</div>
+
+<!-- Current Status -->
+<div class="card mb-lg" style="border-color: var(--color-accent);">
+  <div class="flex items-center gap-md mb-md">
+    <i class="codicon codicon-pulse" style="color: var(--color-accent); font-size:16px;"></i>
+    <div style="flex:1;">
+      <div class="font-bold">Task 4: Create payment intent endpoint</div>
+      <div class="text-secondary" style="font-size: var(--font-caption-size);">Phase: <span style="color: var(--color-success);">GREEN</span> — Making test pass</div>
+    </div>
+  </div>
+  <div class="flex gap-lg" style="font-size: var(--font-caption-size);">
+    <div class="flex items-center gap-sm">
+      <i class="codicon codicon-tools" style="font-size:12px;"></i>
+      <span class="text-secondary">Skills:</span>
+      <span>incremental-impl, test-driven-dev, security-hardening</span>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="section-header">
+  <span class="section-title">Execution Timeline</span>
+</div>
+
+<div class="timeline">
+  <div class="timeline-item is-active">
+    <span class="timeline-time">14:32:50</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-sync codicon-modifier-spin" style="font-size:12px; color: var(--color-accent);"></i>
+        <span>Starting REFACTOR phase...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-item is-success">
+    <span class="timeline-time">14:32:48</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <span style="color: var(--color-success);">🟢 GREEN phase complete</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-item is-success">
+    <span class="timeline-time">14:32:45</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-run-all" style="font-size:12px;"></i>
+        <span>Ran: <code class="font-mono">npm test -- payment</code></span>
+        <span class="badge badge-success" style="height:16px; font-size:10px;">1 passing</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <span class="timeline-time">14:32:42</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-edit" style="font-size:12px;"></i>
+        <span>Editing: <code class="font-mono">src/routes/payment.ts</code></span>
+      </div>
+      <div class="text-secondary" style="font-size: var(--font-caption-size);">Adding POST /api/payments/intent route handler with Zod validation</div>
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <span class="timeline-time">14:32:38</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-book" style="font-size:12px; color: var(--color-info);"></i>
+        <span>Source verified: <span class="text-accent">stripe.com/docs/api/payment_intents</span></span>
+      </div>
+      <div class="text-secondary" style="font-size: var(--font-caption-size);">Confirmed PaymentIntent.create() API signature and required parameters</div>
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <span class="timeline-time">14:32:35</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-shield" style="font-size:12px; color: var(--color-warning);"></i>
+        <span>Security check: Input validation with Zod schema</span>
+      </div>
+      <div class="text-secondary" style="font-size: var(--font-caption-size);">Validating amount (positive integer), currency (ISO 4217), at API boundary</div>
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <span class="timeline-time">14:32:30</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-edit" style="font-size:12px;"></i>
+        <span>Editing: <code class="font-mono">src/routes/payment.ts</code></span>
+      </div>
+      <div class="text-secondary" style="font-size: var(--font-caption-size);">Creating route handler skeleton</div>
+    </div>
+  </div>
+
+  <div class="timeline-item is-success">
+    <span class="timeline-time">14:32:25</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-run-all" style="font-size:12px;"></i>
+        <span>Ran: <code class="font-mono">npm test -- payment</code></span>
+        <span class="badge badge-error" style="height:16px; font-size:10px;">1 failing</span>
+        <span class="text-secondary" style="font-size: var(--font-caption-size);">✓ Expected (RED phase)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-item is-error">
+    <span class="timeline-time">14:32:22</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <span style="color: var(--color-error);">🔴 Wrote failing test:</span>
+        <code class="font-mono">"creates payment intent with valid amount"</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <span class="timeline-time">14:32:18</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-file" style="font-size:12px;"></i>
+        <span>Reading: <code class="font-mono">tests/routes/payment.test.ts</code></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-item">
+    <span class="timeline-time">14:32:15</span>
+    <div class="timeline-content">
+      <div class="flex items-center gap-sm">
+        <i class="codicon codicon-file" style="font-size:12px;"></i>
+        <span>Reading: <code class="font-mono">src/routes/payment.ts</code></span>
+      </div>
+      <div class="text-secondary" style="font-size: var(--font-caption-size);">Loading task context — relevant files, spec section, existing patterns</div>
+    </div>
+  </div>
+</div>
+
+<!-- Decisions Made -->
+<div class="section-header mt-xl">
+  <span class="section-title">Decisions Made This Task</span>
+</div>
+<div class="card">
+  <div style="display: flex; flex-direction: column; gap: var(--space-lg); font-size: var(--font-small-size);">
+    <div>
+      <div class="flex items-center gap-sm mb-sm">
+        <i class="codicon codicon-lightbulb" style="color: var(--color-warning); font-size:14px;"></i>
+        <span class="font-bold">Using Zod for payment amount validation</span>
+        <span class="badge" style="height:16px; font-size:10px;">Informational</span>
+      </div>
+      <div class="text-secondary" style="padding-left: 22px;">Consistent with existing validation patterns in <code class="font-mono">src/lib/validation.ts</code></div>
+    </div>
+    <div>
+      <div class="flex items-center gap-sm mb-sm">
+        <i class="codicon codicon-lightbulb" style="color: var(--color-warning); font-size:14px;"></i>
+        <span class="font-bold">Amount in cents (integer) not dollars (float)</span>
+        <span class="badge" style="height:16px; font-size:10px;">Informational</span>
+      </div>
+      <div class="text-secondary" style="padding-left: 22px;">Per Stripe docs recommendation — avoids floating point precision issues</div>
+    </div>
+    <div>
+      <div class="flex items-center gap-sm mb-sm">
+        <i class="codicon codicon-lightbulb" style="color: var(--color-info); font-size:14px;"></i>
+        <span class="font-bold">Using stripe-node SDK (not raw HTTP)</span>
+        <span class="badge badge-info" style="height:16px; font-size:10px;">Source-verified</span>
+      </div>
+      <div class="text-secondary" style="padding-left: 22px;">Official SDK handles auth, retries, and idempotency — <span class="text-accent">stripe.com/docs/api</span></div>
+    </div>
+  </div>
+</div>

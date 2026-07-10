@@ -1,0 +1,156 @@
+<!-- Settings -->
+
+<div class="page-header">
+  <h2>Settings</h2>
+</div>
+
+<div style="max-width: 600px;">
+
+  <!-- Process Defaults -->
+  <div class="card mb-lg">
+    <div class="card-header">
+      <span class="card-title">Process Defaults</span>
+    </div>
+    <div class="form-group">
+      <label class="label">Default Process Level</label>
+      <select class="select">
+        <option>Auto-detect (recommended)</option>
+        <option>Light</option>
+        <option>Standard</option>
+        <option>Thorough</option>
+        <option>Guarded</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="label">Auto-approve Informational Decisions</label>
+      <div class="flex items-center gap-md" style="font-size: var(--font-small-size);">
+        <input type="checkbox" checked style="accent-color: var(--color-accent);" />
+        <span>Skip notification for low-risk agent decisions (naming, patterns, library versions)</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="label">Review Required Timeout</label>
+      <div class="flex items-center gap-md">
+        <input class="input" type="number" value="5" style="width: 80px;" />
+        <span style="font-size: var(--font-small-size);">minutes (auto-proceed if no objection)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Management -->
+  <div class="card mb-lg" style="border-color: var(--color-accent);">
+    <div class="card-header">
+      <span class="card-title"><i class="codicon codicon-history" style="font-size:14px;"></i> History Management</span>
+    </div>
+
+    <div class="alert alert-info mb-md">
+      <i class="codicon codicon-info"></i>
+      <span style="font-size: var(--font-caption-size);">History uses a tiered strategy to keep your repo fast. Recent work keeps full artifacts; older work is compacted to summaries. Full artifacts are always recoverable from git history.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Hot Tier — Full Artifacts in Repo</label>
+      <div class="flex items-center gap-md">
+        <span style="font-size: var(--font-small-size);">Keep full artifacts for the last</span>
+        <input class="input" type="number" value="20" style="width: 60px;" />
+        <span style="font-size: var(--font-small-size);">work requests</span>
+      </div>
+      <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size);">Includes spec, plan, ADRs, review reports, and audit log. Currently using ~2.4 MB.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Warm Tier — Summary Only</label>
+      <div class="flex items-center gap-md" style="font-size: var(--font-small-size);">
+        <input type="checkbox" checked style="accent-color: var(--color-accent);" />
+        <span>Auto-compact older entries to summary.md only (full artifacts removed from working tree, preserved in git history)</span>
+      </div>
+      <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size);">
+        Summary includes: objective, process level, duration, task count, key decisions, approval history, commit list. ~2KB per entry.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Cold Tier — Audit Log Cleanup</label>
+      <div class="flex items-center gap-md">
+        <span style="font-size: var(--font-small-size);">Remove events.jsonl from summaries after</span>
+        <input class="input" type="number" value="6" style="width: 60px;" />
+        <span style="font-size: var(--font-small-size);">months</span>
+      </div>
+      <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size);">Audit logs are the largest files (~50-200KB each). Always recoverable via <code class="font-mono">git log</code>.</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Current Usage -->
+    <div class="section-header" style="margin-bottom: var(--space-md);">
+      <span class="section-title">Current Usage</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); font-size: var(--font-small-size); text-align: center; margin-bottom: var(--space-md);">
+      <div>
+        <div style="font-size: var(--font-h4-size); font-weight: 600;">5</div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Hot (full artifacts)</div>
+      </div>
+      <div>
+        <div style="font-size: var(--font-h4-size); font-weight: 600;">0</div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Warm (summaries)</div>
+      </div>
+      <div>
+        <div style="font-size: var(--font-h4-size); font-weight: 600;">2.4 MB</div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Total .codestudio/ size</div>
+      </div>
+    </div>
+
+    <div class="progress-bar mb-sm">
+      <div class="progress-fill" style="width: 12%; background: var(--color-success);"></div>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">2.4 MB of ~20 MB recommended limit</div>
+  </div>
+
+  <!-- Recovery Info -->
+  <div class="card mb-lg">
+    <div class="card-header">
+      <span class="card-title"><i class="codicon codicon-git-branch" style="font-size:14px;"></i> Recovering Compacted History</span>
+    </div>
+    <div style="font-size: var(--font-small-size); line-height: 1.6;">
+      <p class="mb-md">When history is compacted, full artifacts are removed from the working tree but <strong>remain in git history forever</strong>. To recover:</p>
+      <div style="background: var(--color-background); padding: var(--space-md); border-radius: var(--radius-md); font-family: var(--font-code-family); font-size: var(--font-code-size); margin-bottom: var(--space-md);">
+        <div class="text-secondary"># Find the commit that archived the work request</div>
+        <div>git log --all -- .codestudio/archive/2026-01/user-auth/</div>
+        <div class="mt-sm text-secondary"># Restore full artifacts from that commit</div>
+        <div>git checkout &lt;commit-sha&gt; -- .codestudio/archive/2026-01/user-auth/</div>
+        <div class="mt-sm text-secondary"># Or view a specific file without restoring</div>
+        <div>git show &lt;commit-sha&gt;:.codestudio/archive/2026-01/user-auth/spec.md</div>
+      </div>
+      <p class="text-secondary">The extension can also do this for you — click "Restore Full Artifacts" on any compacted history entry.</p>
+    </div>
+  </div>
+
+  <!-- Agent Configuration -->
+  <div class="card mb-lg">
+    <div class="card-header">
+      <span class="card-title">Agent Configuration</span>
+    </div>
+    <div class="form-group">
+      <label class="label">Specialist Agents</label>
+      <div style="display: flex; flex-direction: column; gap: var(--space-sm); font-size: var(--font-small-size);">
+        <div class="flex items-center gap-md">
+          <input type="checkbox" checked style="accent-color: var(--color-accent);" />
+          <span>Code Reviewer (five-axis review)</span>
+        </div>
+        <div class="flex items-center gap-md">
+          <input type="checkbox" checked style="accent-color: var(--color-accent);" />
+          <span>Security Auditor (OWASP assessment)</span>
+        </div>
+        <div class="flex items-center gap-md">
+          <input type="checkbox" style="accent-color: var(--color-accent);" />
+          <span>Performance Auditor (Core Web Vitals)</span>
+        </div>
+        <div class="flex items-center gap-md">
+          <input type="checkbox" style="accent-color: var(--color-accent);" />
+          <span>Test Engineer (coverage analysis)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

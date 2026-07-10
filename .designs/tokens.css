@@ -1,0 +1,103 @@
+/* Light theme (default) */
+:root {
+  /* Colors */
+  --color-primary: #CCCCCC;
+  --color-secondary: #858585;
+  --color-accent: #0078D4;
+  --color-background: #1E1E1E;
+  --color-surface: #252526;
+  --color-border: #3C3C3C;
+  --color-success: #4EC9B0;
+  --color-warning: #CCA700;
+  --color-error: #F14C4C;
+  --color-info: #3794FF;
+  --color-surface-hover: #2A2D2E;
+  --color-surface-active: #37373D;
+  --color-accent-secondary: #264F78;
+  --color-text-link: #3794FF;
+  --color-badge-bg: #4D4D4D;
+  --color-input-bg: #3C3C3C;
+  --color-toolbar-bg: #333333;
+  --color-sash: #007ACC;
+
+  /* Typography */
+  --font-h1-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-h1-size: 26px;
+  --font-h1-weight: 400;
+  --font-h1-line-height: 1.3;
+  --font-h1-letter-spacing: 0em;
+  --font-h2-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-h2-size: 20px;
+  --font-h2-weight: 600;
+  --font-h2-line-height: 1.35;
+  --font-h2-letter-spacing: 0em;
+  --font-h3-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-h3-size: 16px;
+  --font-h3-weight: 600;
+  --font-h3-line-height: 1.4;
+  --font-h4-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-h4-size: 14px;
+  --font-h4-weight: 600;
+  --font-h4-line-height: 1.4;
+  --font-body-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-body-size: 13px;
+  --font-body-weight: 400;
+  --font-body-line-height: 1.5;
+  --font-small-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-small-size: 12px;
+  --font-small-weight: 400;
+  --font-small-line-height: 1.4;
+  --font-caption-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-caption-size: 11px;
+  --font-caption-weight: 400;
+  --font-caption-line-height: 1.35;
+  --font-code-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --font-code-size: 12px;
+  --font-code-weight: 400;
+  --font-code-line-height: 1.5;
+
+  /* Border Radius */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --space-xs: 2px;
+  --space-sm: 4px;
+  --space-md: 8px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+  --space-2xl: 20px;
+  --space-3xl: 24px;
+
+}
+
+/* Dark theme — activated via data-theme="dark" attribute */
+[data-theme="dark"] {
+  --color-primary: #CCCCCC;
+  --color-secondary: #858585;
+  --color-accent: #0078D4;
+  --color-background: #1E1E1E;
+  --color-surface: #252526;
+  --color-border: #3C3C3C;
+  --color-success: #4EC9B0;
+  --color-warning: #CCA700;
+  --color-error: #F14C4C;
+}
+
+/* Dark theme — auto-activated via OS preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary: #CCCCCC;
+    --color-secondary: #858585;
+    --color-accent: #0078D4;
+    --color-background: #1E1E1E;
+    --color-surface: #252526;
+    --color-border: #3C3C3C;
+    --color-success: #4EC9B0;
+    --color-warning: #CCA700;
+    --color-error: #F14C4C;
+  }
+}

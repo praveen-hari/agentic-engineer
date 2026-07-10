@@ -1,0 +1,156 @@
+<!-- Review Report — Five-Axis Code Review -->
+
+<div class="page-header">
+  <div class="flex items-center gap-md">
+    <button class="btn-icon" onclick="loadScreen('artifacts')"><i class="codicon codicon-arrow-left"></i></button>
+    <h2>Code Review Report</h2>
+    <span class="badge badge-warning">Pending Approval</span>
+  </div>
+</div>
+
+<p class="text-secondary mb-lg" style="font-size: var(--font-small-size);">Five-axis review of Stripe payment integration · 8 tasks · 12 files changed · 340 lines added</p>
+
+<!-- Summary -->
+<div class="stats-grid mb-lg">
+  <div class="stat-card">
+    <div class="stat-label">Critical</div>
+    <div class="stat-value text-error">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Required</div>
+    <div class="stat-value" style="color: var(--color-warning);">2</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Optional</div>
+    <div class="stat-value text-secondary">3</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Nit</div>
+    <div class="stat-value text-secondary">1</div>
+  </div>
+</div>
+
+<!-- Axes -->
+<div class="section-header">
+  <span class="section-title">Review Axes</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-xl);">
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Correctness</span>
+      <span class="badge badge-success" style="height:16px; font-size:10px;">Pass</span>
+    </div>
+    <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size); padding-left: 22px;">All acceptance criteria met. Edge cases handled. Tests cover happy path and error paths.</div>
+  </div>
+
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Readability</span>
+      <span class="badge badge-success" style="height:16px; font-size:10px;">Pass</span>
+    </div>
+    <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size); padding-left: 22px;">Clear naming, consistent patterns, no unnecessary complexity. Follows project conventions.</div>
+  </div>
+
+  <div class="card card-compact" style="border-color: var(--color-warning);">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-warning" style="color: var(--color-warning); font-size:14px;"></i>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Architecture</span>
+      <span class="badge badge-warning" style="height:16px; font-size:10px;">2 findings</span>
+    </div>
+    <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size); padding-left: 22px;">Payment service could be extracted from route handler. Webhook handler should be a separate module.</div>
+  </div>
+
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Security</span>
+      <span class="badge badge-success" style="height:16px; font-size:10px;">Pass</span>
+    </div>
+    <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size); padding-left: 22px;">Input validated at boundary. No secrets in code. Stripe secret key from env. No card data logged.</div>
+  </div>
+
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Performance</span>
+      <span class="badge badge-success" style="height:16px; font-size:10px;">Pass</span>
+    </div>
+    <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size); padding-left: 22px;">No N+1 patterns. Stripe calls are async. Bundle impact acceptable (+45KB).</div>
+  </div>
+</div>
+
+<!-- Findings -->
+<div class="section-header">
+  <span class="section-title">Findings</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: var(--space-md);">
+  <div class="card card-compact" style="border-left: 3px solid var(--color-warning);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-warning" style="min-width: 60px; justify-content: center;">Required</span>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Extract PaymentService from route handler</span>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">
+      <code class="font-mono">src/routes/payment.ts:15-48</code> — Business logic (creating PaymentIntent, handling errors) is mixed with HTTP handling. Extract to <code class="font-mono">src/services/payment.ts</code> for testability and reuse.
+    </div>
+  </div>
+
+  <div class="card card-compact" style="border-left: 3px solid var(--color-warning);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-warning" style="min-width: 60px; justify-content: center;">Required</span>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Webhook handler should be a separate module</span>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">
+      <code class="font-mono">src/routes/payment.ts:52-78</code> — Webhook verification and event handling should be in <code class="font-mono">src/routes/webhook.ts</code> to keep payment routes focused.
+    </div>
+  </div>
+
+  <div class="card card-compact" style="border-left: 3px solid var(--color-info);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-info" style="min-width: 60px; justify-content: center;">Optional</span>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Add idempotency key to PaymentIntent creation</span>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">
+      Stripe supports idempotency keys to prevent duplicate charges on retries. Consider adding <code class="font-mono">idempotencyKey</code> parameter.
+    </div>
+  </div>
+
+  <div class="card card-compact" style="border-left: 3px solid var(--color-info);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-info" style="min-width: 60px; justify-content: center;">Optional</span>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Add structured logging for payment events</span>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">
+      Payment creation, success, and failure events should be logged with structured fields for observability.
+    </div>
+  </div>
+
+  <div class="card card-compact" style="border-left: 3px solid var(--color-info);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-info" style="min-width: 60px; justify-content: center;">Optional</span>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Consider rate limiting on payment endpoint</span>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">
+      Payment endpoints are high-value targets. Consider adding rate limiting similar to auth endpoints.
+    </div>
+  </div>
+
+  <div class="card card-compact" style="border-left: 3px solid var(--color-secondary);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge" style="min-width: 60px; justify-content: center;">Nit</span>
+      <span class="font-bold" style="font-size: var(--font-small-size);">Rename <code class="font-mono">amt</code> to <code class="font-mono">amount</code> in test fixtures</span>
+    </div>
+    <div class="text-secondary" style="font-size: var(--font-caption-size);">
+      <code class="font-mono">tests/routes/payment.test.ts:8</code> — Use full word for clarity. Minor.
+    </div>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="flex gap-md mt-xl">
+  <button class="btn btn-success"><i class="codicon codicon-check" style="font-size:12px;"></i> Approve Review</button>
+  <button class="btn btn-secondary"><i class="codicon codicon-comment" style="font-size:12px;"></i> Request Changes</button>
+</div>

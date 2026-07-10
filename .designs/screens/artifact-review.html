@@ -1,0 +1,80 @@
+<!-- Artifact Review — Spec Document -->
+
+<div class="page-header">
+  <div class="flex items-center gap-md">
+    <button class="btn-icon" onclick="loadScreen('artifacts')"><i class="codicon codicon-arrow-left"></i></button>
+    <i class="codicon codicon-file-text" style="font-size:16px; color: var(--color-success);"></i>
+    <h2>stripe-payment-spec.md</h2>
+    <span class="badge badge-success">Approved</span>
+  </div>
+  <div class="page-actions">
+    <span class="text-secondary" style="font-size: var(--font-caption-size);">Generated 1h 45m ago</span>
+  </div>
+</div>
+
+<!-- Spec Content -->
+<div class="card mb-lg" style="font-size: var(--font-small-size); line-height: 1.6;">
+
+  <h3 style="margin-bottom: var(--space-lg);">Spec: Stripe Payment Integration</h3>
+
+  <h4 style="color: var(--color-info); margin-bottom: var(--space-md);">Objective</h4>
+  <p style="margin-bottom: var(--space-lg);">Add Stripe payment processing to the checkout flow. Users can pay with credit/debit cards. Payment completes in &lt;3s, handles failures gracefully, and follows PCI compliance best practices (no card data touches our server).</p>
+
+  <h4 style="color: var(--color-info); margin-bottom: var(--space-md);">Tech Stack</h4>
+  <ul style="margin-bottom: var(--space-lg); padding-left: var(--space-xl);">
+    <li>Stripe.js v3 (client-side) — <span class="text-accent font-mono">stripe.com/docs/js</span></li>
+    <li>stripe-node v14 (server-side) — <span class="text-accent font-mono">stripe.com/docs/api</span></li>
+    <li>Zod for input validation (consistent with existing patterns)</li>
+  </ul>
+
+  <h4 style="color: var(--color-info); margin-bottom: var(--space-md);">Commands</h4>
+  <div style="background: var(--color-background); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg); font-family: var(--font-code-family); font-size: var(--font-code-size);">
+    <div>Test: <span class="text-secondary">npm test -- --grep "payment"</span></div>
+    <div>Dev:  <span class="text-secondary">npm run dev</span></div>
+    <div>Build: <span class="text-secondary">npm run build</span></div>
+  </div>
+
+  <h4 style="color: var(--color-info); margin-bottom: var(--space-md);">Testing Strategy</h4>
+  <ul style="margin-bottom: var(--space-lg); padding-left: var(--space-xl);">
+    <li><strong>Unit:</strong> Payment validation, amount calculation, error mapping</li>
+    <li><strong>Integration:</strong> Stripe API mock with test keys</li>
+    <li><strong>E2E:</strong> Full checkout flow with Playwright</li>
+  </ul>
+
+  <h4 style="color: var(--color-info); margin-bottom: var(--space-md);">Boundaries</h4>
+  <div style="margin-bottom: var(--space-lg);">
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-success" style="min-width: 70px; justify-content: center;">Always</span>
+      <span>Validate amounts server-side · Use Stripe.js for card collection (never touch raw card data)</span>
+    </div>
+    <div class="flex items-center gap-md mb-sm">
+      <span class="badge badge-warning" style="min-width: 70px; justify-content: center;">Ask first</span>
+      <span>Storing payment metadata · Adding webhook endpoints · Retry logic for failed payments</span>
+    </div>
+    <div class="flex items-center gap-md">
+      <span class="badge badge-error" style="min-width: 70px; justify-content: center;">Never</span>
+      <span>Log full card numbers · Store card data on our server · Disable HTTPS · Expose Stripe secret key</span>
+    </div>
+  </div>
+
+  <h4 style="color: var(--color-info); margin-bottom: var(--space-md);">Success Criteria</h4>
+  <div class="checklist">
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Payment intent created successfully via API</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Card validation errors shown to user with clear messages</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Failed payments handled with retry option</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Payment confirmation page shows receipt details</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> All amounts in cents (integer) — no floating point</div>
+  </div>
+</div>
+
+<!-- Approval Actions -->
+<div class="card" style="border-color: var(--color-success); background: rgba(78, 201, 176, 0.05);">
+  <div class="flex items-center gap-md mb-md">
+    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
+    <span class="font-bold">Approved by you</span>
+    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 45m ago</span>
+  </div>
+  <div class="text-secondary" style="font-size: var(--font-small-size);">
+    Comment: "Add a note about webhook signature verification in the Boundaries section."
+  </div>
+</div>

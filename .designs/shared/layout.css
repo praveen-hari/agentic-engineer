@@ -1,0 +1,219 @@
+/* App shell — simulates Code Studio extension layout */
+.app-shell {
+  display: grid;
+  grid-template-columns: 48px 220px 1fr;
+  grid-template-rows: 1fr;
+  min-height: 100vh;
+}
+
+/* Activity bar — VS Code left icon strip */
+.activity-bar {
+  grid-row: 1 / -1;
+  background: var(--color-toolbar-bg);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-md);
+}
+
+.activity-bar-item {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-secondary);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: color 0.1s;
+  font-size: 22px;
+  text-decoration: none;
+}
+.activity-bar-item:hover { color: var(--color-primary); text-decoration: none; }
+.activity-bar-item.is-active {
+  color: var(--color-primary);
+  border-left-color: var(--color-accent);
+}
+
+/* Sidebar — VS Code sidebar panel */
+.sidebar {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-xl);
+  font-size: var(--font-caption-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-secondary);
+  min-height: 35px;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.nav-section {
+  padding: var(--space-sm) 0;
+}
+
+.nav-section-title {
+  padding: var(--space-sm) var(--space-xl);
+  font-size: var(--font-caption-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-secondary);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-xl);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-body-size);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.nav-item:hover { background: var(--color-surface-hover); text-decoration: none; }
+.nav-item.is-active { background: var(--color-surface-active); }
+
+.nav-item .codicon { font-size: 16px; color: var(--color-secondary); flex-shrink: 0; }
+.nav-item.is-active .codicon { color: var(--color-primary); }
+
+.nav-item-badge {
+  margin-left: auto;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--font-caption-size);
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main content area */
+.main-area {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Editor tabs bar */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  background: var(--color-toolbar-bg);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 35px;
+  overflow-x: auto;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0 var(--space-xl);
+  height: 35px;
+  font-size: var(--font-body-size);
+  color: var(--color-secondary);
+  border-right: 1px solid var(--color-border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.1s;
+}
+.tab-item:hover { color: var(--color-primary); }
+.tab-item.is-active {
+  color: var(--color-primary);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-background);
+  margin-bottom: -1px;
+}
+
+/* Content area */
+.content {
+  flex: 1;
+  padding: var(--space-xl) var(--space-2xl);
+  overflow-y: auto;
+  background: var(--color-background);
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 22px;
+  padding: 0 var(--space-md);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--font-caption-size);
+}
+
+.status-bar-left, .status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: default;
+}
+
+/* Bottom panel (simulates terminal/panel area) */
+.bottom-panel {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.bottom-panel-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-md);
+  min-height: 35px;
+  gap: 0;
+}
+
+.bottom-panel-tab {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-caption-size);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-secondary);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+}
+.bottom-panel-tab:hover { color: var(--color-primary); }
+.bottom-panel-tab.is-active { color: var(--color-primary); border-bottom-color: var(--color-accent); }
+
+.bottom-panel-content {
+  padding: var(--space-md) var(--space-xl);
+  font-size: var(--font-small-size);
+}
+
+@media (max-width: 768px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .activity-bar, .sidebar { display: none; }
+}

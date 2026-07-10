@@ -1,0 +1,99 @@
+<!-- New Work Request -->
+
+<div class="page-header">
+  <h2>New Work Request</h2>
+</div>
+
+<div style="max-width: 600px;">
+
+  <!-- Objective -->
+  <div class="card mb-lg">
+    <h3 style="margin-bottom: var(--space-lg);">What do you want to build?</h3>
+    <div class="form-group">
+      <label class="label">Objective</label>
+      <textarea class="textarea" rows="3" placeholder="Describe what you want to accomplish...&#10;&#10;Example: Add Stripe payment integration to the checkout flow">Add user authentication with email/password and Google OAuth</textarea>
+    </div>
+  </div>
+
+  <!-- Detected Analysis -->
+  <div class="card mb-lg" style="border-color: var(--color-accent);">
+    <div class="flex items-center gap-md mb-md">
+      <i class="codicon codicon-sparkle" style="color: var(--color-accent); font-size:16px;"></i>
+      <span class="font-bold">Analysis</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 140px 1fr; gap: var(--space-sm) var(--space-lg); font-size: var(--font-small-size);">
+      <span class="text-secondary">Task Type</span>
+      <span>New Feature</span>
+
+      <span class="text-secondary">Complexity</span>
+      <div class="flex items-center gap-sm">
+        <span>High</span>
+        <span class="text-secondary">— touches auth, database schema, external OAuth provider</span>
+      </div>
+
+      <span class="text-secondary">Risk Level</span>
+      <div class="flex items-center gap-sm">
+        <span class="badge badge-error">High</span>
+        <span class="text-secondary">— authentication is security-critical</span>
+      </div>
+
+      <span class="text-secondary">Recommended</span>
+      <div class="flex items-center gap-sm">
+        <span class="badge badge-warning">Thorough</span>
+        <span class="text-secondary">— spec + architecture + security review + approval gates</span>
+      </div>
+
+      <span class="text-secondary">Estimated Tasks</span>
+      <span>10-14 tasks across 4 phases</span>
+
+      <span class="text-secondary">Skills Activated</span>
+      <span>spec, planning, TDD, security-hardening, code-review</span>
+    </div>
+  </div>
+
+  <!-- Process Level Override -->
+  <div class="card mb-lg">
+    <div class="card-header">
+      <span class="card-title">Process Level</span>
+      <button class="btn btn-ghost btn-sm"><i class="codicon codicon-info" style="font-size:12px;"></i> What's this?</button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <div class="tree-item" style="border-radius: var(--radius-md); padding: var(--space-md);">
+        <input type="radio" name="process" style="accent-color: var(--color-accent);" />
+        <div>
+          <div class="font-bold" style="font-size: var(--font-small-size);">Light</div>
+          <div class="text-secondary" style="font-size: var(--font-caption-size);">Context → Plan → Implement → Test → Commit</div>
+        </div>
+      </div>
+      <div class="tree-item" style="border-radius: var(--radius-md); padding: var(--space-md);">
+        <input type="radio" name="process" style="accent-color: var(--color-accent);" />
+        <div>
+          <div class="font-bold" style="font-size: var(--font-small-size);">Standard</div>
+          <div class="text-secondary" style="font-size: var(--font-caption-size);">Spec → Plan → Tasks → Build → Test → Review</div>
+        </div>
+      </div>
+      <div class="tree-item" style="border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-surface-active); border: 1px solid var(--color-accent);">
+        <input type="radio" name="process" checked style="accent-color: var(--color-accent);" />
+        <div>
+          <div class="font-bold" style="font-size: var(--font-small-size);">Thorough <span class="badge badge-warning" style="height:16px; font-size:10px;">Recommended</span></div>
+          <div class="text-secondary" style="font-size: var(--font-caption-size);">Spec → Architecture → Plan → Build → Security → Performance → Review → Docs</div>
+        </div>
+      </div>
+      <div class="tree-item" style="border-radius: var(--radius-md); padding: var(--space-md);">
+        <input type="radio" name="process" style="accent-color: var(--color-accent);" />
+        <div>
+          <div class="font-bold" style="font-size: var(--font-small-size);">Guarded</div>
+          <div class="text-secondary" style="font-size: var(--font-caption-size);">All Thorough steps + explicit approval at every decision point</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap-md">
+    <button class="btn btn-primary"><i class="codicon codicon-play" style="font-size:12px;"></i> Start Workflow</button>
+    <button class="btn btn-secondary">Cancel</button>
+  </div>
+
+</div>

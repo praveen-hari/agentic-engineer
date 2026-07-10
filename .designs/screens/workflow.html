@@ -1,0 +1,148 @@
+<!-- Workflow — Lifecycle Stages -->
+
+<div class="page-header">
+  <h2>Workflow</h2>
+  <div class="page-actions">
+    <span class="badge badge-accent">Standard Process</span>
+    <button class="btn btn-secondary btn-sm"><i class="codicon codicon-settings-gear" style="font-size:12px;"></i> Override</button>
+  </div>
+</div>
+
+<p class="text-secondary mb-lg" style="font-size: var(--font-small-size);">Add Stripe payment integration to checkout flow</p>
+
+<!-- Stage Cards -->
+<div style="display: flex; flex-direction: column; gap: var(--space-md);">
+
+  <!-- ONBOARD — Completed -->
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-check-all" style="color: var(--color-success); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">1. Onboard</span>
+          <span class="badge badge-success">Completed</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Project context generated · Tech stack detected · Rules file created</div>
+      </div>
+      <span class="text-secondary" style="font-size: var(--font-caption-size);">2h ago</span>
+    </div>
+  </div>
+
+  <!-- DEFINE — Completed -->
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-check-all" style="color: var(--color-success); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">2. Define</span>
+          <span class="badge badge-success">Completed</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Objective captured · Spec generated and approved · ADR-005 recorded</div>
+      </div>
+      <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 45m ago</span>
+    </div>
+    <div class="flex gap-md mt-md" style="padding-left: 28px;">
+      <button class="btn btn-ghost btn-sm" onclick="loadScreen('artifact-review')"><i class="codicon codicon-file-text" style="font-size:12px;"></i> stripe-payment-spec.md</button>
+      <button class="btn btn-ghost btn-sm"><i class="codicon codicon-file-text" style="font-size:12px;"></i> ADR-005</button>
+    </div>
+  </div>
+
+  <!-- PLAN — Completed -->
+  <div class="card card-compact">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-check-all" style="color: var(--color-success); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">3. Plan</span>
+          <span class="badge badge-success">Completed</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">8 tasks planned · Vertical slices · Risk-first ordering</div>
+      </div>
+      <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 30m ago</span>
+    </div>
+    <div class="flex gap-md mt-md" style="padding-left: 28px;">
+      <button class="btn btn-ghost btn-sm" onclick="loadScreen('task-board')"><i class="codicon codicon-tasklist" style="font-size:12px;"></i> View Task Board</button>
+    </div>
+  </div>
+
+  <!-- BUILD — Active -->
+  <div class="card" style="border-color: var(--color-accent);">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-play-circle" style="color: var(--color-accent); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">4. Build</span>
+          <span class="badge badge-accent">Active — Task 4/8</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Implementing slice by slice · TDD cycle · Incremental commits</div>
+      </div>
+    </div>
+    <div class="progress-bar mt-md" style="margin-left: 28px; max-width: 300px;">
+      <div class="progress-fill" style="width: 37%;"></div>
+    </div>
+    <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size); padding-left: 28px;">3 of 8 tasks completed · Agent working on Task 4</div>
+    <div class="flex gap-md mt-md" style="padding-left: 28px;">
+      <button class="btn btn-ghost btn-sm" onclick="loadScreen('agent-activity')"><i class="codicon codicon-pulse" style="font-size:12px;"></i> View Agent Activity</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadScreen('task-board')"><i class="codicon codicon-tasklist" style="font-size:12px;"></i> View Tasks</button>
+    </div>
+  </div>
+
+  <!-- VERIFY — Pending -->
+  <div class="card card-compact" style="opacity: 0.6;">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">5. Verify</span>
+          <span class="badge">Pending</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Full test suite · Build check · Security scan · Performance measurement</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW — Pending -->
+  <div class="card card-compact" style="opacity: 0.6;">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">6. Review</span>
+          <span class="badge">Pending</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Five-axis code review · Security review (required) · Definition of Done</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHIP — Pending -->
+  <div class="card card-compact" style="opacity: 0.6;">
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size:16px;"></i>
+      <div style="flex:1;">
+        <div class="flex items-center gap-md">
+          <span class="font-bold" style="font-size: var(--font-small-size);">7. Ship</span>
+          <span class="badge">Pending</span>
+        </div>
+        <div class="text-secondary" style="font-size: var(--font-caption-size);">Pre-launch checklist · Commit/PR preparation</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quality Gates -->
+<div class="section-header mt-xl">
+  <span class="section-title">Quality Gates</span>
+</div>
+<div class="card">
+  <div class="checklist">
+    <div class="checklist-item"><i class="codicon codicon-pass-filled checklist-icon is-done"></i> Spec approved</div>
+    <div class="checklist-item"><i class="codicon codicon-pass-filled checklist-icon is-done"></i> Plan approved</div>
+    <div class="checklist-item"><i class="codicon codicon-pass-filled checklist-icon is-done"></i> Checkpoint: Foundation (Tasks 1-3)</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> All tests pass</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Build succeeds</div>
+    <div class="checklist-item"><i class="codicon codicon-shield checklist-icon is-blocked" style="color: var(--color-warning);"></i> Security review <span class="badge badge-warning" style="margin-left: var(--space-sm);">Required</span></div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Code review approved</div>
+    <div class="checklist-item"><i class="codicon codicon-circle-outline checklist-icon is-pending"></i> Definition of Done met</div>
+  </div>
+</div>

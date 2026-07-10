@@ -1,0 +1,172 @@
+<!-- Project Context -->
+
+<div class="page-header">
+  <div class="flex items-center gap-md">
+    <h2>Project Context</h2>
+    <span class="badge">Auto-generated</span>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-secondary btn-sm"><i class="codicon codicon-refresh" style="font-size:12px;"></i> Refresh</button>
+    <button class="btn btn-secondary btn-sm"><i class="codicon codicon-edit" style="font-size:12px;"></i> Edit</button>
+  </div>
+</div>
+
+<p class="text-secondary mb-lg" style="font-size: var(--font-small-size);">This context is loaded by agents before every task. Last updated 10 minutes ago.</p>
+
+<!-- Git-Tracked Workflow State -->
+<div class="alert alert-info mb-lg">
+  <i class="codicon codicon-git-branch"></i>
+  <div>
+    <strong>Workflow state is git-tracked.</strong> All engineering artifacts, workflow state, and context live in <code class="font-mono">.codestudio/</code> and are committed alongside your code. Any team member who pulls this branch can see the full engineering state and resume work.
+  </div>
+</div>
+
+<!-- Repository -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-repo" style="font-size:14px;"></i> Repository</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 120px 1fr; gap: var(--space-sm) var(--space-lg); font-size: var(--font-small-size);">
+    <span class="text-secondary">Name</span><span>my-task-app</span>
+    <span class="text-secondary">Type</span><span>Full-stack web application</span>
+    <span class="text-secondary">Size</span><span>142 files · 12,400 lines</span>
+    <span class="text-secondary">Branch</span><span class="font-mono">feature/stripe-payments</span>
+  </div>
+</div>
+
+<!-- .codestudio/ Directory -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-folder" style="font-size:14px;"></i> .codestudio/ <span class="badge badge-accent" style="margin-left: var(--space-sm);">Git-tracked</span></span>
+    <span class="text-secondary" style="font-size: var(--font-caption-size);">Committed to repo · Shared across team</span>
+  </div>
+  <div style="font-family: var(--font-code-family); font-size: var(--font-code-size); line-height: 1.8;">
+    <div>.codestudio/</div>
+    <div style="padding-left: 16px;">├── context.md <span class="text-secondary">← project context (rules file for agents)</span></div>
+    <div style="padding-left: 16px;">├── config.json <span class="text-secondary">← extension settings (process defaults, approval prefs)</span></div>
+    <div style="padding-left: 16px;">├── workflows/</div>
+    <div style="padding-left: 32px;">└── current/</div>
+    <div style="padding-left: 48px;">├── workflow.json <span class="text-secondary">← current workflow state (stage, tasks, gates)</span></div>
+    <div style="padding-left: 48px;">├── objective.md <span class="text-secondary">← confirmed statement of intent</span></div>
+    <div style="padding-left: 48px;">└── events.jsonl <span class="text-secondary">← append-only audit log (all actions + decisions)</span></div>
+    <div style="padding-left: 16px;">├── artifacts/</div>
+    <div style="padding-left: 32px;">├── specs/ <span class="text-secondary">← generated specifications</span></div>
+    <div style="padding-left: 32px;">├── plans/ <span class="text-secondary">← task plans (plan.md, todo.md)</span></div>
+    <div style="padding-left: 32px;">├── adrs/ <span class="text-secondary">← architecture decision records</span></div>
+    <div style="padding-left: 32px;">├── reviews/ <span class="text-secondary">← code review reports</span></div>
+    <div style="padding-left: 32px;">└── reports/ <span class="text-secondary">← test, security, performance reports</span></div>
+    <div style="padding-left: 16px;">└── archive/ <span class="text-secondary">← completed workflows (history)</span></div>
+  </div>
+  <div class="divider"></div>
+  <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+    <strong>How it works:</strong> Every workflow action (spec generated, task completed, approval given) is recorded in <code class="font-mono">events.jsonl</code> and the current state is updated in <code class="font-mono">workflow.json</code>. Both are committed with each task's code changes. When a teammate pulls the branch, the extension reads <code class="font-mono">workflow.json</code> and reconstructs the full UI state — including which stage is active, which tasks are done, and what approvals are pending.
+  </div>
+</div>
+
+<!-- Team Handoff -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-people" style="font-size:14px;"></i> Team Handoff</span>
+  </div>
+  <div style="font-size: var(--font-small-size);">
+    <div class="flex items-center gap-md mb-md">
+      <i class="codicon codicon-check" style="color: var(--color-success); font-size:12px;"></i>
+      <span><strong>Resume after restart:</strong> Extension reads <code class="font-mono">workflow.json</code> on activation — picks up exactly where you left off</span>
+    </div>
+    <div class="flex items-center gap-md mb-md">
+      <i class="codicon codicon-check" style="color: var(--color-success); font-size:12px;"></i>
+      <span><strong>Switch branches:</strong> Each branch can have its own <code class="font-mono">.codestudio/workflows/current/</code> — switching branches switches workflow state</span>
+    </div>
+    <div class="flex items-center gap-md mb-md">
+      <i class="codicon codicon-check" style="color: var(--color-success); font-size:12px;"></i>
+      <span><strong>Team member joins:</strong> Pull the branch → open Code Studio → extension loads the full engineering state automatically</span>
+    </div>
+    <div class="flex items-center gap-md mb-md">
+      <i class="codicon codicon-check" style="color: var(--color-success); font-size:12px;"></i>
+      <span><strong>Approval attribution:</strong> Each approval records who approved and when — visible in the audit log</span>
+    </div>
+    <div class="flex items-center gap-md">
+      <i class="codicon codicon-check" style="color: var(--color-success); font-size:12px;"></i>
+      <span><strong>PR review:</strong> Reviewers can see the full engineering story — spec, plan, decisions, test evidence — in the <code class="font-mono">.codestudio/</code> directory</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tech Stack -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-symbol-misc" style="font-size:14px;"></i> Tech Stack</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 120px 1fr; gap: var(--space-sm) var(--space-lg); font-size: var(--font-small-size);">
+    <span class="text-secondary">Frontend</span><span>React 19.1 · TypeScript 5.7 · Vite 6.2</span>
+    <span class="text-secondary">Backend</span><span>Node.js 22 · Express 5 · Prisma 6</span>
+    <span class="text-secondary">Database</span><span>PostgreSQL 16</span>
+    <span class="text-secondary">Styling</span><span>Tailwind CSS 4</span>
+    <span class="text-secondary">Testing</span><span>Vitest · Playwright</span>
+  </div>
+</div>
+
+<!-- Commands -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-terminal" style="font-size:14px;"></i> Commands</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 120px 1fr; gap: var(--space-sm) var(--space-lg); font-size: var(--font-small-size);">
+    <span class="text-secondary">Build</span><code class="font-mono">npm run build</code>
+    <span class="text-secondary">Test</span><code class="font-mono">npm test</code>
+    <span class="text-secondary">Dev</span><code class="font-mono">npm run dev</code>
+    <span class="text-secondary">Lint</span><code class="font-mono">npm run lint</code>
+    <span class="text-secondary">Type check</span><code class="font-mono">npx tsc --noEmit</code>
+  </div>
+</div>
+
+<!-- Conventions -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-law" style="font-size:14px;"></i> Conventions</span>
+  </div>
+  <ul style="font-size: var(--font-small-size); padding-left: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-sm);">
+    <li>Functional components with hooks (no class components)</li>
+    <li>Named exports (no default exports)</li>
+    <li>Colocated tests: <code class="font-mono">Button.tsx</code> → <code class="font-mono">Button.test.tsx</code></li>
+    <li>Zod for validation at API boundaries</li>
+    <li>Error boundaries at route level</li>
+    <li><code class="font-mono">cn()</code> utility for conditional classNames</li>
+  </ul>
+</div>
+
+<!-- Architecture -->
+<div class="card mb-md">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-symbol-structure" style="font-size:14px;"></i> Architecture</span>
+  </div>
+  <div style="font-family: var(--font-code-family); font-size: var(--font-code-size); line-height: 1.6;">
+    <div>src/</div>
+    <div style="padding-left: 16px;">├── routes/ <span class="text-secondary">→ API route handlers</span></div>
+    <div style="padding-left: 16px;">├── services/ <span class="text-secondary">→ Business logic</span></div>
+    <div style="padding-left: 16px;">├── components/ <span class="text-secondary">→ React components</span></div>
+    <div style="padding-left: 16px;">├── lib/ <span class="text-secondary">→ Shared utilities</span></div>
+    <div style="padding-left: 16px;">└── types/ <span class="text-secondary">→ TypeScript type definitions</span></div>
+  </div>
+</div>
+
+<!-- Boundaries -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="codicon codicon-warning" style="font-size:14px;"></i> Boundaries</span>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: var(--space-md); font-size: var(--font-small-size);">
+    <div>
+      <span class="badge badge-success mb-sm" style="min-width: 70px; justify-content: center;">Always</span>
+      <div class="text-secondary" style="padding-left: var(--space-sm);">Run tests before commits · Validate inputs at boundaries · Follow naming conventions</div>
+    </div>
+    <div>
+      <span class="badge badge-warning mb-sm" style="min-width: 70px; justify-content: center;">Ask first</span>
+      <div class="text-secondary" style="padding-left: var(--space-sm);">Database schema changes · Adding dependencies · Changing CI config</div>
+    </div>
+    <div>
+      <span class="badge badge-error mb-sm" style="min-width: 70px; justify-content: center;">Never</span>
+      <div class="text-secondary" style="padding-left: var(--space-sm);">Commit .env files · Disable security headers · Remove failing tests without approval</div>
+    </div>
+  </div>
+</div>

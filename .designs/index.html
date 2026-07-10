@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engineering Workspace — Code Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/@vscode/codicons@0.0.36/dist/codicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="shared/base.css" />
+  <link rel="stylesheet" href="shared/layout.css" />
+  <link rel="stylesheet" href="shared/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- Activity Bar (VS Code left icon strip) -->
+    <aside class="activity-bar">
+      <a class="activity-bar-item is-active" data-screen="home" title="Engineering Workspace">
+        <i class="codicon codicon-tools"></i>
+      </a>
+      <a class="activity-bar-item" title="Explorer" style="opacity:0.4; pointer-events:none;">
+        <i class="codicon codicon-files"></i>
+      </a>
+      <a class="activity-bar-item" title="Search" style="opacity:0.4; pointer-events:none;">
+        <i class="codicon codicon-search"></i>
+      </a>
+      <a class="activity-bar-item" title="Source Control" style="opacity:0.4; pointer-events:none;">
+        <i class="codicon codicon-source-control"></i>
+      </a>
+      <a class="activity-bar-item" title="Extensions" style="opacity:0.4; pointer-events:none;">
+        <i class="codicon codicon-extensions"></i>
+      </a>
+    </aside>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        Engineering Workspace
+        <div class="sidebar-header-actions">
+          <button class="btn-icon" title="New Work Request" onclick="loadScreen('workflow-setup')"><i class="codicon codicon-add"></i></button>
+          <button class="btn-icon" title="Refresh"><i class="codicon codicon-refresh"></i></button>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <a class="nav-item is-active" data-screen="home">
+          <i class="codicon codicon-home"></i>
+          <span class="tree-item-label">Home</span>
+        </a>
+        <a class="nav-item" data-screen="workflow">
+          <i class="codicon codicon-type-hierarchy-sub"></i>
+          <span class="tree-item-label">Workflow</span>
+          <span class="badge badge-accent" style="margin-left:auto; height:16px; font-size:10px;">BUILD</span>
+        </a>
+        <a class="nav-item" data-screen="task-board">
+          <i class="codicon codicon-tasklist"></i>
+          <span class="tree-item-label">Tasks</span>
+          <span class="tree-item-meta" style="margin-left:auto;">3/8</span>
+        </a>
+        <a class="nav-item" data-screen="artifacts">
+          <i class="codicon codicon-file-code"></i>
+          <span class="tree-item-label">Artifacts</span>
+          <span class="tree-item-meta" style="margin-left:auto;">5</span>
+        </a>
+        <a class="nav-item" data-screen="agent-activity">
+          <i class="codicon codicon-pulse"></i>
+          <span class="tree-item-label">Activity</span>
+        </a>
+        <a class="nav-item" data-screen="approvals">
+          <i class="codicon codicon-shield"></i>
+          <span class="tree-item-label">Approvals</span>
+          <span class="nav-item-badge">2</span>
+        </a>
+        <a class="nav-item" data-screen="project-context">
+          <i class="codicon codicon-symbol-structure"></i>
+          <span class="tree-item-label">Context</span>
+        </a>
+        <a class="nav-item" data-screen="history">
+          <i class="codicon codicon-history"></i>
+          <span class="tree-item-label">History</span>
+          <span class="tree-item-meta" style="margin-left:auto;">7</span>
+        </a>
+        <a class="nav-item" data-screen="settings">
+          <i class="codicon codicon-settings-gear"></i>
+          <span class="tree-item-label">Settings</span>
+        </a>
+      </div>
+
+      <div class="divider" style="margin: var(--space-sm) var(--space-xl);"></div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Current Work</div>
+        <a class="nav-item" data-screen="artifact-review">
+          <i class="codicon codicon-file-text" style="color: var(--color-success);"></i>
+          <span class="tree-item-label">stripe-payment-spec.md</span>
+          <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
+        </a>
+        <a class="nav-item" data-screen="task-detail">
+          <i class="codicon codicon-circle-filled" style="color: var(--color-accent); font-size:10px;"></i>
+          <span class="tree-item-label">Task 4: Payment intent endpoint</span>
+        </a>
+        <a class="nav-item" data-screen="review-report">
+          <i class="codicon codicon-file-text" style="color: var(--color-secondary);"></i>
+          <span class="tree-item-label">review-report.md</span>
+          <span class="badge" style="height:16px; font-size:10px;">Pending</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Area -->
+    <div class="main-area">
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item is-active" id="main-tab">
+          <i class="codicon codicon-home" style="font-size:14px;"></i>
+          <span>Home</span>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <main class="content" id="screen-content">
+        <div class="empty-state">
+          <i class="codicon codicon-loading codicon-modifier-spin" style="font-size:24px;"></i>
+          <p class="mt-md">Loading...</p>
+        </div>
+      </main>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <div class="status-bar-left">
+          <span class="status-item"><i class="codicon codicon-tools" style="font-size:12px;"></i> Engineering Workspace</span>
+          <span class="status-item"><i class="codicon codicon-type-hierarchy-sub" style="font-size:12px;"></i> BUILD (4/7)</span>
+          <span class="status-item"><i class="codicon codicon-tasklist" style="font-size:12px;"></i> Task 3/8 ✓</span>
+        </div>
+        <div class="status-bar-right">
+          <span class="status-item"><i class="codicon codicon-pulse" style="font-size:12px;"></i> Agent: Working</span>
+          <span class="status-item">Standard Process</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const tabIcons = {
+      'home': 'codicon-home',
+      'workflow': 'codicon-type-hierarchy-sub',
+      'task-board': 'codicon-tasklist',
+      'task-detail': 'codicon-tasklist',
+      'artifacts': 'codicon-file-code',
+      'artifact-review': 'codicon-file-text',
+      'agent-activity': 'codicon-pulse',
+      'approvals': 'codicon-shield',
+      'project-context': 'codicon-symbol-structure',
+      'workflow-setup': 'codicon-add',
+      'review-report': 'codicon-file-text',
+      'history': 'codicon-history',
+      'history-detail': 'codicon-history',
+      'settings': 'codicon-settings-gear'
+    };
+
+    async function loadScreen(name) {
+      try {
+        const res = await fetch('screens/' + name + '.html');
+        if (!res.ok) throw new Error('Not found');
+        document.getElementById('screen-content').innerHTML = await res.text();
+      } catch {
+        document.getElementById('screen-content').innerHTML =
+          '<div class="empty-state"><i class="codicon codicon-warning" style="font-size:32px; color:var(--color-warning);"></i>' +
+          '<h2 class="mt-md">' + name + '</h2><p>Screen not generated yet.</p></div>';
+      }
+
+      // Update sidebar active state
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.toggle('is-active', el.dataset.screen === name);
+      });
+
+      // Update tab
+      const title = name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const icon = tabIcons[name] || 'codicon-file';
+      document.getElementById('main-tab').innerHTML =
+        '<i class="codicon ' + icon + '" style="font-size:14px;"></i><span>' + title + '</span>';
+      document.title = title + ' — Engineering Workspace';
+    }
+
+    // Navigation click handlers
+    document.querySelectorAll('[data-screen]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadScreen(el.dataset.screen);
+      });
+    });
+
+    // Load initial screen
+    loadScreen(location.hash.slice(1) || 'home');
+    window.addEventListener('hashchange', () => loadScreen(location.hash.slice(1) || 'home'));
+  </script>
+</body>
+</html>

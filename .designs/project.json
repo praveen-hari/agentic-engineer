@@ -1,0 +1,45 @@
+{
+  "name": "Engineering Workspace",
+  "description": "Visual SDLC workspace for Code Studio — guides developers through structured engineering workflows with AI agents",
+  "version": "0.1.0",
+  "createdAt": "2026-07-10T10:00:00Z",
+  "updatedAt": "2026-07-10T10:00:00Z",
+
+  "platform": {
+    "type": "web",
+    "responsive": true,
+    "darkMode": true
+  },
+
+  "iconLibrary": "codicon",
+
+  "navigation": {
+    "pattern": "sidebar",
+    "items": [
+      { "label": "Home", "icon": "codicon-home", "screen": "home" },
+      { "label": "Workflow", "icon": "codicon-type-hierarchy-sub", "screen": "workflow" },
+      { "label": "Tasks", "icon": "codicon-tasklist", "screen": "task-board" },
+      { "label": "Artifacts", "icon": "codicon-file-code", "screen": "artifacts" },
+      { "label": "Activity", "icon": "codicon-pulse", "screen": "agent-activity" },
+      { "label": "Approvals", "icon": "codicon-shield", "screen": "approvals" },
+      { "label": "Context", "icon": "codicon-symbol-structure", "screen": "project-context" }
+    ]
+  },
+
+  "screens": {
+    "home": { "title": "Home", "type": "dashboard", "priority": "P0" },
+    "workflow": { "title": "Workflow", "type": "detail", "priority": "P0" },
+    "task-board": { "title": "Tasks", "type": "list", "priority": "P0" },
+    "task-detail": { "title": "Task Detail", "type": "detail", "priority": "P0" },
+    "artifact-review": { "title": "Artifact Review", "type": "detail", "priority": "P0" },
+    "agent-activity": { "title": "Agent Activity", "type": "detail", "priority": "P0" },
+    "approvals": { "title": "Approvals", "type": "list", "priority": "P1" },
+    "artifacts": { "title": "Artifacts", "type": "list", "priority": "P1" },
+    "project-context": { "title": "Project Context", "type": "detail", "priority": "P1" },
+    "workflow-setup": { "title": "New Work Request", "type": "form", "priority": "P1" },
+    "review-report": { "title": "Review Report", "type": "detail", "priority": "P1" },
+    "settings": { "title": "Settings", "type": "settings", "priority": "P2" }
+  },
+
+  "standalone": []
+}
