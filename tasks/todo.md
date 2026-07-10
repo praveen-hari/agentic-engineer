@@ -187,25 +187,87 @@
 
 ## Slice C: Intelligence
 
-### Task 7: Workflow Generator
+### Task 7a: Skill Registry
 
-**Description:** Implement dynamic workflow builder (DD-014 step 2). Given a `RiskAssessment`, generates a `WorkflowDefinition` with appropriate stages, quality gates, and approval requirements based on process level.
+**Description:** Define the catalog of all 24 engineering skills from the `addyosmani/agent-skills` repository. Each skill has metadata: ID, human-readable name, user-facing label (DD-007: skills are invisible), category, lifecycle stages, activation mode, applicable work types, context signals, minimum process level, and gate configuration. Pure TypeScript, no VS Code deps.
 
 **Acceptance criteria:**
-- [ ] `WorkflowGenerator` class with `generate(assessment)` method
+- [ ] `SkillRegistry` class with `getAll()`, `getById(id)`, `getByCategory(cat)`, `getByStage(stage)`, `getByTaskType(type)` methods
+- [ ] All 24 skills registered with complete `SkillDefinition` metadata
+- [ ] 3 "always active" skills: `context-engineering`, `git-workflow-and-versioning`, `incremental-implementation`
+- [ ] 7 "by-task-type" skills mapped to correct work types (feature, bugfix, refactor, etc.)
+- [ ] 7 "by-context" skills mapped to correct context signals (touches_ui, touches_api, etc.)
+- [ ] 4 "interactive" skills: `interview-me`, `idea-refine`, `spec-driven-development`, `planning-and-task-breakdown`
+- [ ] 5 "quality-gate" skills with correct gate types (hard vs conditional)
+- [ ] 4 "specialist" agents: `code-reviewer`, `security-auditor`, `test-engineer`, `web-performance-auditor`
+- [ ] User-facing labels are human-readable (e.g., "Code Review" not "code-review-and-quality")
+- [ ] Each skill has valid `lifecycleStages` matching the stage-to-skill mapping from analysis
+- [ ] 10+ unit tests: all skills present, metadata valid, lookup methods correct
+
+**Verification:**
+- [ ] `npm test -- --grep "SkillRegistry"` — all pass
+- [ ] Coverage ≥ 90% on skill-registry.ts
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/core/skill-registry.ts`
+- `src/test/core/skill-registry.test.ts`
+
+---
+
+### Task 7b: Skill Engine
+
+**Description:** Implement the skill activation rule engine (DD-007). Given a `RiskAssessment` (with work type, process level, and context signals), computes the set of active skills. This is the core intelligence that determines what engineering practices apply to a given task. Pure TypeScript, no VS Code deps.
+
+**Acceptance criteria:**
+- [ ] `SkillEngine` class with `computeActiveSkills(assessment)` method
+- [ ] Returns `{ activeSkills: SkillId[], activationReasons: Record<SkillId, string> }`
+- [ ] Always includes the 3 "always active" skills
+- [ ] Adds task-type skills based on `assessment.workType`
+- [ ] Adds context skills based on `assessment.contextSignals`
+- [ ] Adds process-level skills (additive — thorough includes standard's skills)
+- [ ] Deduplicates skills (a skill activated by multiple rules appears once)
+- [ ] Each activated skill has a human-readable reason (e.g., "Activated because task type is 'feature'")
+- [ ] Feature task → activates spec-driven-dev, planning, TDD, code-review (+ always)
+- [ ] Bugfix task → activates debugging, TDD, code-review (+ always)
+- [ ] Feature + touches_auth → adds security-and-hardening
+- [ ] Guarded process level → adds shipping-and-launch, security, performance, documentation
+- [ ] 15+ unit tests covering all work types, context signals, process levels, combinations
+
+**Verification:**
+- [ ] `npm test -- --grep "SkillEngine"` — all pass
+- [ ] Coverage ≥ 90% on skill-engine.ts
+
+**Dependencies:** Tasks 2, 7a
+
+**Files created:**
+- `src/core/skill-engine.ts`
+- `src/test/core/skill-engine.test.ts`
+
+---
+
+### Task 7c: Workflow Generator (Skill-Aware)
+
+**Description:** Implement dynamic workflow builder (DD-014 step 2). Given a `RiskAssessment` and the computed `activeSkills`, generates a `WorkflowDefinition` with appropriate stages, quality gates, and approval requirements. The active skills determine which stages are included and which gates are inserted.
+
+**Acceptance criteria:**
+- [ ] `WorkflowGenerator` class with `generate(assessment, activeSkills)` method
 - [ ] Light process: 3 stages (Define → Implement → Verify)
 - [ ] Standard process: 5 stages (Define → Plan → Implement → Review → Verify)
 - [ ] Thorough process: 7 stages (Define → Plan → Implement → Test → Review → Approve → Deploy)
 - [ ] Guarded process: 7 stages + extra quality gates + mandatory approvals
-- [ ] Quality gates are inserted between appropriate stages
+- [ ] Quality gates are inserted based on active gate skills (e.g., security gate only if `security-and-hardening` is active)
+- [ ] Each stage records which skills are active during it (from the stage-to-skill mapping)
 - [ ] Approval requirements scale with process level
-- [ ] 10+ unit tests covering all 4 process levels + edge cases
+- [ ] `WorkflowDefinition.activeSkills` and `skillActivationReason` are populated
+- [ ] 12+ unit tests covering all 4 process levels, skill-driven gate insertion, edge cases
 
 **Verification:**
 - [ ] `npm test -- --grep "WorkflowGenerator"` — all pass
 - [ ] Coverage ≥ 85% on workflow-generator.ts
 
-**Dependencies:** Task 2
+**Dependencies:** Tasks 2, 7a, 7b
 
 **Files created:**
 - `src/core/workflow-generator.ts`
@@ -241,7 +303,35 @@
 
 ---
 
-### Task 9: AI Layer (Language Model API + Tools)
+### Task 9: Context Signal Detector
+
+**Description:** Implement detection of workspace context signals that drive skill activation. Analyzes file patterns, package.json dependencies, and directory structure to detect signals like `touches_ui`, `touches_api`, `touches_auth_or_input`, etc. These signals feed into the Skill Engine (Task 7b) and Risk Engine (Task 5). Pure TypeScript, no VS Code deps.
+
+**Acceptance criteria:**
+- [ ] `ContextSignalDetector` class with `detect(projectContext)` method
+- [ ] Returns `ContextSignal[]` — the set of detected signals
+- [ ] `touches_ui`: detected when project has React/Vue/Angular/Svelte components, CSS files, or UI test files
+- [ ] `touches_api`: detected when project has route files, API handlers, OpenAPI specs, or GraphQL schemas
+- [ ] `touches_auth_or_input`: detected when project has auth middleware, login/signup routes, form validation, or user input handling
+- [ ] `touches_external_services`: detected when project has HTTP clients, SDK imports, webhook handlers, or queue consumers
+- [ ] `performance_sensitive`: detected when project has performance budgets, lighthouse config, or is a public-facing web app
+- [ ] `high_risk_decision`: detected when objective mentions architecture, migration, breaking changes, or data model changes
+- [ ] Signals are additive — a project can have multiple signals
+- [ ] 10+ unit tests with fixture project contexts covering all signal types
+
+**Verification:**
+- [ ] `npm test -- --grep "ContextSignalDetector"` — all pass
+- [ ] Coverage ≥ 90% on context-signal-detector.ts
+
+**Dependencies:** Tasks 2, 8
+
+**Files created:**
+- `src/core/context-signal-detector.ts`
+- `src/test/core/context-signal-detector.test.ts`
+
+---
+
+### Task 10: AI Layer (Language Model API + Tools)
 
 **Description:** Implement the AI integration layer: model access with fallback, LLM-powered risk analyzer, and three Language Model Tools for agent mode. All AI features gracefully degrade when no LLM is available.
 
@@ -259,7 +349,7 @@
 - [ ] `npm test -- --grep "ModelAccess|AiRiskAnalyzer|Tool"` — all pass
 - [ ] Manual: tools appear in agent mode tool list after extension activation
 
-**Dependencies:** Tasks 2, 5, 6, 8
+**Dependencies:** Tasks 2, 5, 6, 8, 9
 
 **Files created:**
 - `src/ai/model-access.ts`
@@ -277,7 +367,7 @@
 
 ## Slice D: Integration
 
-### Task 10: Services (VS Code API Integration)
+### Task 11: Services (VS Code API Integration)
 
 **Description:** Implement the service layer that bridges core logic with VS Code APIs. File system service manages `.codestudio/` directory. Git service detects branch. Workspace service provides configuration. Notification service manages status bar and messages.
 
@@ -304,7 +394,7 @@
 
 ---
 
-### Task 11: Preact Webview Shell
+### Task 12: Preact Webview Shell
 
 **Description:** Build the Preact-based webview with sidebar navigation, 7 view components, signal-based state management, and postMessage bridge to extension host. This is the visual interface matching the `.designs/` prototype.
 
@@ -329,7 +419,7 @@
 - [ ] Manual: navigation between views works
 - [ ] Manual: theme matches VS Code dark theme
 
-**Dependencies:** Tasks 2, 10
+**Dependencies:** Tasks 2, 11
 
 **Files created:**
 - `src/views/sidebar-provider.ts`
@@ -362,7 +452,7 @@
 
 ---
 
-### Task 12: Chat Participant
+### Task 13: Chat Participant
 
 **Description:** Register `@engineering` chat participant with `/status`, `/analyze`, and `/history` slash commands. Handles natural language queries about workflow state, delegates to core engines for analysis.
 
@@ -381,7 +471,7 @@
 - [ ] Manual: `@engineering /status` returns response in chat
 - [ ] Manual: `@engineering analyze adding user authentication` returns risk analysis
 
-**Dependencies:** Tasks 2, 5, 6, 9
+**Dependencies:** Tasks 2, 5, 6, 7b, 10
 
 **Files created:**
 - `src/chat/participant.ts`
@@ -393,7 +483,7 @@
 
 ---
 
-### Task 13: Extension Entry Point
+### Task 14: Extension Entry Point
 
 **Description:** Wire everything together in `extension.ts`. Register all services, create core engine instances, register webview provider, register chat participant, register language model tools, set up activation events, and handle deactivation cleanup.
 
@@ -415,7 +505,7 @@
 - [ ] Manual: `.codestudio/` directory created
 - [ ] Manual: `context.md` generated
 
-**Dependencies:** Tasks 9, 10, 11, 12
+**Dependencies:** Tasks 7a, 7b, 10, 11, 12, 13
 
 **Files modified:**
 - `src/extension.ts` (expand from stub)
@@ -424,7 +514,7 @@
 
 ## Slice E: Polish
 
-### Task 14: Status Bar + Bundle Optimization + Integration Test
+### Task 15: Status Bar + Bundle Optimization + Integration Test
 
 **Description:** Add status bar item showing current workflow state, optimize bundle sizes, verify all M1 success criteria, and write a manual integration test checklist.
 
@@ -456,9 +546,11 @@
 
 | Metric | Target |
 |--------|--------|
-| Total tasks | 14 |
-| Total estimated hours | ~32h |
-| Unit tests expected | 80+ |
+| Total tasks | 16 (1, 2, 3, 4, 5, 6, 7a, 7b, 7c, 8, 9, 10, 11, 12, 13, 14, 15) |
+| Total estimated hours | ~38h |
+| Unit tests expected | 100+ |
 | Core coverage target | ≥ 80% |
-| Files to create | ~60 |
+| Files to create | ~65 |
 | Bundles | 2 (extension.js + webview.js) |
+| Skills cataloged | 24 (from addyosmani/agent-skills) |
+| Context signals detected | 6 types |

@@ -163,11 +163,14 @@ codestudio-engineering-workspace/
 │   │   ├── workflow-engine.ts       # State machine for workflow transitions
 │   │   ├── risk-engine.ts           # Deterministic risk assessment (fallback)
 │   │   ├── workflow-generator.ts    # Dynamic workflow builder (DD-014 step 2)
+│   │   ├── skill-engine.ts          # Skill activation rules + stage-to-skill mapping (DD-007)
+│   │   ├── skill-registry.ts        # Skill catalog: 24 skills with metadata + activation config
 │   │   ├── event-stream.ts          # Append-only JSONL logger (DD-008)
 │   │   ├── state-manager.ts         # Read/write workflow.json
 │   │   ├── history-manager.ts       # Archive, compact, index (DD-004, DD-005)
 │   │   ├── context-analyzer.ts      # Workspace analysis engine
-│   │   └── project-detector.ts      # Detect stack, conventions, structure
+│   │   ├── project-detector.ts      # Detect stack, conventions, structure
+│   │   └── context-signal-detector.ts # Detect context signals (UI, API, auth, etc.)
 │   │
 │   ├── ai/                          # AI integration layer (uses vscode.lm)
 │   │   ├── model-access.ts          # Language Model selection + fallback
@@ -241,6 +244,9 @@ codestudio-engineering-workspace/
 │       │   ├── workflow-engine.test.ts
 │       │   ├── risk-engine.test.ts
 │       │   ├── workflow-generator.test.ts
+│       │   ├── skill-engine.test.ts
+│       │   ├── skill-registry.test.ts
+│       │   ├── context-signal-detector.test.ts
 │       │   ├── event-stream.test.ts
 │       │   ├── state-manager.test.ts
 │       │   ├── history-manager.test.ts
@@ -582,6 +588,111 @@ Every AI-powered feature has a deterministic fallback:
 
 **The extension MUST be fully functional without any LLM.** AI enriches; it never gates.
 
+### 5.5 Skill Engine Architecture (DD-007)
+
+The extension is powered by **24 engineering skills** from the `addyosmani/agent-skills` repository. Skills are **invisible plumbing** — users never see skill names, files, or configuration. They see workflow stages, quality gates, and agent actions.
+
+#### Skill Classification
+
+| Category | Skills | Extension Behavior |
+|----------|--------|-------------------|
+| **Always Active** (background policies) | `context-engineering`, `git-workflow-and-versioning`, `incremental-implementation` | Run silently — manage context, enforce commit discipline, constrain to thin slices |
+| **Automatic by Task Type** | `spec-driven-development`, `planning-and-task-breakdown`, `test-driven-development`, `debugging-and-error-recovery`, `code-simplification`, `deprecation-and-migration`, `documentation-and-adrs` | Activated by workflow engine based on detected work type |
+| **Automatic by Context** | `frontend-ui-engineering`, `browser-testing-with-devtools`, `api-and-interface-design`, `security-and-hardening`, `performance-optimization`, `observability-and-instrumentation`, `doubt-driven-development` | Activated when workspace analysis detects relevant patterns (UI files, API routes, auth code, etc.) |
+| **Interactive** | `interview-me`, `idea-refine`, `spec-driven-development` (review), `planning-and-task-breakdown` (approval) | Require user interaction — power the objective capture, spec review, and plan approval flows |
+| **Quality Gates** | `test-driven-development`, `code-review-and-quality`, `security-and-hardening`, `performance-optimization`, `shipping-and-launch` | Block stage progression until gate criteria are met |
+| **Specialist Agents** | `code-reviewer`, `security-auditor`, `test-engineer`, `web-performance-auditor` | Power review panels with specialist perspectives |
+
+#### Skill Activation Rules
+
+```typescript
+// src/core/skill-engine.ts — Activation rule engine
+export interface SkillActivationRules {
+  // Always active (background policies)
+  readonly always: readonly SkillId[];
+
+  // Activated by work type
+  readonly byTaskType: Readonly<Record<WorkType, readonly SkillId[]>>;
+
+  // Activated by detected workspace context
+  readonly byContext: Readonly<Record<ContextSignal, readonly SkillId[]>>;
+
+  // Activated by process level (additive — higher levels include lower)
+  readonly byProcessLevel: Readonly<Record<ProcessLevel, readonly SkillId[]>>;
+}
+
+export type ContextSignal =
+  | 'touches_ui'
+  | 'touches_api'
+  | 'touches_auth_or_input'
+  | 'touches_external_services'
+  | 'performance_sensitive'
+  | 'high_risk_decision';
+```
+
+#### Skill-to-Stage Mapping
+
+```
+ONBOARD          DEFINE           PLAN             BUILD
+─────────        ─────────        ─────────        ─────────
+context-eng.     interview-me     planning-and-    incremental-impl.
+                 idea-refine      task-breakdown   test-driven-dev.
+                 spec-driven-dev                   context-eng.
+                 api-and-iface                     source-driven-dev.
+                 documentation                     doubt-driven-dev.
+                                                   frontend-ui-eng.
+                                                   api-and-iface
+                                                   observability
+
+VERIFY           REVIEW           SHIP
+─────────        ─────────        ─────────
+test-driven-dev  code-review      shipping-launch
+browser-testing  code-simplify    ci-cd-auto
+security-hard.   security-hard.   git-workflow
+performance-opt  performance-opt  documentation
+                 documentation    observability
+                 git-workflow
+```
+
+#### Skill Registry
+
+```typescript
+// src/core/skill-registry.ts — Catalog of all 24 skills
+export interface SkillDefinition {
+  readonly id: SkillId;
+  readonly name: string;                    // Human-readable (shown in advanced mode only)
+  readonly userFacingLabel: string;          // What users see: "Code Review", not "code-review-and-quality"
+  readonly category: SkillCategory;
+  readonly lifecycleStages: readonly LifecycleStage[];
+  readonly activationMode: 'always' | 'by-task-type' | 'by-context' | 'interactive' | 'quality-gate';
+  readonly taskTypes: readonly WorkType[];   // Which work types trigger this skill
+  readonly contextSignals: readonly ContextSignal[]; // Which context signals trigger this skill
+  readonly minProcessLevel: ProcessLevel;    // Minimum process level to activate
+  readonly isGate: boolean;                  // Does this skill block stage progression?
+  readonly gateType: 'hard' | 'conditional' | 'none';
+}
+```
+
+#### How the Workflow Engine Uses Skills
+
+1. **Risk assessment** determines `WorkType`, `Complexity`, `RiskLevel` → `ProcessLevel`
+2. **Skill engine** computes `activeSkills` = `always` ∪ `byTaskType[workType]` ∪ `byContext[signals]` ∪ `byProcessLevel[level]`
+3. **Workflow generator** uses `activeSkills` to determine which stages to include, which quality gates to insert, and which approval levels to require
+4. **Stage executor** (M2+) activates the relevant skills when entering each stage
+5. **Quality gates** check skill-specific criteria before allowing stage progression
+
+#### What Users See (DD-007: Skills Are Invisible)
+
+| Internal Skill | User Sees |
+|---------------|-----------|
+| `spec-driven-development` | "Define" stage with spec artifact |
+| `planning-and-task-breakdown` | "Plan" stage with task board |
+| `test-driven-development` | "Testing" quality gate with pass/fail |
+| `code-review-and-quality` | "Code Review" gate with 5-axis report |
+| `security-and-hardening` | "Security Check" gate with findings |
+| `performance-optimization` | "Performance Check" gate with metrics |
+| `shipping-and-launch` | "Pre-Launch Checklist" in Ship stage |
+
 ---
 
 ## 6. Code Style
@@ -594,6 +705,26 @@ export type ProcessLevel = 'light' | 'standard' | 'thorough' | 'guarded';
 export type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
 export type WorkType = 'feature' | 'bugfix' | 'refactor' | 'infrastructure' | 'documentation' | 'security';
 export type Complexity = 'trivial' | 'simple' | 'moderate' | 'complex' | 'critical';
+export type LifecycleStage = 'onboard' | 'define' | 'plan' | 'build' | 'verify' | 'review' | 'ship';
+export type SkillCategory = 'always' | 'by-task-type' | 'by-context' | 'interactive' | 'quality-gate' | 'specialist';
+
+// All 24 skill IDs as a union type
+export type SkillId =
+  | 'context-engineering' | 'git-workflow-and-versioning' | 'incremental-implementation'
+  | 'interview-me' | 'idea-refine' | 'spec-driven-development'
+  | 'planning-and-task-breakdown' | 'test-driven-development'
+  | 'source-driven-development' | 'doubt-driven-development'
+  | 'frontend-ui-engineering' | 'api-and-interface-design'
+  | 'browser-testing-with-devtools' | 'debugging-and-error-recovery'
+  | 'code-review-and-quality' | 'code-simplification'
+  | 'security-and-hardening' | 'performance-optimization'
+  | 'observability-and-instrumentation' | 'documentation-and-adrs'
+  | 'deprecation-and-migration' | 'ci-cd-and-automation'
+  | 'shipping-and-launch' | 'using-agent-skills';
+
+export type ContextSignal =
+  | 'touches_ui' | 'touches_api' | 'touches_auth_or_input'
+  | 'touches_external_services' | 'performance_sensitive' | 'high_risk_decision';
 
 export interface RiskAssessment {
   readonly workType: WorkType;
@@ -601,6 +732,7 @@ export interface RiskAssessment {
   readonly riskLevel: 'low' | 'medium' | 'high';
   readonly processLevel: ProcessLevel;
   readonly signals: readonly RiskSignal[];
+  readonly contextSignals: readonly ContextSignal[];
   readonly source: 'deterministic' | 'llm';
 }
 
@@ -613,7 +745,8 @@ export interface WorkflowDefinition {
   readonly stages: readonly Stage[];
   readonly qualityGates: readonly QualityGate[];
   readonly approvals: readonly Approval[];
-  readonly activeSkills: readonly string[];
+  readonly activeSkills: readonly SkillId[];
+  readonly skillActivationReason: Readonly<Record<SkillId, string>>; // Why each skill was activated
   readonly state: WorkflowState;
 }
 
@@ -724,7 +857,7 @@ export const progress = computed(() => {
 
 | Level | What | Where | When |
 |-------|------|-------|------|
-| **Unit** | Core logic (workflow engine, risk engine, state manager, event stream) | `src/test/core/` | Every commit |
+| **Unit** | Core logic (workflow engine, risk engine, skill engine, state manager, event stream) | `src/test/core/` | Every commit |
 | **Unit** | AI layer (with LM API mocked) | `src/test/ai/` | Every commit |
 | **Unit** | Chat participant (with chat API mocked) | `src/test/chat/` | Every commit |
 | **Unit** | Service layer (with VS Code API mocked) | `src/test/services/` | Every commit |
@@ -738,6 +871,8 @@ export const progress = computed(() => {
 | `workflow-engine` | State transitions, invalid transitions rejected | "Standard workflow has 7 stages in correct order" |
 | `risk-engine` | Risk signal detection, process level mapping | "Objective mentioning 'auth' returns high risk" |
 | `workflow-generator` | Correct stages/gates/approvals per process level | "Standard + payment context adds security gate" |
+| `skill-engine` | Skill activation by task type, context, process level | "Feature task activates spec-driven-development" |
+| `skill-registry` | All 24 skills registered, metadata correct | "Registry contains 24 skills", "Each skill has valid lifecycle stages" |
 | `event-stream` | Append, read, replay, file format | "Events are valid JSONL" |
 | `state-manager` | Read/write/update workflow.json | "State survives write-read cycle" |
 | `ai/risk-analyzer` | LLM path + fallback path | "Returns deterministic result when model unavailable" |
@@ -809,33 +944,37 @@ export const progress = computed(() => {
 | 11 | `@engineering` chat participant responds to `/status` and `/analyze` | Chat interaction test |
 | 12 | `analyze_work_request` tool appears in agent mode tool list | Agent mode check |
 | 13 | `get_workflow_status` tool returns current state | Agent mode check |
-| 14 | Status bar shows current workflow state | Visual check |
-| 15 | All unit tests pass with ≥ 80% coverage on `core/` | `npm run test:coverage` |
-| 16 | Webview bundle < 100KB (Preact + all components) | `ls -la out/` |
-| 17 | Extension host bundle < 400KB | `ls -la out/` |
-| 18 | Activation time < 500ms | Console timing in extension.ts |
+| 14 | Skill engine activates correct skills for each work type + context | `npm test` — skill-engine.test.ts |
+| 15 | Skill registry contains all 24 skills with correct metadata | `npm test` — skill-registry.test.ts |
+| 16 | Workflow generator uses active skills to determine stages/gates | `npm test` — workflow-generator.test.ts |
+| 17 | Status bar shows current workflow state | Visual check |
+| 18 | All unit tests pass with ≥ 80% coverage on `core/` | `npm run test:coverage` |
+| 19 | Webview bundle < 100KB (Preact + all components) | `ls -la out/` |
+| 20 | Extension host bundle < 400KB | `ls -la out/` |
+| 21 | Activation time < 500ms | Console timing in extension.ts |
 
 ### Milestone 2: Interactive Views + Full Chat (Target: 2 weeks after M1)
 
 | # | Criterion | Verification |
 |---|-----------|-------------|
-| 19 | Tasks view shows generated tasks with inline expansion | Visual check |
-| 20 | Artifacts view shows generated specs/plans | Visual check |
-| 21 | Approvals view shows pending items with approve/reject | Visual check |
-| 22 | Activity view shows real-time event feed | Visual check |
-| 23 | History view shows archived workflows with inline expansion | Visual check |
-| 24 | Settings view allows configuration changes | Visual check |
-| 25 | Chat participant handles natural language queries beyond slash commands | Chat test |
-| 26 | `get_project_context` tool returns enriched context | Agent mode check |
+| 22 | Tasks view shows generated tasks with inline expansion | Visual check |
+| 23 | Artifacts view shows generated specs/plans | Visual check |
+| 24 | Approvals view shows pending items with approve/reject | Visual check |
+| 25 | Activity view shows real-time event feed | Visual check |
+| 26 | History view shows archived workflows with inline expansion | Visual check |
+| 27 | Settings view allows configuration changes (incl. skill visibility in advanced mode) | Visual check |
+| 28 | Chat participant handles natural language queries beyond slash commands | Chat test |
+| 29 | `get_project_context` tool returns enriched context | Agent mode check |
 
 ### Milestone 3: Agent Integration + Polish (Target: 1 week after M2)
 
 | # | Criterion | Verification |
 |---|-----------|-------------|
-| 27 | History tiering (hot/warm/cold) works correctly | Unit tests |
-| 28 | Workflow complete state shows summary + archive button | Visual check |
-| 29 | All 7 views are fully functional and match prototype | Full walkthrough |
-| 30 | Chat participant provides contextual follow-up suggestions | Chat test |
+| 30 | History tiering (hot/warm/cold) works correctly | Unit tests |
+| 31 | Workflow complete state shows summary + archive button | Visual check |
+| 32 | All 7 views are fully functional and match prototype | Full walkthrough |
+| 33 | Chat participant provides contextual follow-up suggestions | Chat test |
+| 34 | Advanced mode shows active skills per stage (V2 prep) | Visual check |
 
 ---
 
@@ -856,13 +995,15 @@ export const progress = computed(() => {
 
 ### M1: Foundation & Shell (This Spec)
 - Extension scaffold + build pipeline (esbuild dual-bundle: extension + Preact webview)
-- Core types (DD-015 schema)
+- Core types (DD-015 schema + skill types)
 - State persistence (`.codestudio/` read/write)
 - Event sourcing (JSONL append/read)
+- **Skill registry** (24 skills with metadata, lifecycle stages, activation config)
+- **Skill engine** (activation rules by task type, context signals, process level)
 - Workflow engine (state machine)
-- Risk assessment engine (deterministic rules)
+- Risk assessment engine (deterministic rules + context signal detection)
 - AI risk analyzer (LLM-powered with fallback)
-- Workflow generator (dynamic workflow creation)
+- Workflow generator (uses active skills to determine stages/gates/approvals)
 - Sidebar webview with Preact (7-view navigation)
 - Workflow view (all 3 states: empty/active/complete)
 - Project context analyzer

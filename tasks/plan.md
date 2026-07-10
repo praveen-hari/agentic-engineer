@@ -36,9 +36,10 @@
               ┌──────────────┼──────────────┐
               │              │              │
      ┌────────▼───────┐ ┌───▼──────────┐ ┌▼──────────────┐
-     │7. Workflow Gen. │ │8. Context    │ │9. AI Layer    │
-     │(dynamic builder)│ │  Analyzer    │ │(LM API + tools)│
-     └────────┬───────┘ └───┬──────────┘ └┬──────────────┘
+     │7a. Skill Reg.  │ │8. Context    │ │10. AI Layer   │
+     │7b. Skill Eng.  │ │  Analyzer    │ │(LM API + tools)│
+     │7c. Workflow Gen.│ │              │ │               │
+     └────────┬───────┘ └───┬──────────┘ └┬───────────────┘
               │              │              │
               └──────────────┼──────────────┘
                              │
@@ -104,9 +105,9 @@ Status bar, activation timing, bundle optimization, final integration testing.
 |-------------|-----------|---------|
 | A (Foundation) | Project compiles, tests run (0 tests), lint passes | `npm run typecheck && npm test && npm run lint` |
 | B (Core Engine) | 30+ unit tests pass, ≥ 80% coverage on core/ | `npm run test:coverage` |
-| C (Intelligence) | AI fallback tests pass, workflow generation correct | `npm test` |
-| D (Integration) | Extension activates, sidebar renders, chat responds | Manual: F5 → Extension Development Host |
-| E (Polish) | All M1 success criteria met (18 items from spec) | Full checklist walkthrough |
+| C (Intelligence) | Skill engine activates correct skills per scenario, AI fallback works, workflow generation uses skills | `npm test` |
+| D (Integration) | Extension activates, sidebar renders, chat responds, tools registered | Manual: F5 → Extension Development Host |
+| E (Polish) | All M1 success criteria met (21 items from spec) | Full checklist walkthrough |
 
 ---
 
@@ -117,17 +118,20 @@ Tasks are numbered 1–14. Each task has acceptance criteria and verification st
 | Task | Slice | Description | Est. |
 |------|-------|-------------|------|
 | 1 | A | Project scaffold (package.json, tsconfig, esbuild, vitest) | 2h |
-| 2 | A | Core types (types.ts — all interfaces from DD-015) | 1h |
+| 2 | A | Core types (types.ts — all interfaces + skill types) | 1.5h |
 | 3 | B | Event stream (JSONL append/read/replay) | 2h |
 | 4 | B | State manager (workflow.json read/write) | 2h |
-| 5 | B | Risk engine (deterministic keyword + pattern matching) | 3h |
+| 5 | B | Risk engine (deterministic keyword + pattern + context signals) | 3h |
 | 6 | B | Workflow engine (state machine + transitions) | 3h |
-| 7 | C | Workflow generator (dynamic workflow builder) | 2h |
+| 7a | C | Skill registry (24 skills catalog with metadata) | 2h |
+| 7b | C | Skill engine (activation rules by type/context/level) | 3h |
+| 7c | C | Workflow generator (uses active skills → stages/gates) | 2h |
 | 8 | C | Context analyzer + project detector | 2h |
-| 9 | C | AI layer (model access, risk analyzer, LM tools) | 3h |
-| 10 | D | Services (file system, git, workspace, notification) | 2h |
-| 11 | D | Preact webview shell (sidebar, nav, 7 views, bridge) | 4h |
-| 12 | D | Chat participant (@engineering + slash commands) | 2h |
-| 13 | D | Extension entry point (activate, register all) | 2h |
-| 14 | E | Status bar, bundle optimization, integration test | 2h |
-| | | **Total estimated** | **~32h** |
+| 9 | C | Context signal detector (UI/API/auth/perf pattern detection) | 1.5h |
+| 10 | C | AI layer (model access, risk analyzer, LM tools) | 3h |
+| 11 | D | Services (file system, git, workspace, notification) | 2h |
+| 12 | D | Preact webview shell (sidebar, nav, 7 views, bridge) | 4h |
+| 13 | D | Chat participant (@engineering + slash commands) | 2h |
+| 14 | D | Extension entry point (activate, register all) | 2h |
+| 15 | E | Status bar, bundle optimization, integration test | 2h |
+| | | **Total estimated** | **~38h** |
