@@ -40,6 +40,7 @@
       <div class="sidebar-header">
         Engineering Workspace
         <div class="sidebar-header-actions">
+          <button class="btn-icon" title="New Work Request" onclick="loadScreen('workflow-empty')"><i class="codicon codicon-add"></i></button>
           <button class="btn-icon" title="Refresh"><i class="codicon codicon-refresh"></i></button>
         </div>
       </div>
@@ -122,12 +123,20 @@
   <script>
     const tabIcons = {
       'workflow': 'codicon-type-hierarchy-sub',
+      'workflow-empty': 'codicon-type-hierarchy-sub',
+      'workflow-complete': 'codicon-type-hierarchy-sub',
       'tasks': 'codicon-tasklist',
       'activity': 'codicon-pulse',
       'artifacts': 'codicon-file-code',
       'approvals': 'codicon-shield',
       'history': 'codicon-history',
       'settings': 'codicon-settings-gear'
+    };
+
+    // Map sub-screens to their parent nav item for sidebar highlighting
+    const navParent = {
+      'workflow-empty': 'workflow',
+      'workflow-complete': 'workflow'
     };
 
     async function loadScreen(name) {
@@ -141,9 +150,10 @@
           '<h2 class="mt-md">' + name + '</h2><p>Screen not generated yet.</p></div>';
       }
 
-      // Update sidebar active state
+      // Update sidebar active state (sub-screens highlight their parent)
+      const navTarget = navParent[name] || name;
       document.querySelectorAll('.nav-item').forEach(el => {
-        el.classList.toggle('is-active', el.dataset.screen === name);
+        el.classList.toggle('is-active', el.dataset.screen === navTarget);
       });
 
       // Update tab

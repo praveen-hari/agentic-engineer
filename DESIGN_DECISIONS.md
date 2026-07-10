@@ -678,6 +678,41 @@ type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
 
 ---
 
+## DD-017: Work Request Lifecycle — Three Workflow States
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** After consolidating to 7 views (DD-016), the Workflow view absorbed the old `home` and `workflow-setup` screens. But the prototype only showed the "active" state — there was no way for a user to create a new work request or see what happens when work completes. The extension had no entry point.
+
+**Decision:** The Workflow view has three distinct states:
+
+| State | Trigger | Content |
+|-------|---------|--------|
+| **Empty** | No active work request, or user clicks "+" | New work request form: objective input, AI analysis panel (type, complexity, risk, estimated tasks, detected risk signals), process level selector (Light/Standard/Thorough/Guarded), workflow preview, "Start Workflow" button, quick-start examples |
+| **Active** | Work request in progress | Current objective banner, progress bar, stats grid, lifecycle stages with status, quality gates checklist, recommended next action |
+| **Complete** | All stages done | Success banner, completion stats (tasks, tests, coverage, files, lines), completed pipeline, quality gates (all passed), artifacts summary, commit list, "Archive & Start New" button |
+
+**Entry points for creating a new work request:**
+1. **Workflow view empty state** — shown automatically when no work is active
+2. **"+" button in sidebar header** — always visible, navigates to empty state
+3. **"Archive & Start New" button** — on the complete state, archives current work and shows empty state
+
+**State transitions:**
+```
+Empty → (user clicks "Start Workflow") → Active
+Active → (all stages complete) → Complete
+Complete → (user clicks "Archive & Start New") → Empty
+```
+
+**Rationale:** The Workflow view is the home screen (DD-016). It must handle all three lifecycle phases without requiring separate screens. The empty state doubles as the onboarding experience — new users see a clear CTA ("What do you want to build?") with examples. The complete state provides closure and a natural transition to the next work request.
+
+**Alternatives Considered:**
+- *Modal dialog for new work request* — Rejected: modals feel disruptive in VS Code; the empty state is more natural
+- *Separate "New" screen in navigation* — Rejected: adds an 8th view; the empty state of Workflow is the right place
+- *Auto-archive on completion* — Rejected: user should see the summary and consciously decide to move on
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -698,3 +733,4 @@ type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
 | DD-014 | Dynamic Workflow Generation (risk engine + conditional gates + mid-workflow promotion) | Accepted |
 | DD-015 | Workflow Definition Schema (typed JSON with flat arrays, risk signals, reasons) | Accepted |
 | DD-016 | Screen Consolidation: 14 → 7 Views | Accepted |
+| DD-017 | Work Request Lifecycle: Three Workflow States (Empty/Active/Complete) | Accepted |

@@ -190,66 +190,14 @@
 
 </div>
 
-<!-- ===== EMPTY STATE (shown when no active work request) ===== -->
-<!--
-<div class="view-workflow-empty" style="max-width: 560px; margin: 0 auto; padding: var(--space-xxl) 0;">
-  <div style="text-align: center; margin-bottom: var(--space-xxl);">
-    <i class="codicon codicon-tools" style="font-size: 48px; color: var(--color-secondary); opacity: 0.5;"></i>
-    <h2 style="margin-top: var(--space-lg);">Start a New Work Request</h2>
-    <p style="color: var(--color-secondary); margin-top: var(--space-sm);">Describe what you want to build. The system will analyze complexity, detect risks, and generate an engineering workflow.</p>
+<!-- Prototype navigation: switch between workflow states -->
+<div style="margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px dashed var(--color-border);">
+  <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-sm);">
+    <i class="codicon codicon-beaker" style="font-size: 11px;"></i> Prototype: View other workflow states
   </div>
-
-  <div class="form-group">
-    <label class="label">Objective</label>
-    <textarea class="textarea" rows="3" placeholder="e.g., Add user authentication with OAuth2 and session management">Integrate Stripe payment processing with idempotency support</textarea>
-  </div>
-
-  <div class="card" style="margin-bottom: var(--space-xl);">
-    <div class="card-header">
-      <span class="card-title" style="font-size: var(--font-small-size);">
-        <i class="codicon codicon-sparkle" style="color: var(--color-accent);"></i> AI Analysis
-      </span>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); font-size: var(--font-small-size);">
-      <div><span style="color: var(--color-secondary);">Type:</span> New Feature</div>
-      <div><span style="color: var(--color-secondary);">Complexity:</span> Medium</div>
-      <div><span style="color: var(--color-secondary);">Risk:</span> <span style="color: var(--color-warning);">High (payment data)</span></div>
-      <div><span style="color: var(--color-secondary);">Est. Tasks:</span> ~8</div>
-    </div>
-    <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border); font-size: var(--font-small-size);">
-      <span style="color: var(--color-secondary);">Recommended:</span>
-      <span class="badge badge-warning" style="margin-left: var(--space-sm);">Standard + Security Gate</span>
-    </div>
-    <div style="margin-top: var(--space-sm); font-size: var(--font-caption-size); color: var(--color-secondary);">
-      Skills: spec-driven-development, planning-and-task-breakdown, incremental-implementation, security-and-hardening, test-driven-development
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label class="label">Process Level</label>
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-sm);">
-      <div class="card card-compact card-clickable" style="text-align: center; opacity: 0.6;">
-        <div style="font-size: var(--font-small-size); font-weight: 600;">Light</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Quick fix</div>
-      </div>
-      <div class="card card-compact" style="text-align: center; border-color: var(--color-accent); background: rgba(0, 120, 212, 0.05);">
-        <div style="font-size: var(--font-small-size); font-weight: 600; color: var(--color-accent);">Standard</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Recommended</div>
-      </div>
-      <div class="card card-compact card-clickable" style="text-align: center; opacity: 0.6;">
-        <div style="font-size: var(--font-small-size); font-weight: 600;">Thorough</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Major feature</div>
-      </div>
-      <div class="card card-compact card-clickable" style="text-align: center; opacity: 0.6;">
-        <div style="font-size: var(--font-small-size); font-weight: 600;">Guarded</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">High risk</div>
-      </div>
-    </div>
-  </div>
-
-  <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
-    <button class="btn btn-secondary">Cancel</button>
-    <button class="btn btn-primary"><i class="codicon codicon-play"></i> Start Workflow</button>
+  <div style="display: flex; gap: var(--space-sm);">
+    <button class="btn btn-ghost btn-sm" onclick="loadScreen('workflow-empty')">Empty State (new request)</button>
+    <button class="btn btn-ghost btn-sm" style="border-bottom: 2px solid var(--color-accent);">Active State (current)</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadScreen('workflow-complete')">Complete State</button>
   </div>
 </div>
--->
