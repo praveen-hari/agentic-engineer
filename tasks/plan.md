@@ -1,110 +1,133 @@
-# Implementation Plan: M1 — Foundation
+# Implementation Plan: Engineering Workspace Extension (M1)
 
-## Overview
+**Spec:** `SPEC.md` v2.0  
+**Target:** 2 weeks  
+**Date:** 10 July 2026
 
-Build the extension scaffold, core data layer, sidebar UI shell, and project context generation. At the end of M1, a user can install the extension, see the Engineering Workspace sidebar with a Home view, and have their project automatically analyzed with context generated and persisted in `.codestudio/`.
-
-No agent execution, no workflow execution, no artifact generation — those are M2+. M1 is the skeleton that everything else plugs into.
-
-## Architecture Decisions
-
-- **Language:** TypeScript (strict mode) — standard for VS Code extensions
-- **Webview framework:** Vanilla HTML/CSS with lightweight message passing — avoid React in M1 to keep the bundle small and the dependency surface minimal. React can be introduced in M2 when webviews become complex (Artifact Review, Task Board). For M1, the Home view is simple enough for template literals.
-- **Build tool:** esbuild via `@vscode/vsce` — fast builds, standard tooling
-- **Testing:** Vitest for unit tests on core logic (workflow engine, context manager, state persistence). VS Code extension integration tests deferred to M2.
-- **State format:** JSON for workflow state, JSONL for event stream, Markdown for artifacts
-- **Directory convention:** `.codestudio/` in workspace root for all persisted state
+---
 
 ## Dependency Graph
 
 ```
-Extension Scaffold (Task 1)
-    │
-    ├── Core Types & Interfaces (Task 2)
-    │       │
-    │       ├── State Persistence Layer (Task 3)
-    │       │       │
-    │       │       └── Event Stream (Task 4)
-    │       │
-    │       └── Workflow Engine — Data Model Only (Task 5)
-    │               │
-    │               └── Risk Assessment Engine — Stub (Task 6)
-    │
-    ├── Sidebar Tree Views (Task 7)
-    │       │
-    │       └── Home Webview Panel (Task 8)
-    │
-    └── Context Manager (Task 9)
-            │
-            └── Project Analyzer (Task 10)
-                    │
-                    └── Integration: Home View + Context (Task 11)
+                    ┌─────────────────┐
+                    │  1. Scaffold     │
+                    │  (project setup) │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  2. Core Types   │
+                    │  (types.ts)      │
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼───────┐ ┌───▼──────┐ ┌────▼─────────┐
+     │ 3. Event Stream│ │4. State  │ │5. Risk Engine│
+     │ (JSONL logger) │ │ Manager  │ │ (determin.)  │
+     └────────┬───────┘ └───┬──────┘ └────┬─────────┘
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │ 6. Workflow     │
+                    │    Engine       │
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼───────┐ ┌───▼──────────┐ ┌▼──────────────┐
+     │7. Workflow Gen. │ │8. Context    │ │9. AI Layer    │
+     │(dynamic builder)│ │  Analyzer    │ │(LM API + tools)│
+     └────────┬───────┘ └───┬──────────┘ └┬──────────────┘
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │10. Services     │
+                    │(FS, Git, Notif.)│
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼───────┐ ┌───▼──────────┐ ┌▼──────────────┐
+     │11. Webview     │ │12. Chat      │ │13. Extension  │
+     │ (Preact shell) │ │  Participant │ │  Entry Point  │
+     └────────┬───────┘ └───┬──────────┘ └┬──────────────┘
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │14. Integration  │
+                    │   & Polish      │
+                    └─────────────────┘
 ```
 
-## Task List
+---
 
-### Phase 1: Scaffold & Core
+## Vertical Slices
 
-- [ ] Task 1: Extension scaffold with activation, commands, and build pipeline
-- [ ] Task 2: Core TypeScript types and interfaces
-- [ ] Task 3: State persistence layer (read/write `.codestudio/`)
-- [ ] Task 4: Event stream (append-only JSONL logger)
+We build in vertical slices — each slice delivers testable, working functionality.
 
-### Checkpoint: Scaffold
-- [ ] Extension activates without errors
-- [ ] State can be written to and read from `.codestudio/`
-- [ ] Events can be appended and read back
-- [ ] `npm test` passes
-- [ ] `npm run build` succeeds
+### Slice A: Foundation (Tasks 1–2)
+Scaffold + types. No runtime behavior yet, but everything compiles and tests run.
 
-### Phase 2: Workflow Data Model
+### Slice B: Core Engine (Tasks 3–6)
+Event stream + state + risk + workflow engine. All pure TypeScript, fully unit-tested. No VS Code deps.
 
-- [ ] Task 5: Workflow engine — state machine (data model + transitions only)
-- [ ] Task 6: Risk assessment engine — stub with hardcoded rules
+### Slice C: Intelligence (Tasks 7–9)
+Workflow generation + context analysis + AI layer. The "brain" of the extension.
 
-### Checkpoint: Workflow Model
-- [ ] Workflow can be created, stages can transition
-- [ ] Risk assessment returns a process level for sample inputs
-- [ ] All state changes are persisted and recoverable
-- [ ] `npm test` passes
+### Slice D: Integration (Tasks 10–13)
+VS Code services + Preact webview + chat participant + extension entry point. The "body" that connects brain to IDE.
 
-### Phase 3: UI Shell
+### Slice E: Polish (Task 14)
+Status bar, activation timing, bundle optimization, final integration testing.
 
-- [ ] Task 7: Sidebar tree view providers (Workflow, Tasks, Artifacts, Activity)
-- [ ] Task 8: Home webview panel (static layout, reads workflow state)
+---
 
-### Checkpoint: UI Shell
-- [ ] Sidebar shows 5 sections in activity bar view
-- [ ] Home panel renders with placeholder content
-- [ ] Home panel reads and displays workflow state
-- [ ] Extension builds and loads without errors
+## Risk Register
 
-### Phase 4: Context Generation
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Preact JSX config conflicts with VS Code extension TS config | Medium | Medium | Separate `tsconfig.webview.json` with `jsxImportSource: "preact"` |
+| Language Model API not available in Code Studio fork | Medium | High | Every AI feature has deterministic fallback; AI is enrichment, not gating |
+| Chat Participant API not available in Code Studio | Low | Medium | Chat is additive; sidebar webview is the primary interface |
+| esbuild dual-bundle (extension + webview) complexity | Medium | Low | Well-documented pattern; use separate entry points |
+| Preact signals + webview postMessage race conditions | Medium | Medium | Queue messages until Preact app mounts; use `signal.peek()` for reads during message handling |
+| `.codestudio/` directory conflicts with existing projects | Low | Low | Check for existing directory on activation; prompt user |
 
-- [ ] Task 9: Context manager — workspace analysis engine
-- [ ] Task 10: Project analyzer — detect stack, conventions, structure
-- [ ] Task 11: Integration — Home view displays project context, status bar shows state
+---
 
-### Checkpoint: M1 Complete
-- [ ] Extension activates, shows sidebar, displays Home
-- [ ] Project context is auto-generated on first activation
-- [ ] Context is persisted in `.codestudio/context.md`
-- [ ] Workflow state survives Code Studio restart
-- [ ] Status bar shows current state
-- [ ] All tests pass, build clean
-- [ ] Ready for M2 (Define stage) to plug in
+## Verification Checkpoints
 
-## Risks and Mitigations
+| After Slice | Checkpoint | Command |
+|-------------|-----------|---------|
+| A (Foundation) | Project compiles, tests run (0 tests), lint passes | `npm run typecheck && npm test && npm run lint` |
+| B (Core Engine) | 30+ unit tests pass, ≥ 80% coverage on core/ | `npm run test:coverage` |
+| C (Intelligence) | AI fallback tests pass, workflow generation correct | `npm test` |
+| D (Integration) | Extension activates, sidebar renders, chat responds | Manual: F5 → Extension Development Host |
+| E (Polish) | All M1 success criteria met (18 items from spec) | Full checklist walkthrough |
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Code Studio extension API differs from VS Code | High | Verify API compatibility early in Task 1; use only stable APIs |
-| Webview message passing complexity | Medium | Keep M1 webview simple (read-only); complex webviews in M2 |
-| `.codestudio/` conflicts with user's files | Low | Check for existing directory on activation; prompt before creating |
-| Context generation too slow for large repos | Medium | Set timeout, analyze only top-level structure in M1; deep analysis in M2 |
+---
 
-## Open Questions
+## Implementation Order
 
-- What is the Code Studio extension API surface? Is it identical to VS Code's `vscode` module, or are there Syncfusion-specific APIs?
-- Does Code Studio have a built-in chat API that extensions can hook into, or do we need to build chat integration from scratch?
-- Are there existing Syncfusion UI components (webview toolkit) we should use instead of building from scratch?
+Tasks are numbered 1–14. Each task has acceptance criteria and verification steps in `tasks/todo.md`.
+
+| Task | Slice | Description | Est. |
+|------|-------|-------------|------|
+| 1 | A | Project scaffold (package.json, tsconfig, esbuild, vitest) | 2h |
+| 2 | A | Core types (types.ts — all interfaces from DD-015) | 1h |
+| 3 | B | Event stream (JSONL append/read/replay) | 2h |
+| 4 | B | State manager (workflow.json read/write) | 2h |
+| 5 | B | Risk engine (deterministic keyword + pattern matching) | 3h |
+| 6 | B | Workflow engine (state machine + transitions) | 3h |
+| 7 | C | Workflow generator (dynamic workflow builder) | 2h |
+| 8 | C | Context analyzer + project detector | 2h |
+| 9 | C | AI layer (model access, risk analyzer, LM tools) | 3h |
+| 10 | D | Services (file system, git, workspace, notification) | 2h |
+| 11 | D | Preact webview shell (sidebar, nav, 7 views, bridge) | 4h |
+| 12 | D | Chat participant (@engineering + slash commands) | 2h |
+| 13 | D | Extension entry point (activate, register all) | 2h |
+| 14 | E | Status bar, bundle optimization, integration test | 2h |
+| | | **Total estimated** | **~32h** |

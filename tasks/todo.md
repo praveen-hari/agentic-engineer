@@ -1,0 +1,464 @@
+# Task List: Engineering Workspace Extension (M1)
+
+**Plan:** `tasks/plan.md`  
+**Spec:** `SPEC.md` v2.0
+
+---
+
+## Slice A: Foundation
+
+### Task 1: Project Scaffold
+
+**Description:** Create the extension project structure with package.json (including all VS Code contribution points for chat participant, language model tools, webview), TypeScript configs (separate for extension host and Preact webview), esbuild dual-bundle config, Vitest setup, ESLint, Prettier, and VS Code debug launch config.
+
+**Acceptance criteria:**
+- [ ] `package.json` has correct `contributes` section (commands, viewsContainers, views, chatParticipants, languageModelTools)
+- [ ] `tsconfig.json` targets Node.js (extension host) with strict mode
+- [ ] `tsconfig.webview.json` targets ES2020 with `jsxImportSource: "preact"` and `jsx: "react-jsx"`
+- [ ] `esbuild.config.mjs` produces two bundles: `out/extension.js` (CJS, Node) and `out/webview.js` (ESM, browser)
+- [ ] `vitest.config.ts` configured with v8 coverage provider
+- [ ] `.eslintrc.json` with `@typescript-eslint` rules
+- [ ] `.prettierrc` with consistent formatting
+- [ ] `.vscode/launch.json` with Extension Development Host debug config
+- [ ] `.vscode/tasks.json` with build/watch tasks
+- [ ] `.vscodeignore` excludes src/, test/, node_modules/
+- [ ] `npm install` succeeds without errors
+- [ ] `npm run typecheck` passes (no source files yet, but config is valid)
+- [ ] `npm run build` produces output in `out/`
+
+**Verification:**
+- [ ] `npm install && npm run typecheck && npm run build`
+- [ ] `npm test` runs (0 tests, exits clean)
+
+**Dependencies:** None
+
+**Files created:**
+- `package.json`
+- `tsconfig.json`
+- `tsconfig.webview.json`
+- `esbuild.config.mjs`
+- `vitest.config.ts`
+- `.eslintrc.json`
+- `.prettierrc`
+- `.vscode/launch.json`
+- `.vscode/tasks.json`
+- `.vscode/settings.json`
+- `.vscodeignore`
+- `src/extension.ts` (minimal activate/deactivate stub)
+- `src/webview/index.tsx` (minimal Preact render stub)
+
+---
+
+### Task 2: Core Types
+
+**Description:** Define all TypeScript interfaces and types from DD-015 schema in `src/core/types.ts`. This is the shared vocabulary for the entire extension — workflow definitions, risk signals, stages, events, project context, etc.
+
+**Acceptance criteria:**
+- [ ] All types from SPEC.md Section 6 are defined
+- [ ] All properties are `readonly`
+- [ ] `Result<T, E>` utility type is defined
+- [ ] `WorkflowDefinition`, `RiskAssessment`, `RiskSignal`, `Stage`, `QualityGate`, `Approval` interfaces complete
+- [ ] `WorkflowEvent` discriminated union for event sourcing
+- [ ] `ProjectContext` interface for context analyzer output
+- [ ] `ProcessLevel`, `StageStatus`, `WorkType`, `Complexity` literal union types
+- [ ] `MessageProtocol` types for webview ↔ extension host communication
+- [ ] `ChatCommand` types for chat participant
+- [ ] `ToolInput` types for language model tools
+- [ ] File compiles with `npm run typecheck`
+
+**Verification:**
+- [ ] `npm run typecheck` passes
+- [ ] No `any` types used
+
+**Dependencies:** Task 1
+
+**Files created:**
+- `src/core/types.ts`
+- `src/constants.ts`
+
+---
+
+## Slice B: Core Engine
+
+### Task 3: Event Stream
+
+**Description:** Implement append-only JSONL event logger (DD-008). Events are the source of truth — workflow state can be reconstructed by replaying events. Pure TypeScript, no VS Code deps. Uses injected file I/O interface for testability.
+
+**Acceptance criteria:**
+- [ ] `EventStream` class with `append(event)`, `read()`, `replay()` methods
+- [ ] Events are serialized as one JSON object per line (JSONL format)
+- [ ] Each event has `id`, `timestamp`, `type`, `payload` fields
+- [ ] `replay()` returns events in chronological order
+- [ ] File I/O is injected via interface (not imported from vscode or fs)
+- [ ] Invalid JSON lines are skipped with warning (not crash)
+- [ ] 8+ unit tests covering append, read, replay, empty file, corrupt line
+
+**Verification:**
+- [ ] `npm test -- --grep "EventStream"` — all pass
+- [ ] Coverage ≥ 90% on event-stream.ts
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/core/event-stream.ts`
+- `src/test/core/event-stream.test.ts`
+- `src/test/fixtures/sample-events.jsonl`
+
+---
+
+### Task 4: State Manager
+
+**Description:** Implement read/write for `workflow.json` — the current workflow state file in `.codestudio/`. Pure TypeScript with injected file I/O. Handles missing file (first run), corrupt file (recovery), and concurrent access (last-write-wins with version check).
+
+**Acceptance criteria:**
+- [ ] `StateManager` class with `load()`, `save(state)`, `update(fn)` methods
+- [ ] `load()` returns `null` for missing file (first run)
+- [ ] `save()` validates JSON before writing
+- [ ] `update()` is atomic: load → transform → save with version bump
+- [ ] Version mismatch detection (optimistic concurrency)
+- [ ] File I/O injected via interface
+- [ ] 8+ unit tests covering load, save, update, missing file, corrupt file, version conflict
+
+**Verification:**
+- [ ] `npm test -- --grep "StateManager"` — all pass
+- [ ] Coverage ≥ 90% on state-manager.ts
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/core/state-manager.ts`
+- `src/test/core/state-manager.test.ts`
+- `src/test/fixtures/sample-workflow.json`
+
+---
+
+### Task 5: Risk Engine (Deterministic)
+
+**Description:** Implement keyword + pattern-based risk assessment. This is the deterministic fallback that works without any LLM. Analyzes objective text for risk signals (auth, payment, database, security keywords), detects work type, estimates complexity, and maps to process level.
+
+**Acceptance criteria:**
+- [ ] `RiskEngine` class with `assess(objective, context?)` method
+- [ ] Detects work type from objective keywords (feature, bugfix, refactor, etc.)
+- [ ] Detects risk signals: security keywords, infrastructure patterns, scope indicators
+- [ ] Maps (workType + complexity + riskSignals) → ProcessLevel using DD-001 rules
+- [ ] Returns `RiskAssessment` with `source: 'deterministic'`
+- [ ] 15+ unit tests covering all work types, risk levels, edge cases
+- [ ] "Add login page" → high risk (auth), standard+ process
+- [ ] "Fix typo in README" → low risk, light process
+- [ ] "Refactor payment module" → high risk (payment + refactor), thorough process
+
+**Verification:**
+- [ ] `npm test -- --grep "RiskEngine"` — all pass
+- [ ] Coverage ≥ 90% on risk-engine.ts
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/core/risk-engine.ts`
+- `src/test/core/risk-engine.test.ts`
+
+---
+
+### Task 6: Workflow Engine
+
+**Description:** Implement the state machine for workflow lifecycle. Manages stage transitions (pending → active → completed/skipped), enforces ordering, validates transitions, and emits events for each state change.
+
+**Acceptance criteria:**
+- [ ] `WorkflowEngine` class with `create(assessment, workflow)`, `advanceStage()`, `skipStage()`, `completeWorkflow()` methods
+- [ ] Enforces valid transitions: pending→active, active→completed, active→skipped
+- [ ] Rejects invalid transitions (e.g., pending→completed, completed→active)
+- [ ] Auto-advances to next stage when current completes
+- [ ] Emits events via injected `EventStream`
+- [ ] Workflow states: `idle`, `active`, `completed`, `failed`
+- [ ] Stage ordering is enforced (can't skip ahead without marking intermediate as skipped)
+- [ ] 12+ unit tests covering create, advance, skip, complete, invalid transitions, event emission
+
+**Verification:**
+- [ ] `npm test -- --grep "WorkflowEngine"` — all pass
+- [ ] Coverage ≥ 85% on workflow-engine.ts
+
+**Dependencies:** Tasks 2, 3
+
+**Files created:**
+- `src/core/workflow-engine.ts`
+- `src/test/core/workflow-engine.test.ts`
+
+---
+
+## Slice C: Intelligence
+
+### Task 7: Workflow Generator
+
+**Description:** Implement dynamic workflow builder (DD-014 step 2). Given a `RiskAssessment`, generates a `WorkflowDefinition` with appropriate stages, quality gates, and approval requirements based on process level.
+
+**Acceptance criteria:**
+- [ ] `WorkflowGenerator` class with `generate(assessment)` method
+- [ ] Light process: 3 stages (Define → Implement → Verify)
+- [ ] Standard process: 5 stages (Define → Plan → Implement → Review → Verify)
+- [ ] Thorough process: 7 stages (Define → Plan → Implement → Test → Review → Approve → Deploy)
+- [ ] Guarded process: 7 stages + extra quality gates + mandatory approvals
+- [ ] Quality gates are inserted between appropriate stages
+- [ ] Approval requirements scale with process level
+- [ ] 10+ unit tests covering all 4 process levels + edge cases
+
+**Verification:**
+- [ ] `npm test -- --grep "WorkflowGenerator"` — all pass
+- [ ] Coverage ≥ 85% on workflow-generator.ts
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/core/workflow-generator.ts`
+- `src/test/core/workflow-generator.test.ts`
+
+---
+
+### Task 8: Context Analyzer + Project Detector
+
+**Description:** Implement workspace analysis that detects tech stack, file structure, conventions, and dependencies. Generates `context.md` in `.codestudio/`. Pure TypeScript with injected file system interface.
+
+**Acceptance criteria:**
+- [ ] `ProjectDetector` class with `detect(fileList)` method
+- [ ] Detects language (TypeScript, JavaScript, Python, etc.) from file extensions
+- [ ] Detects framework (React, Next.js, Express, etc.) from package.json/config files
+- [ ] Detects test framework from config files
+- [ ] Detects build tools from config files
+- [ ] `ContextAnalyzer` class with `analyze(detection)` method — generates markdown summary
+- [ ] Output is a `ProjectContext` object + markdown string
+- [ ] 8+ unit tests with fixture file lists
+
+**Verification:**
+- [ ] `npm test -- --grep "ProjectDetector|ContextAnalyzer"` — all pass
+- [ ] Coverage ≥ 80% on both files
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/core/project-detector.ts`
+- `src/core/context-analyzer.ts`
+- `src/test/core/project-detector.test.ts`
+- `src/test/core/context-analyzer.test.ts`
+
+---
+
+### Task 9: AI Layer (Language Model API + Tools)
+
+**Description:** Implement the AI integration layer: model access with fallback, LLM-powered risk analyzer, and three Language Model Tools for agent mode. All AI features gracefully degrade when no LLM is available.
+
+**Acceptance criteria:**
+- [ ] `ModelAccess` class: selects copilot model, caches, returns null if unavailable
+- [ ] `AiRiskAnalyzer` class: uses LLM for enriched analysis, falls back to `RiskEngine`
+- [ ] `AnalyzeWorkRequestTool` implements `vscode.LanguageModelTool` — analyzes objectives
+- [ ] `GetWorkflowStatusTool` implements `vscode.LanguageModelTool` — returns current state
+- [ ] `GetProjectContextTool` implements `vscode.LanguageModelTool` — returns project context
+- [ ] All tools have proper `prepareInvocation` with confirmation messages
+- [ ] All tools have proper `inputSchema` matching package.json definitions
+- [ ] 6+ unit tests (model unavailable fallback, tool invocation with mocked deps)
+
+**Verification:**
+- [ ] `npm test -- --grep "ModelAccess|AiRiskAnalyzer|Tool"` — all pass
+- [ ] Manual: tools appear in agent mode tool list after extension activation
+
+**Dependencies:** Tasks 2, 5, 6, 8
+
+**Files created:**
+- `src/ai/model-access.ts`
+- `src/ai/risk-analyzer.ts`
+- `src/ai/workflow-advisor.ts`
+- `src/ai/context-enricher.ts`
+- `src/ai/prompts/risk-assessment.ts`
+- `src/ai/tools/analyze-work-request.tool.ts`
+- `src/ai/tools/get-workflow-status.tool.ts`
+- `src/ai/tools/get-project-context.tool.ts`
+- `src/test/ai/model-access.test.ts`
+- `src/test/ai/risk-analyzer.test.ts`
+
+---
+
+## Slice D: Integration
+
+### Task 10: Services (VS Code API Integration)
+
+**Description:** Implement the service layer that bridges core logic with VS Code APIs. File system service manages `.codestudio/` directory. Git service detects branch. Workspace service provides configuration. Notification service manages status bar and messages.
+
+**Acceptance criteria:**
+- [ ] `FileSystemService`: ensureDirectory, readJson, writeJson, appendLine, readLines, listFiles
+- [ ] `GitService`: getCurrentBranch, isGitRepo
+- [ ] `WorkspaceService`: getWorkspaceRoot, getConfiguration, onConfigChange
+- [ ] `NotificationService`: showInfo, showError, showProgress, updateStatusBar
+- [ ] All use `vscode.workspace.fs` (not Node.js `fs`)
+- [ ] 4+ unit tests per service (with VS Code API mocked)
+
+**Verification:**
+- [ ] `npm test -- --grep "Service"` — all pass
+- [ ] Manual: `.codestudio/` directory created on activation
+
+**Dependencies:** Task 2
+
+**Files created:**
+- `src/services/file-system.service.ts`
+- `src/services/git.service.ts`
+- `src/services/workspace.service.ts`
+- `src/services/notification.service.ts`
+- `src/test/services/file-system.service.test.ts`
+
+---
+
+### Task 11: Preact Webview Shell
+
+**Description:** Build the Preact-based webview with sidebar navigation, 7 view components, signal-based state management, and postMessage bridge to extension host. This is the visual interface matching the `.designs/` prototype.
+
+**Acceptance criteria:**
+- [ ] `index.tsx` renders `<App />` into webview DOM
+- [ ] `app.tsx` has sidebar nav + content area with signal-based routing
+- [ ] `bridge.ts` handles postMessage send/receive with type-safe protocol
+- [ ] `sidebar-nav.tsx` renders 7 nav items + settings pinned to bottom + new work request button
+- [ ] `workflow-view.tsx` renders all 3 states (empty/active/complete)
+- [ ] Empty state: objective input with progressive disclosure (analyze button appears after ≥10 chars)
+- [ ] Active state: stage pipeline + stats grid + current stage details
+- [ ] Complete state: success banner + summary + archive button
+- [ ] 6 placeholder views (tasks, activity, artifacts, approvals, history, settings) with empty states
+- [ ] Signal stores: `workflow.store.ts`, `ui.store.ts`, `activity.store.ts`
+- [ ] CSS uses VS Code theme tokens (`--vscode-*` custom properties)
+- [ ] BEM naming convention for all CSS classes
+- [ ] Webview bundle < 100KB
+
+**Verification:**
+- [ ] `npm run build` — webview bundle produced
+- [ ] Manual: F5 → sidebar renders with correct layout
+- [ ] Manual: navigation between views works
+- [ ] Manual: theme matches VS Code dark theme
+
+**Dependencies:** Tasks 2, 10
+
+**Files created:**
+- `src/views/sidebar-provider.ts`
+- `src/views/message-handler.ts`
+- `src/webview/index.tsx`
+- `src/webview/app.tsx`
+- `src/webview/router.ts`
+- `src/webview/bridge.ts`
+- `src/webview/store/workflow.store.ts`
+- `src/webview/store/ui.store.ts`
+- `src/webview/store/activity.store.ts`
+- `src/webview/views/workflow-view.tsx`
+- `src/webview/views/tasks-view.tsx`
+- `src/webview/views/activity-view.tsx`
+- `src/webview/views/artifacts-view.tsx`
+- `src/webview/views/approvals-view.tsx`
+- `src/webview/views/history-view.tsx`
+- `src/webview/views/settings-view.tsx`
+- `src/webview/components/sidebar-nav.tsx`
+- `src/webview/components/stage-pipeline.tsx`
+- `src/webview/components/stats-grid.tsx`
+- `src/webview/components/progress-bar.tsx`
+- `src/webview/components/risk-badge.tsx`
+- `src/webview/components/empty-state.tsx`
+- `src/webview/components/icon.tsx`
+- `src/webview/styles/variables.css`
+- `src/webview/styles/base.css`
+- `src/webview/styles/layout.css`
+- `src/webview/styles/components.css`
+
+---
+
+### Task 12: Chat Participant
+
+**Description:** Register `@engineering` chat participant with `/status`, `/analyze`, and `/history` slash commands. Handles natural language queries about workflow state, delegates to core engines for analysis.
+
+**Acceptance criteria:**
+- [ ] Chat participant registered with ID `engineering-workspace.engineering`
+- [ ] `/status` command returns current workflow state as formatted markdown
+- [ ] `/analyze` command analyzes user prompt as work request objective
+- [ ] `/history` command returns recent workflow summaries
+- [ ] Natural language fallback: routes unrecognized prompts to LLM with engineering context
+- [ ] Participant detection configured with disambiguation examples
+- [ ] Follow-up provider suggests relevant next actions
+- [ ] 4+ unit tests (command routing, response format, no-workflow state)
+
+**Verification:**
+- [ ] `npm test -- --grep "ChatParticipant"` — all pass
+- [ ] Manual: `@engineering /status` returns response in chat
+- [ ] Manual: `@engineering analyze adding user authentication` returns risk analysis
+
+**Dependencies:** Tasks 2, 5, 6, 9
+
+**Files created:**
+- `src/chat/participant.ts`
+- `src/chat/commands/status.command.ts`
+- `src/chat/commands/analyze.command.ts`
+- `src/chat/commands/history.command.ts`
+- `src/chat/intents.ts`
+- `src/test/chat/participant.test.ts`
+
+---
+
+### Task 13: Extension Entry Point
+
+**Description:** Wire everything together in `extension.ts`. Register all services, create core engine instances, register webview provider, register chat participant, register language model tools, set up activation events, and handle deactivation cleanup.
+
+**Acceptance criteria:**
+- [ ] `activate()` creates and wires all dependencies (dependency injection via constructors)
+- [ ] Registers `WebviewViewProvider` for sidebar
+- [ ] Registers chat participant
+- [ ] Registers 3 language model tools via `vscode.lm.registerTool`
+- [ ] Registers commands: `engineering-workspace.newWorkRequest`, `engineering-workspace.openSidebar`
+- [ ] Creates `.codestudio/` directory on first activation
+- [ ] Runs project context analysis on first activation
+- [ ] `deactivate()` cleans up subscriptions
+- [ ] Activation time logged to console
+- [ ] All registrations added to `context.subscriptions`
+
+**Verification:**
+- [ ] Manual: F5 → extension activates without errors
+- [ ] Manual: Output panel shows activation log
+- [ ] Manual: `.codestudio/` directory created
+- [ ] Manual: `context.md` generated
+
+**Dependencies:** Tasks 9, 10, 11, 12
+
+**Files modified:**
+- `src/extension.ts` (expand from stub)
+
+---
+
+## Slice E: Polish
+
+### Task 14: Status Bar + Bundle Optimization + Integration Test
+
+**Description:** Add status bar item showing current workflow state, optimize bundle sizes, verify all M1 success criteria, and write a manual integration test checklist.
+
+**Acceptance criteria:**
+- [ ] Status bar item shows: "No Workflow" / "⚡ Stage: Define" / "✅ Complete"
+- [ ] Status bar item click opens sidebar
+- [ ] Extension host bundle < 400KB
+- [ ] Webview bundle < 100KB
+- [ ] Activation time < 500ms (measured)
+- [ ] All 18 M1 success criteria from SPEC.md verified
+- [ ] `CHANGELOG.md` updated with M1 release notes
+- [ ] `README.md` has installation and usage instructions
+
+**Verification:**
+- [ ] `npm run build && ls -la out/` — check bundle sizes
+- [ ] Full M1 checklist walkthrough (18 items)
+- [ ] `npm run test:coverage` — ≥ 80% on core/
+
+**Dependencies:** Task 13
+
+**Files created/modified:**
+- `README.md`
+- `CHANGELOG.md`
+- `src/services/notification.service.ts` (add status bar)
+
+---
+
+## Summary
+
+| Metric | Target |
+|--------|--------|
+| Total tasks | 14 |
+| Total estimated hours | ~32h |
+| Unit tests expected | 80+ |
+| Core coverage target | ≥ 80% |
+| Files to create | ~60 |
+| Bundles | 2 (extension.js + webview.js) |
