@@ -1,66 +1,113 @@
 # Code Studio Engineering Workspace — Application Architecture
 
+> **DD-016 applied:** Consolidated from 14 screens → 7 views to eliminate navigation fatigue.  
+> Each view answers exactly ONE question. Detail views use inline expansion, not page navigation.
+
 ## Navigation
 
 ### Pattern: Sidebar (collapsible) + Top bar
 
-This simulates Code Studio's extension sidebar. The sidebar contains the primary navigation sections of the Engineering Workspace. The top bar contains search, notifications, and user actions.
+The sidebar contains the 7 primary views. The top bar contains contextual info and global actions.
 
 **Primary navigation (sidebar):**
-- Home → `home`
-- Workflow → `workflow`
-- Tasks → `task-board`
+- Workflow → `workflow` (also serves as home + setup)
+- Tasks → `tasks`
+- Activity → `activity`
 - Artifacts → `artifacts`
-- Activity → `agent-activity`
 - Approvals → `approvals`
-- Context → `project-context`
+- History → `history`
+- Settings → `settings`
 
 **Secondary (top bar):**
-- Search
+- Search (global across all views)
 - Current stage badge (e.g., "BUILD 4/7")
+- Pending approvals count badge
 - Theme toggle (dark/light)
-- Settings icon
 
-## Screen Inventory
+## View Inventory
 
-| # | Screen | Type | Priority | Description |
-|---|--------|------|----------|-------------|
-| 1 | `home` | dashboard | P0 | Current objective, progress bar, active task, pending approvals, recent activity, recommended next action |
-| 2 | `workflow` | detail | P0 | Visual lifecycle stages with status (completed/active/pending/skipped), quality gates checklist, artifacts list |
-| 3 | `task-board` | list | P0 | Tasks grouped by phase with status badges, dependency indicators, size labels, file counts, test evidence |
-| 4 | `task-detail` | detail | P0 | Single task with description, acceptance criteria, changed files, test results, commits, agent log |
-| 5 | `artifact-review` | detail | P0 | Full artifact content (spec/plan/ADR/review) with approve/reject/comment actions |
-| 6 | `agent-activity` | detail | P0 | Real-time agent timeline: actions, decisions, tool usage, TDD phase, source citations |
-| 7 | `approvals` | list | P1 | Pending approvals with risk level, context, approve/reject buttons; completed approvals history |
-| 8 | `artifacts` | list | P1 | All generated artifacts by type (specs, plans, ADRs, reviews, reports) with status and timestamps |
-| 9 | `project-context` | detail | P1 | Repository summary, tech stack, conventions, commands, boundaries, architecture overview |
-| 10 | `workflow-setup` | form | P1 | New work request form: objective input, detected process level, stage configuration |
-| 11 | `review-report` | detail | P1 | Five-axis code review with findings categorized by severity (Critical/Required/Optional/Nit/FYI) |
-| 12 | `settings` | settings | P2 | Extension settings: default process level, approval preferences, agent configuration |
+| # | View | Priority | Question It Answers | Description |
+|---|------|----------|---------------------|-------------|
+| 1 | `workflow` | P0 | "Where am I in the process?" | **Empty state:** new work request form (objective input, detected process level, stage config). **Active state:** current objective, visual lifecycle stages with status, progress bar, quality gates checklist, quick stats (tasks, artifacts, commits, approvals). This IS the home screen. |
+| 2 | `tasks` | P0 | "What's being built?" | Tasks grouped by phase with status badges, dependency indicators, size labels. **Inline expansion:** click a task → it expands in-place showing acceptance criteria, changed files, test evidence, agent decisions (tabs within the expanded row). No separate task-detail page. |
+| 3 | `activity` | P0 | "What's the agent doing now?" | Real-time agent timeline: current task, TDD phase, active skills, execution log with timestamps, decisions with rationale and source citations. Pause/resume agent button. |
+| 4 | `artifacts` | P1 | "What's been produced?" | All generated artifacts by type (specs, plans, ADRs, reviews, context, reports) with status and timestamps. **Inline expansion:** click an artifact → it expands in-place showing full content with rendered markdown. Includes project context as a special artifact type. Review reports render inline with five-axis scores and findings. |
+| 5 | `approvals` | P1 | "What needs my decision?" | **Pending section:** items needing action with risk level, context summary, approve/reject/comment buttons. Clicking "Review" expands the artifact content inline. **Completed section:** approval history with timestamps and outcomes. Badge count shown in sidebar. |
+| 6 | `history` | P1 | "What did we do before?" | Completed work requests grouped by month with summary stats (tasks, files, lines, tests, PR#). **Inline expansion:** click an entry → it expands showing completed workflow pipeline, artifact list, key decisions, approval timeline, commit list. Warm/cold tier entries show "Summary Only" with restore button. |
+| 7 | `settings` | P2 | "How do I configure this?" | Process defaults (default level, auto-approve, review timeout), history management (tier thresholds, usage stats), agent configuration (specialist agent toggles). |
 
-**Total: 12 screens** (6 P0, 4 P1, 2 P2)
+**Total: 7 views** (3 P0, 3 P1, 1 P2)
+
+## Inline Expansion Pattern
+
+Instead of navigating to a separate detail page, detail content expands within the list view:
+
+```
+┌─────────────────────────────────────┐
+│ ▸ Task 3: Create payment model  [S] │  ← collapsed (default)
+├─────────────────────────────────────┤
+│ ▾ Task 4: POST /api/payments    [M] │  ← expanded (clicked)
+│   ┌─────────────────────────────┐   │
+│   │ [Criteria] [Files] [Tests] [Log]│  ← tabs within expansion
+│   │                                 │
+│   │ ✅ Returns 201 with client_se…  │
+│   │ ✅ Validates amount > 0         │
+│   │ 🔄 Handles Stripe API errors    │
+│   │ ○  Idempotency key support      │
+│   └─────────────────────────────┘   │
+├─────────────────────────────────────┤
+│ ▸ Task 5: Error handling middleware  │  ← collapsed
+└─────────────────────────────────────┘
+```
+
+**Benefits:**
+- No context loss — the user sees the detail within the list
+- Back button not needed — collapse to return to list
+- Keyboard navigable — arrow keys move between items, Enter expands/collapses
 
 ## Key User Journeys
 
 ### Journey 1: Start a New Feature (End-to-End)
-`home` → `workflow-setup` → `workflow` → `artifact-review` (spec) → `task-board` → `agent-activity` → `task-detail` → `artifact-review` (review) → `home`
+`workflow` (empty state → fill form → start) → `workflow` (watch stages activate) → `approvals` (review spec) → `tasks` (watch tasks appear) → `activity` (monitor agent) → `tasks` (expand task, check tests) → `approvals` (approve review) → `workflow` (see completion)
 
-The developer opens the workspace, starts a new work request, sees the workflow stages activate, reviews the generated spec, watches tasks appear on the board, monitors agent progress, reviews individual task results, approves the final code review, and returns to home showing completion.
+**5 view switches** (down from 8 page navigations in the old design).
 
 ### Journey 2: Monitor Agent Progress
-`home` → `agent-activity` → `task-detail` → `task-board`
+`activity` → `tasks` (expand active task)
 
-The developer checks what the agent is currently doing, drills into the active task to see changed files and test evidence, then views the overall task board for progress.
+**1 view switch** (down from 3).
 
 ### Journey 3: Review and Approve
-`home` → `approvals` → `artifact-review` → `approvals`
+`approvals` (expand artifact inline → approve/reject)
 
-The developer sees pending approvals on home, opens the approval center, reviews an artifact (spec, plan, or review report), approves or requests changes, returns to see remaining approvals.
+**0 view switches** — everything happens within the approvals view (down from 3).
 
 ### Journey 4: Understand Project Context
-`home` → `project-context`
+`artifacts` (expand context.md)
 
-The developer views the auto-generated project context to understand what the agents know about the codebase — tech stack, conventions, commands, and boundaries.
+**0 view switches** — context is an artifact that expands inline (down from 1).
+
+### Journey 5: Check Past Work
+`history` (expand a completed request → browse artifacts, decisions, commits)
+
+**0 view switches** — all detail is inline (down from 2).
+
+## View States
+
+### Workflow View — Three States
+
+| State | Trigger | Content |
+|-------|---------|---------|
+| **Empty** | No active work request | New work request form: objective input, AI analysis panel, process level selector, "Start Workflow" button |
+| **Active** | Work request in progress | Current objective, stage pipeline, progress bar, quality gates, stats grid, recommended next action |
+| **Complete** | All stages done | Completion summary with "Archive & Start New" button, links to review report and artifacts |
+
+### Approvals View — Badge System
+
+The sidebar shows a count badge on the Approvals icon when items are pending:
+- 🔴 Red badge = critical/high-risk approval pending
+- 🟡 Yellow badge = standard approval pending
+- No badge = all clear
 
 ## Standalone Pages
-None — all screens use the app shell with sidebar navigation. This simulates the Code Studio extension experience where all views are within the same panel.
+None — all views use the app shell with sidebar navigation. Detail content uses inline expansion within each view.

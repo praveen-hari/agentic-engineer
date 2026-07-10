@@ -1,77 +1,152 @@
-<!-- Artifacts List -->
+<!-- ARTIFACTS VIEW — "What's been produced?"
+     Absorbs: old artifacts + artifact-review + review-report + project-context screens
+     Pattern: List with inline expansion (click to expand artifact content in-place)
+-->
 
-<div class="page-header">
-  <h2>Artifacts</h2>
-  <span class="text-secondary" style="font-size: var(--font-small-size);">5 artifacts generated</span>
-</div>
+<div class="view-artifacts">
 
-<!-- Specs -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-file-text" style="font-size:12px;"></i> Specifications</span>
-</div>
-<div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl);">
-  <div class="tree-item card-clickable" onclick="loadScreen('artifact-review')" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-file-text" style="color: var(--color-info); font-size:14px;"></i>
-    <span class="tree-item-label">stripe-payment-spec.md</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 45m ago</span>
+  <!-- Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl);">
+    <div>
+      <h3>Artifacts</h3>
+      <p style="font-size: var(--font-small-size); color: var(--color-secondary);">All generated documents, specs, plans, and reports</p>
+    </div>
+    <div style="display: flex; gap: var(--space-sm);">
+      <button class="btn btn-ghost btn-sm" style="border-bottom: 2px solid var(--color-accent);">All</button>
+      <button class="btn btn-ghost btn-sm">Specs</button>
+      <button class="btn btn-ghost btn-sm">Plans</button>
+      <button class="btn btn-ghost btn-sm">ADRs</button>
+      <button class="btn btn-ghost btn-sm">Reviews</button>
+    </div>
   </div>
-</div>
 
-<!-- Plans -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-tasklist" style="font-size:12px;"></i> Plans</span>
-</div>
-<div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl);">
-  <div class="tree-item card-clickable" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-file-text" style="color: var(--color-info); font-size:14px;"></i>
-    <span class="tree-item-label">tasks/plan.md</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 30m ago</span>
-  </div>
-  <div class="tree-item card-clickable" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-file-text" style="color: var(--color-info); font-size:14px;"></i>
-    <span class="tree-item-label">tasks/todo.md</span>
-    <span class="badge badge-accent" style="height:16px; font-size:10px;">Active</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">Updated 2m ago</span>
-  </div>
-</div>
+  <!-- Artifact 1: Spec — EXPANDED (showing inline content) -->
+  <div class="card" style="margin-bottom: var(--space-md);">
+    <!-- Header row -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); cursor: pointer;">
+      <i class="codicon codicon-file-text" style="color: var(--color-success); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">stripe-payment-spec.md</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Specification • Generated 2h ago</div>
+      </div>
+      <span class="badge badge-success">Approved</span>
+      <i class="codicon codicon-chevron-down" style="color: var(--color-secondary);"></i>
+    </div>
 
-<!-- ADRs -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-law" style="font-size:12px;"></i> Architecture Decisions</span>
-</div>
-<div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl);">
-  <div class="tree-item card-clickable" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-file-text" style="color: var(--color-warning); font-size:14px;"></i>
-    <span class="tree-item-label">ADR-005: Use Stripe for payment processing</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Accepted</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 30m ago</span>
-  </div>
-</div>
+    <!-- Expanded content (inline rendered spec) -->
+    <div style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--color-border);">
+      <div style="background: var(--color-surface-hover); border-radius: var(--radius-md); padding: var(--space-lg); font-size: var(--font-small-size); line-height: 1.6;">
+        <h4 style="margin-bottom: var(--space-md);">Stripe Payment Integration — Specification</h4>
 
-<!-- Reviews -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-eye" style="font-size:12px;"></i> Reviews</span>
-</div>
-<div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl);">
-  <div class="tree-item" style="border-radius: var(--radius-md); opacity: 0.5;">
-    <i class="codicon codicon-file-text" style="color: var(--color-secondary); font-size:14px;"></i>
-    <span class="tree-item-label">review-report.md</span>
-    <span class="badge" style="height:16px; font-size:10px;">Pending</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">Will generate after BUILD completes</span>
-  </div>
-</div>
+        <div style="margin-bottom: var(--space-md);">
+          <strong>Objective:</strong> Integrate Stripe payment processing into the existing Express API with support for creating payment intents, handling webhooks, and ensuring idempotency.
+        </div>
 
-<!-- Context -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-symbol-structure" style="font-size:12px;"></i> Context</span>
-</div>
-<div style="display: flex; flex-direction: column; gap: var(--space-xs);">
-  <div class="tree-item card-clickable" onclick="loadScreen('project-context')" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-file-text" style="color: var(--color-success); font-size:14px;"></i>
-    <span class="tree-item-label">.codestudio/context.md</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Current</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">Updated 10m ago</span>
+        <div style="margin-bottom: var(--space-md);">
+          <strong>Tech Stack:</strong>
+          <div style="margin-top: var(--space-xs); color: var(--color-secondary);">
+            Express 5 • Stripe SDK v14 • Prisma 6 • PostgreSQL 16 • Vitest
+          </div>
+        </div>
+
+        <div style="margin-bottom: var(--space-md);">
+          <strong>Success Criteria:</strong>
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-top: var(--space-xs);">
+            <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> Payment intents can be created via API</div>
+            <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> Webhook events are verified and processed</div>
+            <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> Idempotency keys prevent duplicate charges</div>
+            <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> All payment operations are logged with correlation IDs</div>
+            <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> Test coverage ≥ 80% for payment module</div>
+          </div>
+        </div>
+
+        <div>
+          <strong>Boundaries:</strong>
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--space-xs) var(--space-md); margin-top: var(--space-xs);">
+            <span class="badge badge-success" style="font-size: 9px; height: 14px;">ALWAYS</span>
+            <span>Use service layer pattern, write tests first (TDD), validate all inputs</span>
+            <span class="badge badge-warning" style="font-size: 9px; height: 14px;">ASK FIRST</span>
+            <span>Adding new dependencies, changing DB schema, modifying auth middleware</span>
+            <span class="badge badge-error" style="font-size: 9px; height: 14px;">NEVER</span>
+            <span>Store raw card numbers, skip error handling, use test keys in production</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval status -->
+      <div style="margin-top: var(--space-md); padding: var(--space-md); background: rgba(78, 201, 176, 0.05); border-radius: var(--radius-md); display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success);"></i>
+        <div style="flex: 1; font-size: var(--font-small-size);">
+          <span style="font-weight: 600;">Approved</span> by developer • 1h 45m ago
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">"Looks good. Make sure to add rate limiting for the webhook endpoint."</div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Artifact 2: Plan — Collapsed -->
+  <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-file-text" style="color: var(--color-success); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">plan.md</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Plan • 8 tasks, 3 phases • Generated 1h ago</div>
+      </div>
+      <span class="badge badge-success">Approved</span>
+      <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+    </div>
+  </div>
+
+  <!-- Artifact 3: ADR — Collapsed -->
+  <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-file-text" style="color: var(--color-info); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">ADR-005: Service layer for payment logic</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Architecture Decision • Generated 1h ago</div>
+      </div>
+      <span class="badge">Recorded</span>
+      <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+    </div>
+  </div>
+
+  <!-- Artifact 4: Context — Collapsed -->
+  <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-symbol-structure" style="color: var(--color-secondary); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">context.md</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Project Context • Auto-generated • React 19, Express 5, Prisma 6</div>
+      </div>
+      <span class="badge">Auto</span>
+      <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+    </div>
+  </div>
+
+  <!-- Artifact 5: Review Report — Collapsed (pending) -->
+  <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-file-text" style="color: var(--color-warning); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">review-report.md</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Code Review • 5-axis • 0 critical, 2 required findings</div>
+      </div>
+      <span class="badge badge-warning">Pending Review</span>
+      <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+    </div>
+  </div>
+
+  <!-- Artifact 6: Todo — Collapsed -->
+  <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-checklist" style="color: var(--color-secondary); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">todo.md</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Task Breakdown • 3/8 complete</div>
+      </div>
+      <span class="badge badge-accent">Active</span>
+      <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+    </div>
+  </div>
+
 </div>

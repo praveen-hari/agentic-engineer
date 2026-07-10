@@ -1,231 +1,204 @@
-<!-- History — Completed Work Requests -->
+<!-- HISTORY VIEW — "What did we do before?"
+     Absorbs: old history + history-detail screens
+     Pattern: List with inline expansion (click to expand completed work request details)
+-->
 
-<div class="page-header">
-  <h2>History</h2>
-  <div class="page-actions">
-    <div class="flex items-center gap-md">
-      <input class="input" placeholder="Search history..." style="max-width: 200px;" />
-    </div>
-  </div>
-</div>
+<div class="view-history">
 
-<p class="text-secondary mb-lg" style="font-size: var(--font-small-size);">
-  Completed work requests with full engineering artifacts. Each entry preserves the spec, plan, decisions, review findings, and audit trail.
-</p>
-
-<!-- July 2026 -->
-<div class="section-header">
-  <span class="section-title">July 2026</span>
-  <span class="text-secondary" style="font-size: var(--font-caption-size);">2 completed</span>
-</div>
-
-<div class="card mb-md card-clickable" onclick="loadScreen('history-detail')">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Add Stripe payment integration</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed 2 days ago · Standard process · 8 tasks · 12 files · 340 lines</div>
-    </div>
-    <span class="badge badge-success">Merged</span>
-  </div>
-  <div class="flex gap-lg" style="font-size: var(--font-caption-size); color: var(--color-secondary);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-merge" style="font-size:12px;"></i> PR #47 merged to main</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-commit" style="font-size:12px;"></i> 8 commits</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-beaker" style="font-size:12px;"></i> 24 tests added</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-shield" style="font-size:12px;"></i> Security reviewed</span>
-  </div>
-  <div class="divider"></div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-file-text" style="font-size:12px; color: var(--color-info);"></i> Spec</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-tasklist" style="font-size:12px; color: var(--color-info);"></i> Plan</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-law" style="font-size:12px; color: var(--color-info);"></i> ADR-005</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-eye" style="font-size:12px; color: var(--color-info);"></i> Review</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-shield" style="font-size:12px; color: var(--color-info);"></i> Security Report</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-pulse" style="font-size:12px; color: var(--color-info);"></i> Audit Log</span>
-  </div>
-</div>
-
-<div class="card mb-lg card-clickable">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Fix duplicate tasks in list view</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed 5 days ago · Light process · 2 tasks · 3 files · 45 lines</div>
-    </div>
-    <span class="badge badge-success">Merged</span>
-  </div>
-  <div class="flex gap-lg" style="font-size: var(--font-caption-size); color: var(--color-secondary);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-merge" style="font-size:12px;"></i> PR #45 merged to main</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-commit" style="font-size:12px;"></i> 2 commits</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-beaker" style="font-size:12px;"></i> 1 regression test</span>
-  </div>
-  <div class="divider"></div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-eye" style="font-size:12px; color: var(--color-info);"></i> Review</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-pulse" style="font-size:12px; color: var(--color-info);"></i> Audit Log</span>
-  </div>
-</div>
-
-<!-- June 2026 -->
-<div class="section-header">
-  <span class="section-title">June 2026</span>
-  <span class="text-secondary" style="font-size: var(--font-caption-size);">3 completed</span>
-</div>
-
-<div class="card mb-md card-clickable">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Add user authentication with OAuth</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed Jun 28 · Thorough process · 14 tasks · 28 files · 1,200 lines</div>
-    </div>
-    <span class="badge badge-success">Merged</span>
-  </div>
-  <div class="flex gap-lg" style="font-size: var(--font-caption-size); color: var(--color-secondary);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-merge" style="font-size:12px;"></i> PR #38 merged to main</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-commit" style="font-size:12px;"></i> 14 commits</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-beaker" style="font-size:12px;"></i> 42 tests added</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-shield" style="font-size:12px;"></i> Security reviewed</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-dashboard" style="font-size:12px;"></i> Perf reviewed</span>
-  </div>
-  <div class="divider"></div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-file-text" style="font-size:12px; color: var(--color-info);"></i> Spec</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-tasklist" style="font-size:12px; color: var(--color-info);"></i> Plan</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-law" style="font-size:12px; color: var(--color-info);"></i> ADR-003, ADR-004</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-eye" style="font-size:12px; color: var(--color-info);"></i> Review</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-shield" style="font-size:12px; color: var(--color-info);"></i> Security</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-dashboard" style="font-size:12px; color: var(--color-info);"></i> Performance</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-pulse" style="font-size:12px; color: var(--color-info);"></i> Audit Log</span>
-  </div>
-</div>
-
-<div class="card mb-md card-clickable">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Migrate from REST to tRPC for internal APIs</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed Jun 20 · Thorough process · 11 tasks · 22 files · 890 lines</div>
-    </div>
-    <span class="badge badge-success">Merged</span>
-  </div>
-  <div class="flex gap-lg" style="font-size: var(--font-caption-size); color: var(--color-secondary);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-merge" style="font-size:12px;"></i> PR #32 merged to main</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-commit" style="font-size:12px;"></i> 11 commits</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-beaker" style="font-size:12px;"></i> 18 tests updated</span>
-  </div>
-  <div class="divider"></div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-file-text" style="font-size:12px; color: var(--color-info);"></i> Spec</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-law" style="font-size:12px; color: var(--color-info);"></i> ADR-002</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-eye" style="font-size:12px; color: var(--color-info);"></i> Review</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-pulse" style="font-size:12px; color: var(--color-info);"></i> Audit Log</span>
-  </div>
-</div>
-
-<div class="card mb-lg card-clickable">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Initial project setup and scaffolding</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed Jun 10 · Thorough process · 6 tasks · 35 files · 2,100 lines</div>
-    </div>
-    <span class="badge badge-success">Merged</span>
-  </div>
-  <div class="flex gap-lg" style="font-size: var(--font-caption-size); color: var(--color-secondary);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-merge" style="font-size:12px;"></i> PR #1 merged to main</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-git-commit" style="font-size:12px;"></i> 6 commits</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-beaker" style="font-size:12px;"></i> 12 tests</span>
-  </div>
-  <div class="divider"></div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-file-text" style="font-size:12px; color: var(--color-info);"></i> Spec</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-tasklist" style="font-size:12px; color: var(--color-info);"></i> Plan</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-law" style="font-size:12px; color: var(--color-info);"></i> ADR-001</span>
-    <span class="flex items-center gap-sm"><i class="codicon codicon-pulse" style="font-size:12px; color: var(--color-info);"></i> Audit Log</span>
-  </div>
-</div>
-
-<!-- Example: Compacted (Warm Tier) Entry -->
-<div class="section-header">
-  <span class="section-title">January 2026 <span class="badge" style="margin-left: var(--space-sm); height:16px; font-size:10px;">Compacted</span></span>
-  <span class="text-secondary" style="font-size: var(--font-caption-size);">2 entries · summary only</span>
-</div>
-
-<div class="card mb-md" style="opacity: 0.7;">
-  <div class="flex items-center gap-md mb-sm">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Set up CI/CD pipeline with GitHub Actions</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed Jan 15 · Standard · 5 tasks · 8 files</div>
-    </div>
-    <span class="badge">Summary Only</span>
-  </div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-note" style="font-size:12px; color: var(--color-info);"></i> Summary</span>
-    <span class="text-secondary">·</span>
-    <button class="btn btn-ghost btn-sm" style="height: 18px; font-size: var(--font-caption-size);">
-      <i class="codicon codicon-cloud-download" style="font-size:10px;"></i> Restore Full Artifacts
-    </button>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">from git history</span>
-  </div>
-</div>
-
-<div class="card mb-lg" style="opacity: 0.7;">
-  <div class="flex items-center gap-md mb-sm">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold">Add dark mode support</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Completed Jan 8 · Light · 3 tasks · 6 files</div>
-    </div>
-    <span class="badge">Summary Only</span>
-  </div>
-  <div class="flex gap-md" style="font-size: var(--font-caption-size);">
-    <span class="flex items-center gap-sm"><i class="codicon codicon-note" style="font-size:12px; color: var(--color-info);"></i> Summary</span>
-    <span class="text-secondary">·</span>
-    <button class="btn btn-ghost btn-sm" style="height: 18px; font-size: var(--font-caption-size);">
-      <i class="codicon codicon-cloud-download" style="font-size:10px;"></i> Restore Full Artifacts
-    </button>
-  </div>
-</div>
-
-<!-- Summary Stats -->
-<div class="card" style="background: var(--color-surface-hover);">
-  <div class="section-header" style="margin-bottom: var(--space-md);">
-    <span class="section-title">Project Totals</span>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-lg); font-size: var(--font-small-size); text-align: center;">
+  <!-- Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl);">
     <div>
-      <div style="font-size: var(--font-h3-size); font-weight: 600;">7</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Work Requests</div>
+      <h3>History</h3>
+      <p style="font-size: var(--font-small-size); color: var(--color-secondary);">7 completed work requests • 49 tasks • 5,200 lines</p>
     </div>
-    <div>
-      <div style="font-size: var(--font-h3-size); font-weight: 600;">49</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Tasks Completed</div>
-    </div>
-    <div>
-      <div style="font-size: var(--font-h3-size); font-weight: 600;">109</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Tests Added</div>
-    </div>
-    <div>
-      <div style="font-size: var(--font-h3-size); font-weight: 600;">5</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">ADRs Recorded</div>
-    </div>
-    <div>
-      <div style="font-size: var(--font-h3-size); font-weight: 600;">5,200</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Lines Engineered</div>
+    <div style="display: flex; gap: var(--space-sm); align-items: center;">
+      <input class="input" style="width: 200px; height: 24px; font-size: var(--font-caption-size);" placeholder="Search history..." />
     </div>
   </div>
 
-  <div class="divider"></div>
+  <!-- July 2026 -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h4 style="margin-bottom: var(--space-md); color: var(--color-secondary); font-size: var(--font-caption-size); text-transform: uppercase; letter-spacing: 0.05em;">July 2026</h4>
 
-  <div class="flex items-center justify-between" style="font-size: var(--font-caption-size);">
-    <span class="text-secondary">
-      <i class="codicon codicon-database" style="font-size:12px;"></i>
-      .codestudio/ size: 2.4 MB (5 hot, 2 compacted)
-    </span>
-    <button class="btn btn-ghost btn-sm" onclick="loadScreen('settings')">
-      <i class="codicon codicon-settings-gear" style="font-size:12px;"></i> History Settings
-    </button>
+    <!-- Entry 1 — EXPANDED (showing inline detail) -->
+    <div class="card" style="margin-bottom: var(--space-md);">
+      <!-- Header row -->
+      <div style="display: flex; align-items: center; gap: var(--space-md); cursor: pointer;">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Add user profile settings page</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Standard • 6 tasks • 12 files • +480 lines • Jul 8</div>
+        </div>
+        <span class="badge badge-success">PR #42</span>
+        <i class="codicon codicon-chevron-down" style="color: var(--color-secondary);"></i>
+      </div>
+
+      <!-- Expanded detail -->
+      <div style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--color-border);">
+
+        <!-- Summary grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-lg);">
+          <div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Process</div>
+            <div style="font-size: var(--font-small-size); font-weight: 600;">Standard</div>
+          </div>
+          <div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Duration</div>
+            <div style="font-size: var(--font-small-size); font-weight: 600;">1h 20m</div>
+          </div>
+          <div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Tests</div>
+            <div style="font-size: var(--font-small-size); font-weight: 600;">18 passing</div>
+          </div>
+          <div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Review</div>
+            <div style="font-size: var(--font-small-size); font-weight: 600;">0 critical</div>
+          </div>
+        </div>
+
+        <!-- Completed pipeline (mini) -->
+        <div style="display: flex; gap: var(--space-xs); margin-bottom: var(--space-lg);">
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Onboard ✓</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Define ✓</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Plan ✓</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Build ✓</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Verify ✓</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Review ✓</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 16px;">Ship ✓</span>
+        </div>
+
+        <!-- Artifacts list -->
+        <div style="margin-bottom: var(--space-lg);">
+          <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Artifacts</div>
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+            <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
+              <i class="codicon codicon-file-text" style="font-size: 12px; color: var(--color-secondary);"></i>
+              <span>user-profile-spec.md</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
+              <i class="codicon codicon-file-text" style="font-size: 12px; color: var(--color-secondary);"></i>
+              <span>plan.md (6 tasks, 2 phases)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
+              <i class="codicon codicon-file-text" style="font-size: 12px; color: var(--color-secondary);"></i>
+              <span>review-report.md (all clear)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key decisions -->
+        <div style="margin-bottom: var(--space-lg);">
+          <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Key Decisions</div>
+          <div style="font-size: var(--font-small-size); color: var(--color-secondary);">
+            • Used React Hook Form for validation (existing pattern)<br>
+            • Added avatar upload with S3 presigned URLs<br>
+            • Chose optimistic UI updates for settings changes
+          </div>
+        </div>
+
+        <!-- Commits -->
+        <div>
+          <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Commits</div>
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--font-small-size);">
+            <div><code style="color: var(--color-secondary);">f1a2b3c</code> feat: add user profile settings page</div>
+            <div><code style="color: var(--color-secondary);">d4e5f6a</code> feat: avatar upload with S3</div>
+            <div><code style="color: var(--color-secondary);">b7c8d9e</code> test: profile settings integration tests</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry 2 — Collapsed -->
+    <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Fix pagination bug in user list API</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Light • 2 tasks • 3 files • +45 lines • Jul 5</div>
+        </div>
+        <span class="badge badge-success">PR #41</span>
+        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+      </div>
+    </div>
   </div>
+
+  <!-- June 2026 -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h4 style="margin-bottom: var(--space-md); color: var(--color-secondary); font-size: var(--font-caption-size); text-transform: uppercase; letter-spacing: 0.05em;">June 2026</h4>
+
+    <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Implement OAuth2 authentication flow</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Thorough • 12 tasks • 28 files • +1,200 lines • Jun 28</div>
+        </div>
+        <span class="badge badge-success">PR #38</span>
+        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+      </div>
+    </div>
+
+    <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Add email notification service</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Standard • 8 tasks • 15 files • +620 lines • Jun 20</div>
+        </div>
+        <span class="badge badge-success">PR #35</span>
+        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+      </div>
+    </div>
+
+    <div class="card card-clickable" style="margin-bottom: var(--space-md);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Refactor database connection pooling</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Standard • 5 tasks • 8 files • +310 lines • Jun 12</div>
+        </div>
+        <span class="badge badge-success">PR #32</span>
+        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- January 2026 — Compacted (warm tier) -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h4 style="margin-bottom: var(--space-md); color: var(--color-secondary); font-size: var(--font-caption-size); text-transform: uppercase; letter-spacing: 0.05em;">January 2026 <span class="badge" style="font-size: 9px; height: 14px; margin-left: var(--space-sm);">Compacted</span></h4>
+
+    <div class="card card-clickable" style="margin-bottom: var(--space-md); opacity: 0.7;">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-archive" style="color: var(--color-secondary); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Initial project setup and scaffolding</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Thorough • 15 tasks • 42 files • +2,100 lines • Jan 15</div>
+        </div>
+        <span class="badge" style="font-size: 9px; height: 14px;">Summary Only</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size);">Restore</button>
+      </div>
+    </div>
+
+    <div class="card card-clickable" style="margin-bottom: var(--space-md); opacity: 0.7;">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-archive" style="color: var(--color-secondary); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Configure CI/CD pipeline</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Light • 3 tasks • 5 files • +180 lines • Jan 10</div>
+        </div>
+        <span class="badge" style="font-size: 9px; height: 14px;">Summary Only</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size);">Restore</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer stats -->
+  <div style="padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); font-size: var(--font-caption-size); color: var(--color-secondary); display: flex; gap: var(--space-xl);">
+    <span>7 work requests</span>
+    <span>49 tasks completed</span>
+    <span>109 tests written</span>
+    <span>5 ADRs recorded</span>
+    <span>5,200 lines shipped</span>
+  </div>
+
 </div>

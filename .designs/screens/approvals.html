@@ -1,108 +1,121 @@
-<!-- Approvals Center -->
+<!-- APPROVALS VIEW — "What needs my decision?"
+     Separate from Artifacts because approvals are time-sensitive decisions
+     Pattern: Pending items with inline artifact review + completed history
+-->
 
-<div class="page-header">
-  <h2>Approvals</h2>
-</div>
+<div class="view-approvals">
 
-<!-- Pending -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-circle-filled" style="font-size:8px; color: var(--color-warning);"></i> Pending (2)</span>
-</div>
+  <!-- Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl);">
+    <div>
+      <h3>Approvals</h3>
+      <p style="font-size: var(--font-small-size); color: var(--color-secondary);">2 items need your decision</p>
+    </div>
+  </div>
 
-<div class="card mb-md">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-shield" style="color: var(--color-error); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold" style="font-size: var(--font-small-size);">Security Review: Payment Endpoint</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Task 4 touches payment data and external API (Stripe)</div>
-    </div>
-    <span class="badge badge-error">High Risk</span>
-  </div>
-  <div class="text-secondary mb-md" style="font-size: var(--font-caption-size);">
-    <strong>Why required:</strong> Task modifies <code class="font-mono">src/routes/payment.ts</code> which handles financial transactions and communicates with an external payment provider. Security review is mandatory per Guarded process rules.
-  </div>
-  <div class="flex gap-md">
-    <button class="btn btn-success btn-sm"><i class="codicon codicon-check" style="font-size:12px;"></i> Approve</button>
-    <button class="btn btn-danger btn-sm"><i class="codicon codicon-close" style="font-size:12px;"></i> Reject</button>
-    <button class="btn btn-secondary btn-sm"><i class="codicon codicon-comment" style="font-size:12px;"></i> Comment</button>
-  </div>
-</div>
+  <!-- Pending Section -->
+  <div style="margin-bottom: var(--space-xxl);">
+    <h4 style="margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-md);">
+      <span>Pending</span>
+      <span class="badge badge-warning">2</span>
+    </h4>
 
-<div class="card mb-lg">
-  <div class="flex items-center gap-md mb-md">
-    <i class="codicon codicon-package" style="color: var(--color-warning); font-size:16px;"></i>
-    <div style="flex:1;">
-      <div class="font-bold" style="font-size: var(--font-small-size);">New Dependency: stripe@14.0.0</div>
-      <div class="text-secondary" style="font-size: var(--font-caption-size);">Agent wants to add stripe as a production dependency</div>
-    </div>
-    <span class="badge badge-warning">Review</span>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); margin-bottom: var(--space-md); font-size: var(--font-caption-size);">
-    <div>
-      <div class="text-secondary">Bundle Impact</div>
-      <div>+45KB gzipped</div>
-    </div>
-    <div>
-      <div class="text-secondary">License</div>
-      <div><span class="text-success">MIT ✓</span></div>
-    </div>
-    <div>
-      <div class="text-secondary">Last Commit</div>
-      <div>3 days ago</div>
-    </div>
-    <div>
-      <div class="text-secondary">npm audit</div>
-      <div><span class="text-success">No vulnerabilities ✓</span></div>
-    </div>
-    <div>
-      <div class="text-secondary">Weekly Downloads</div>
-      <div>2.1M</div>
-    </div>
-    <div>
-      <div class="text-secondary">Maintainer</div>
-      <div>Stripe, Inc.</div>
-    </div>
-  </div>
-  <div class="flex gap-md">
-    <button class="btn btn-success btn-sm"><i class="codicon codicon-check" style="font-size:12px;"></i> Approve</button>
-    <button class="btn btn-danger btn-sm"><i class="codicon codicon-close" style="font-size:12px;"></i> Reject</button>
-  </div>
-</div>
+    <!-- Approval 1: Security Review — Expanded with inline review -->
+    <div class="card" style="margin-bottom: var(--space-md); border-left: 3px solid var(--color-error);">
+      <div style="display: flex; align-items: flex-start; gap: var(--space-md);">
+        <i class="codicon codicon-shield" style="color: var(--color-error); font-size: 18px; margin-top: 2px;"></i>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+            <span style="font-size: var(--font-small-size); font-weight: 600;">Security Review Required</span>
+            <span class="badge badge-error">High Risk</span>
+          </div>
+          <div style="font-size: var(--font-small-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+            Task 4 handles payment data. The dynamic workflow engine detected <code>payment</code> and <code>stripe</code> keywords and promoted this to require security approval before proceeding.
+          </div>
 
-<!-- Completed -->
-<div class="section-header">
-  <span class="section-title"><i class="codicon codicon-pass-filled" style="font-size:12px; color: var(--color-success);"></i> Completed (5)</span>
-</div>
+          <!-- Inline review content -->
+          <div style="background: var(--color-surface-hover); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-md);">
+            <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Security Checklist</div>
+            <div style="display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--font-small-size);">
+              <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> No raw card data stored (uses Stripe tokens)</div>
+              <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> Webhook signature verification implemented</div>
+              <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> Idempotency keys prevent duplicate charges</div>
+              <div><i class="codicon codicon-warning" style="color: var(--color-warning); font-size: 12px;"></i> Rate limiting not yet implemented (Task 8)</div>
+              <div><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i> All inputs validated with Zod schemas</div>
+            </div>
+          </div>
 
-<div style="display: flex; flex-direction: column; gap: var(--space-xs);">
-  <div class="tree-item" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
-    <span class="tree-item-label">Spec: stripe-payment-spec.md</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 45m ago</span>
+          <!-- Action buttons -->
+          <div style="display: flex; gap: var(--space-md);">
+            <button class="btn btn-success btn-sm"><i class="codicon codicon-pass"></i> Approve</button>
+            <button class="btn btn-danger btn-sm"><i class="codicon codicon-close"></i> Reject</button>
+            <div style="flex: 1;"></div>
+            <input class="input" style="width: 200px; height: 22px; font-size: var(--font-caption-size);" placeholder="Add a comment..." />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval 2: New Dependency -->
+    <div class="card" style="margin-bottom: var(--space-md); border-left: 3px solid var(--color-warning);">
+      <div style="display: flex; align-items: flex-start; gap: var(--space-md);">
+        <i class="codicon codicon-package" style="color: var(--color-warning); font-size: 18px; margin-top: 2px;"></i>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+            <span style="font-size: var(--font-small-size); font-weight: 600;">New Dependency: stripe@14.0.0</span>
+            <span class="badge badge-warning">Medium Risk</span>
+          </div>
+
+          <!-- Package details -->
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--space-xs) var(--space-lg); font-size: var(--font-small-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+            <span>Bundle impact:</span> <span>+245 KB (gzipped)</span>
+            <span>License:</span> <span style="color: var(--color-success);">MIT ✓</span>
+            <span>Security audit:</span> <span style="color: var(--color-success);">0 vulnerabilities ✓</span>
+            <span>Weekly downloads:</span> <span>2.1M</span>
+            <span>Maintainer:</span> <span>Stripe, Inc. (verified)</span>
+          </div>
+
+          <!-- Action buttons -->
+          <div style="display: flex; gap: var(--space-md);">
+            <button class="btn btn-success btn-sm"><i class="codicon codicon-pass"></i> Approve</button>
+            <button class="btn btn-danger btn-sm"><i class="codicon codicon-close"></i> Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="tree-item" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
-    <span class="tree-item-label">Plan: 8 tasks approved</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 30m ago</span>
+
+  <!-- Completed Section -->
+  <div>
+    <h4 style="margin-bottom: var(--space-md); color: var(--color-secondary);">Completed</h4>
+
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); font-size: var(--font-small-size); border-radius: var(--radius-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+        <span style="flex: 1;">Specification: stripe-payment-spec.md</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Approved • 1h 45m ago</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); font-size: var(--font-small-size); border-radius: var(--radius-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+        <span style="flex: 1;">Plan: 8 tasks across 3 phases</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Approved • 1h 30m ago</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); font-size: var(--font-small-size); border-radius: var(--radius-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+        <span style="flex: 1;">ADR-005: Service layer for payment logic</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Auto-approved • 1h 25m ago</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); font-size: var(--font-small-size); border-radius: var(--radius-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+        <span style="flex: 1;">Project context: context.md</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Auto-approved • 2h ago</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); font-size: var(--font-small-size); border-radius: var(--radius-md);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+        <span style="flex: 1;">Phase 1 checkpoint: Foundation complete</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Approved • 45m ago</span>
+      </div>
+    </div>
   </div>
-  <div class="tree-item" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
-    <span class="tree-item-label">ADR-005: Stripe integration approach</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">1h 30m ago</span>
-  </div>
-  <div class="tree-item" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
-    <span class="tree-item-label">Checkpoint: Foundation (Tasks 1-3)</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Passed</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">45m ago</span>
-  </div>
-  <div class="tree-item" style="border-radius: var(--radius-md);">
-    <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size:14px;"></i>
-    <span class="tree-item-label">Project context accuracy</span>
-    <span class="badge badge-success" style="height:16px; font-size:10px;">Confirmed</span>
-    <span class="text-secondary" style="font-size: var(--font-caption-size);">2h ago</span>
-  </div>
+
 </div>

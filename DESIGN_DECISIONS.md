@@ -635,6 +635,49 @@ type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
 
 ---
 
+## DD-016: Screen Consolidation — 14 Views → 7 Views
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The initial prototype had 14 separate screens. During design review, we identified three structural problems:
+
+1. **Dashboard anti-pattern** — `home.html` duplicated summary data from 5 other screens (workflow pipeline, task count, approvals, activity, active task) without owning any action. It added a click to reach every real action.
+2. **List → Detail explosion** — 4 list/detail pairs (`task-board`→`task-detail`, `artifacts`→`artifact-review`, `history`→`history-detail`, `approvals`→approval detail) that could use inline expansion instead of page navigation.
+3. **Separate screens for rare actions** — `workflow-setup` (used once per work request), `review-report` (a specialized artifact), `project-context` (a specialized artifact) each got their own screen despite being used infrequently.
+
+14 screens in a sidebar extension creates **navigation fatigue** — users lose context switching between views and can't remember where things are.
+
+**Decision:** Consolidate to 7 views, each answering exactly ONE question:
+
+| # | View | Absorbs | Question |
+|---|------|---------|----------|
+| 1 | **Workflow** | `home` + `workflow` + `workflow-setup` | "Where am I in the process?" |
+| 2 | **Tasks** | `task-board` + `task-detail` | "What's being built?" |
+| 3 | **Activity** | `agent-activity` | "What's the agent doing now?" |
+| 4 | **Artifacts** | `artifacts` + `artifact-review` + `review-report` + `project-context` | "What's been produced?" |
+| 5 | **Approvals** | `approvals` (with inline artifact review) | "What needs my decision?" |
+| 6 | **History** | `history` + `history-detail` | "What did we do before?" |
+| 7 | **Settings** | `settings` | "How do I configure this?" |
+
+**Key design patterns:**
+- **Inline expansion** replaces page navigation for detail views (tasks, artifacts, history entries expand in-place)
+- **Workflow IS the home** — no separate dashboard. Empty state = new work request form (`workflow-setup` absorbed)
+- **Approvals stay separate from Artifacts** — approvals are time-sensitive decisions that need their own queue; artifacts are reference material
+- **Settings stays as a custom screen** — extension settings have complex interactions (history tiering, agent toggles) that benefit from a purpose-built UI
+
+**Rationale:** 
+- 7 views = 7 mental models. Each view answers one question. Users can hold 7±2 items in working memory (Miller's Law).
+- Inline expansion preserves context — the user never loses their place in the list.
+- Eliminating the dashboard removes a "dead-end" screen that only redirected to other screens.
+- 50% fewer screens means 50% less code to build and maintain.
+
+**Alternatives Considered:**
+- *Keep all 14 screens* — Rejected: navigation fatigue, too many mental models, dashboard anti-pattern
+- *Collapse to 5 views (merge Approvals into Artifacts, use native VS Code settings)* — Rejected: approvals are time-sensitive and deserve their own queue; custom settings UI gives better control over complex interactions like history tiering
+- *Tab-based navigation instead of sidebar* — Rejected: VS Code extensions use sidebar panels as the primary pattern; tabs would fight the host IDE's own tab system
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -654,3 +697,4 @@ type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
 | DD-013 | Summary Auto-Generation on Archive | Accepted |
 | DD-014 | Dynamic Workflow Generation (risk engine + conditional gates + mid-workflow promotion) | Accepted |
 | DD-015 | Workflow Definition Schema (typed JSON with flat arrays, risk signals, reasons) | Accepted |
+| DD-016 | Screen Consolidation: 14 → 7 Views | Accepted |

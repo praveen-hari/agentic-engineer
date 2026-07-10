@@ -40,43 +40,34 @@
       <div class="sidebar-header">
         Engineering Workspace
         <div class="sidebar-header-actions">
-          <button class="btn-icon" title="New Work Request" onclick="loadScreen('workflow-setup')"><i class="codicon codicon-add"></i></button>
           <button class="btn-icon" title="Refresh"><i class="codicon codicon-refresh"></i></button>
         </div>
       </div>
 
       <div class="nav-section">
-        <a class="nav-item is-active" data-screen="home">
-          <i class="codicon codicon-home"></i>
-          <span class="tree-item-label">Home</span>
-        </a>
-        <a class="nav-item" data-screen="workflow">
+        <a class="nav-item is-active" data-screen="workflow">
           <i class="codicon codicon-type-hierarchy-sub"></i>
           <span class="tree-item-label">Workflow</span>
           <span class="badge badge-accent" style="margin-left:auto; height:16px; font-size:10px;">BUILD</span>
         </a>
-        <a class="nav-item" data-screen="task-board">
+        <a class="nav-item" data-screen="tasks">
           <i class="codicon codicon-tasklist"></i>
           <span class="tree-item-label">Tasks</span>
           <span class="tree-item-meta" style="margin-left:auto;">3/8</span>
         </a>
+        <a class="nav-item" data-screen="activity">
+          <i class="codicon codicon-pulse"></i>
+          <span class="tree-item-label">Activity</span>
+        </a>
         <a class="nav-item" data-screen="artifacts">
           <i class="codicon codicon-file-code"></i>
           <span class="tree-item-label">Artifacts</span>
-          <span class="tree-item-meta" style="margin-left:auto;">5</span>
-        </a>
-        <a class="nav-item" data-screen="agent-activity">
-          <i class="codicon codicon-pulse"></i>
-          <span class="tree-item-label">Activity</span>
+          <span class="tree-item-meta" style="margin-left:auto;">6</span>
         </a>
         <a class="nav-item" data-screen="approvals">
           <i class="codicon codicon-shield"></i>
           <span class="tree-item-label">Approvals</span>
           <span class="nav-item-badge">2</span>
-        </a>
-        <a class="nav-item" data-screen="project-context">
-          <i class="codicon codicon-symbol-structure"></i>
-          <span class="tree-item-label">Context</span>
         </a>
         <a class="nav-item" data-screen="history">
           <i class="codicon codicon-history"></i>
@@ -88,26 +79,6 @@
           <span class="tree-item-label">Settings</span>
         </a>
       </div>
-
-      <div class="divider" style="margin: var(--space-sm) var(--space-xl);"></div>
-
-      <div class="nav-section">
-        <div class="nav-section-title">Current Work</div>
-        <a class="nav-item" data-screen="artifact-review">
-          <i class="codicon codicon-file-text" style="color: var(--color-success);"></i>
-          <span class="tree-item-label">stripe-payment-spec.md</span>
-          <span class="badge badge-success" style="height:16px; font-size:10px;">Approved</span>
-        </a>
-        <a class="nav-item" data-screen="task-detail">
-          <i class="codicon codicon-circle-filled" style="color: var(--color-accent); font-size:10px;"></i>
-          <span class="tree-item-label">Task 4: Payment intent endpoint</span>
-        </a>
-        <a class="nav-item" data-screen="review-report">
-          <i class="codicon codicon-file-text" style="color: var(--color-secondary);"></i>
-          <span class="tree-item-label">review-report.md</span>
-          <span class="badge" style="height:16px; font-size:10px;">Pending</span>
-        </a>
-      </div>
     </nav>
 
     <!-- Main Area -->
@@ -115,8 +86,8 @@
       <!-- Tab Bar -->
       <div class="tab-bar">
         <div class="tab-item is-active" id="main-tab">
-          <i class="codicon codicon-home" style="font-size:14px;"></i>
-          <span>Home</span>
+          <i class="codicon codicon-type-hierarchy-sub" style="font-size:14px;"></i>
+          <span>Workflow</span>
         </div>
       </div>
 
@@ -146,19 +117,12 @@
 
   <script>
     const tabIcons = {
-      'home': 'codicon-home',
       'workflow': 'codicon-type-hierarchy-sub',
-      'task-board': 'codicon-tasklist',
-      'task-detail': 'codicon-tasklist',
+      'tasks': 'codicon-tasklist',
+      'activity': 'codicon-pulse',
       'artifacts': 'codicon-file-code',
-      'artifact-review': 'codicon-file-text',
-      'agent-activity': 'codicon-pulse',
       'approvals': 'codicon-shield',
-      'project-context': 'codicon-symbol-structure',
-      'workflow-setup': 'codicon-add',
-      'review-report': 'codicon-file-text',
       'history': 'codicon-history',
-      'history-detail': 'codicon-history',
       'settings': 'codicon-settings-gear'
     };
 
@@ -195,8 +159,8 @@
     });
 
     // Load initial screen
-    loadScreen(location.hash.slice(1) || 'home');
-    window.addEventListener('hashchange', () => loadScreen(location.hash.slice(1) || 'home'));
+    loadScreen(location.hash.slice(1) || 'workflow');
+    window.addEventListener('hashchange', () => loadScreen(location.hash.slice(1) || 'workflow'));
   </script>
 </body>
 </html>

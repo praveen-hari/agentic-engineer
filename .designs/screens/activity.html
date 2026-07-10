@@ -1,0 +1,170 @@
+<!-- ACTIVITY VIEW — "What's the agent doing now?"
+     Standalone view — unique enough to remain its own screen
+-->
+
+<div class="view-activity">
+
+  <!-- Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl);">
+    <div>
+      <h3>Agent Activity</h3>
+      <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Real-time execution log</p>
+    </div>
+    <button class="btn btn-secondary btn-sm"><i class="codicon codicon-debug-pause"></i> Pause Agent</button>
+  </div>
+
+  <!-- Live Status Card -->
+  <div class="card" style="border-left: 3px solid var(--color-accent); margin-bottom: var(--space-xl);">
+    <div style="display: flex; align-items: center; gap: var(--space-lg);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); animation: pulse 2s infinite;"></div>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">Working on Task 4: POST /api/payments/intent</div>
+        <div style="display: flex; gap: var(--space-lg); font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-xs);">
+          <span>TDD Phase: <span style="color: var(--color-success); font-weight: 600;">GREEN</span></span>
+          <span>Skills: incremental-implementation, test-driven-development</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Execution Timeline -->
+  <div class="card" style="margin-bottom: var(--space-xl);">
+    <div class="card-header">
+      <span class="card-title">Execution Timeline</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Last 2 minutes</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0; position: relative; padding-left: var(--space-xl);">
+      <!-- Timeline line -->
+      <div style="position: absolute; left: 7px; top: 4px; bottom: 4px; width: 1px; background: var(--color-border);"></div>
+
+      <!-- Entry: Current -->
+      <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; position: relative;">
+        <div style="position: absolute; left: calc(-1 * var(--space-xl) + 3px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-accent); border: 2px solid var(--color-background); z-index: 1; margin-top: 4px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <i class="codicon codicon-edit" style="font-size: 12px; color: var(--color-accent);"></i>
+            <span style="font-size: var(--font-small-size);">Writing error handler for Stripe API failures</span>
+            <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: auto;">just now</span>
+          </div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: 2px;">
+            <code>src/services/payment.service.ts</code> — adding try/catch with typed error mapping
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry: Test pass -->
+      <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; position: relative;">
+        <div style="position: absolute; left: calc(-1 * var(--space-xl) + 3px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-success); border: 2px solid var(--color-background); z-index: 1; margin-top: 4px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <i class="codicon codicon-pass" style="font-size: 12px; color: var(--color-success);"></i>
+            <span style="font-size: var(--font-small-size);">Test passed: "returns 201 with client_secret"</span>
+            <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: auto;">30s ago</span>
+          </div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-success); margin-top: 2px;">
+            GREEN — criterion 1 satisfied
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry: Edit -->
+      <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; position: relative;">
+        <div style="position: absolute; left: calc(-1 * var(--space-xl) + 3px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-secondary); border: 2px solid var(--color-background); z-index: 1; margin-top: 4px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <i class="codicon codicon-edit" style="font-size: 12px; color: var(--color-secondary);"></i>
+            <span style="font-size: var(--font-small-size);">Implemented payment intent creation</span>
+            <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: auto;">45s ago</span>
+          </div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: 2px;">
+            <code>src/routes/payments.ts</code> +42 lines, <code>src/services/payment.service.ts</code> +28 lines
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry: Test written (RED) -->
+      <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; position: relative;">
+        <div style="position: absolute; left: calc(-1 * var(--space-xl) + 3px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-secondary); border: 2px solid var(--color-background); z-index: 1; margin-top: 4px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <i class="codicon codicon-beaker" style="font-size: 12px; color: var(--color-error);"></i>
+            <span style="font-size: var(--font-small-size);">Wrote failing test (TDD RED phase)</span>
+            <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: auto;">1m ago</span>
+          </div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-error); margin-top: 2px;">
+            RED — test "returns 201 with client_secret" fails as expected
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry: Source verification -->
+      <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; position: relative;">
+        <div style="position: absolute; left: calc(-1 * var(--space-xl) + 3px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-secondary); border: 2px solid var(--color-background); z-index: 1; margin-top: 4px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <i class="codicon codicon-book" style="font-size: 12px; color: var(--color-info);"></i>
+            <span style="font-size: var(--font-small-size);">Verified Stripe PaymentIntents API docs</span>
+            <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: auto;">1m ago</span>
+          </div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: 2px;">
+            Source: <a href="#" style="color: var(--color-text-link);">stripe.com/docs/api/payment_intents/create</a> — confirmed idempotency_key parameter
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry: File read -->
+      <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; position: relative;">
+        <div style="position: absolute; left: calc(-1 * var(--space-xl) + 3px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-secondary); border: 2px solid var(--color-background); z-index: 1; margin-top: 4px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <i class="codicon codicon-file-code" style="font-size: 12px; color: var(--color-secondary);"></i>
+            <span style="font-size: var(--font-small-size);">Read existing route patterns</span>
+            <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: auto;">2m ago</span>
+          </div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: 2px;">
+            <code>src/routes/index.ts</code>, <code>src/middleware/auth.ts</code> — following existing Express patterns
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Decisions -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Decisions Made</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">During Task 4</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+      <div style="padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <div style="font-size: var(--font-small-size); font-weight: 600; margin-bottom: var(--space-xs);">Used service layer pattern (not inline in route)</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <strong>Rationale:</strong> Existing codebase uses service layer for all business logic (observed in <code>src/services/user.service.ts</code>). Consistency > convenience.
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-info); margin-top: var(--space-xs);">
+          <i class="codicon codicon-book" style="font-size: 10px;"></i> Source: project conventions in <code>.codestudio/context.md</code>
+        </div>
+      </div>
+
+      <div style="padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <div style="font-size: var(--font-small-size); font-weight: 600; margin-bottom: var(--space-xs);">Chose typed error mapping over generic catch</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <strong>Rationale:</strong> Stripe errors have specific types (StripeCardError, StripeInvalidRequestError). Mapping to HTTP status codes gives clients actionable error responses.
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-info); margin-top: var(--space-xs);">
+          <i class="codicon codicon-book" style="font-size: 10px;"></i> Source: <a href="#" style="color: var(--color-text-link);">stripe.com/docs/error-handling</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+</style>

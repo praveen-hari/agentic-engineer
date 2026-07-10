@@ -1,155 +1,180 @@
-<!-- Settings -->
+<!-- SETTINGS VIEW — "How do I configure this?"
+     Custom screen for complex extension settings
+-->
 
-<div class="page-header">
-  <h2>Settings</h2>
-</div>
+<div class="view-settings">
 
-<div style="max-width: 600px;">
+  <!-- Header -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h3>Settings</h3>
+    <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Configure the Engineering Workspace extension</p>
+  </div>
 
   <!-- Process Defaults -->
-  <div class="card mb-lg">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="card-header">
       <span class="card-title">Process Defaults</span>
     </div>
+
     <div class="form-group">
       <label class="label">Default Process Level</label>
-      <select class="select">
+      <select class="select" style="width: 200px;">
         <option>Auto-detect (recommended)</option>
         <option>Light</option>
-        <option>Standard</option>
+        <option selected>Standard</option>
         <option>Thorough</option>
         <option>Guarded</option>
       </select>
-    </div>
-    <div class="form-group">
-      <label class="label">Auto-approve Informational Decisions</label>
-      <div class="flex items-center gap-md" style="font-size: var(--font-small-size);">
-        <input type="checkbox" checked style="accent-color: var(--color-accent);" />
-        <span>Skip notification for low-risk agent decisions (naming, patterns, library versions)</span>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-xs);">
+        Auto-detect analyzes your objective and recommends a level. You can always override per work request.
       </div>
     </div>
+
     <div class="form-group">
-      <label class="label">Review Required Timeout</label>
-      <div class="flex items-center gap-md">
-        <input class="input" type="number" value="5" style="width: 80px;" />
-        <span style="font-size: var(--font-small-size);">minutes (auto-proceed if no objection)</span>
+      <label class="label">Auto-Approve Low-Risk Items</label>
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <div style="width: 36px; height: 20px; background: var(--color-accent); border-radius: 10px; position: relative; cursor: pointer;">
+          <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+        </div>
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">Enabled — auto-approves project context, ADRs, and Light-process plans</span>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 0;">
+      <label class="label">Review Timeout</label>
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <input class="input" type="number" value="30" style="width: 80px;" />
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">minutes — agent pauses if approval not given within this time</span>
       </div>
     </div>
   </div>
 
   <!-- History Management -->
-  <div class="card mb-lg" style="border-color: var(--color-accent);">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="card-header">
-      <span class="card-title"><i class="codicon codicon-history" style="font-size:14px;"></i> History Management</span>
+      <span class="card-title">History Management</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Three-tier storage strategy</span>
     </div>
 
-    <div class="alert alert-info mb-md">
-      <i class="codicon codicon-info"></i>
-      <span style="font-size: var(--font-caption-size);">History uses a tiered strategy to keep your repo fast. Recent work keeps full artifacts; older work is compacted to summaries. Full artifacts are always recoverable from git history.</span>
+    <!-- Current usage -->
+    <div style="margin-bottom: var(--space-lg); padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+      <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
+        <span style="font-size: var(--font-small-size);">Storage Usage</span>
+        <span style="font-size: var(--font-small-size); font-weight: 600;">2.4 MB / 20 MB</span>
+      </div>
+      <div style="height: 4px; background: var(--color-border); border-radius: var(--radius-full); overflow: hidden;">
+        <div style="width: 12%; height: 100%; background: var(--color-success); border-radius: var(--radius-full);"></div>
+      </div>
+      <div style="display: flex; gap: var(--space-xl); margin-top: var(--space-sm); font-size: var(--font-caption-size); color: var(--color-secondary);">
+        <span>🔴 Hot: 5 entries (full artifacts)</span>
+        <span>🟡 Warm: 0 entries (summaries)</span>
+        <span>🔵 Cold: 2 entries (archived)</span>
+      </div>
     </div>
 
+    <!-- Tier settings -->
     <div class="form-group">
-      <label class="label">Hot Tier — Full Artifacts in Repo</label>
-      <div class="flex items-center gap-md">
-        <span style="font-size: var(--font-small-size);">Keep full artifacts for the last</span>
+      <label class="label">Hot Tier (Full Artifacts)</label>
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">Keep last</span>
         <input class="input" type="number" value="20" style="width: 60px;" />
-        <span style="font-size: var(--font-small-size);">work requests</span>
-      </div>
-      <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size);">Includes spec, plan, ADRs, review reports, and audit log. Currently using ~2.4 MB.</div>
-    </div>
-
-    <div class="form-group">
-      <label class="label">Warm Tier — Summary Only</label>
-      <div class="flex items-center gap-md" style="font-size: var(--font-small-size);">
-        <input type="checkbox" checked style="accent-color: var(--color-accent);" />
-        <span>Auto-compact older entries to summary.md only (full artifacts removed from working tree, preserved in git history)</span>
-      </div>
-      <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size);">
-        Summary includes: objective, process level, duration, task count, key decisions, approval history, commit list. ~2KB per entry.
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">work requests with full artifacts in memory</span>
       </div>
     </div>
 
     <div class="form-group">
-      <label class="label">Cold Tier — Audit Log Cleanup</label>
-      <div class="flex items-center gap-md">
-        <span style="font-size: var(--font-small-size);">Remove events.jsonl from summaries after</span>
-        <input class="input" type="number" value="6" style="width: 60px;" />
-        <span style="font-size: var(--font-small-size);">months</span>
-      </div>
-      <div class="text-secondary mt-sm" style="font-size: var(--font-caption-size);">Audit logs are the largest files (~50-200KB each). Always recoverable via <code class="font-mono">git log</code>.</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Current Usage -->
-    <div class="section-header" style="margin-bottom: var(--space-md);">
-      <span class="section-title">Current Usage</span>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); font-size: var(--font-small-size); text-align: center; margin-bottom: var(--space-md);">
-      <div>
-        <div style="font-size: var(--font-h4-size); font-weight: 600;">5</div>
-        <div class="text-secondary" style="font-size: var(--font-caption-size);">Hot (full artifacts)</div>
-      </div>
-      <div>
-        <div style="font-size: var(--font-h4-size); font-weight: 600;">0</div>
-        <div class="text-secondary" style="font-size: var(--font-caption-size);">Warm (summaries)</div>
-      </div>
-      <div>
-        <div style="font-size: var(--font-h4-size); font-weight: 600;">2.4 MB</div>
-        <div class="text-secondary" style="font-size: var(--font-caption-size);">Total .codestudio/ size</div>
+      <label class="label">Warm Tier (Auto-Compact)</label>
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <div style="width: 36px; height: 20px; background: var(--color-accent); border-radius: 10px; position: relative; cursor: pointer;">
+          <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+        </div>
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">Auto-compact entries older than hot tier to summary + index</span>
       </div>
     </div>
 
-    <div class="progress-bar mb-sm">
-      <div class="progress-fill" style="width: 12%; background: var(--color-success);"></div>
-    </div>
-    <div class="text-secondary" style="font-size: var(--font-caption-size);">2.4 MB of ~20 MB recommended limit</div>
-  </div>
-
-  <!-- Recovery Info -->
-  <div class="card mb-lg">
-    <div class="card-header">
-      <span class="card-title"><i class="codicon codicon-git-branch" style="font-size:14px;"></i> Recovering Compacted History</span>
-    </div>
-    <div style="font-size: var(--font-small-size); line-height: 1.6;">
-      <p class="mb-md">When history is compacted, full artifacts are removed from the working tree but <strong>remain in git history forever</strong>. To recover:</p>
-      <div style="background: var(--color-background); padding: var(--space-md); border-radius: var(--radius-md); font-family: var(--font-code-family); font-size: var(--font-code-size); margin-bottom: var(--space-md);">
-        <div class="text-secondary"># Find the commit that archived the work request</div>
-        <div>git log --all -- .codestudio/archive/2026-01/user-auth/</div>
-        <div class="mt-sm text-secondary"># Restore full artifacts from that commit</div>
-        <div>git checkout &lt;commit-sha&gt; -- .codestudio/archive/2026-01/user-auth/</div>
-        <div class="mt-sm text-secondary"># Or view a specific file without restoring</div>
-        <div>git show &lt;commit-sha&gt;:.codestudio/archive/2026-01/user-auth/spec.md</div>
+    <div class="form-group" style="margin-bottom: 0;">
+      <label class="label">Cold Tier (Audit Log Cleanup)</label>
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">Archive entries older than</span>
+        <input class="input" type="number" value="90" style="width: 60px;" />
+        <span style="font-size: var(--font-small-size); color: var(--color-secondary);">days (restorable from git history)</span>
       </div>
-      <p class="text-secondary">The extension can also do this for you — click "Restore Full Artifacts" on any compacted history entry.</p>
     </div>
   </div>
 
   <!-- Agent Configuration -->
-  <div class="card mb-lg">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="card-header">
       <span class="card-title">Agent Configuration</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Specialist agents for review stages</span>
     </div>
-    <div class="form-group">
-      <label class="label">Specialist Agents</label>
-      <div style="display: flex; flex-direction: column; gap: var(--space-sm); font-size: var(--font-small-size);">
-        <div class="flex items-center gap-md">
-          <input type="checkbox" checked style="accent-color: var(--color-accent);" />
-          <span>Code Reviewer (five-axis review)</span>
+
+    <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+      <!-- Code Reviewer -->
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <div style="width: 36px; height: 20px; background: var(--color-accent); border-radius: 10px; position: relative; cursor: pointer;">
+          <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
         </div>
-        <div class="flex items-center gap-md">
-          <input type="checkbox" checked style="accent-color: var(--color-accent);" />
-          <span>Security Auditor (OWASP assessment)</span>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Code Reviewer</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Five-axis review: correctness, readability, architecture, security, performance</div>
         </div>
-        <div class="flex items-center gap-md">
-          <input type="checkbox" style="accent-color: var(--color-accent);" />
-          <span>Performance Auditor (Core Web Vitals)</span>
-        </div>
-        <div class="flex items-center gap-md">
-          <input type="checkbox" style="accent-color: var(--color-accent);" />
-          <span>Test Engineer (coverage analysis)</span>
-        </div>
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Active</span>
       </div>
+
+      <!-- Security Auditor -->
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <div style="width: 36px; height: 20px; background: var(--color-accent); border-radius: 10px; position: relative; cursor: pointer;">
+          <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Security Auditor</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Vulnerability detection, threat modeling, secure coding practices</div>
+        </div>
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Active</span>
+      </div>
+
+      <!-- Performance Auditor -->
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <div style="width: 36px; height: 20px; background: var(--color-accent); border-radius: 10px; position: relative; cursor: pointer;">
+          <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Performance Auditor</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Core Web Vitals, loading, rendering, network optimization</div>
+        </div>
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Active</span>
+      </div>
+
+      <!-- Test Engineer -->
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <div style="width: 36px; height: 20px; background: var(--color-secondary); border-radius: 10px; position: relative; cursor: pointer; opacity: 0.5;">
+          <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px;"></div>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">Test Engineer</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Test strategy, test writing, coverage analysis</div>
+        </div>
+        <span class="badge" style="font-size: 9px; height: 14px;">Disabled</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Git Recovery -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Git Recovery</span>
+    </div>
+    <div style="font-size: var(--font-small-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+      All workflow state is committed to git. If anything goes wrong, you can recover:
+    </div>
+    <div style="background: var(--color-input-bg); border-radius: var(--radius-md); padding: var(--space-md); font-family: var(--font-code-family); font-size: var(--font-code-size); line-height: 1.8;">
+      <div style="color: var(--color-secondary);"># View workflow history</div>
+      <div>git log --oneline -- .codestudio/</div>
+      <div style="color: var(--color-secondary); margin-top: var(--space-sm);"># Restore a previous workflow state</div>
+      <div>git checkout &lt;commit&gt; -- .codestudio/</div>
+      <div style="color: var(--color-secondary); margin-top: var(--space-sm);"># Restore compacted history entry</div>
+      <div>git show &lt;commit&gt;:.codestudio/history/&lt;id&gt;/</div>
     </div>
   </div>
 
