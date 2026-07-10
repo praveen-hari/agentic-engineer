@@ -430,6 +430,211 @@ The summary is ~2 KB and serves as the **sole artifact** for warm/cold tier entr
 
 ---
 
+## DD-014: Dynamic Workflow Generation
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** Each work request needs a workflow (stages, gates, skills, approvals). Should workflows be static templates or dynamically generated per request?
+
+**Decision:** Workflows are **dynamically generated** for each work request by a three-step pipeline:
+
+### Step 1: Risk Assessment Engine
+
+Analyzes the work request to determine the process level:
+
+```
+Input: User's objective text + codebase context
+                    │
+    ┌───────────────┼───────────────┐
+    ▼               ▼               ▼
+ Keyword         Codebase         Pattern
+ Analysis        Analysis         Detection
+    │               │               │
+ Detects:        Detects:         Detects:
+ - domain        - files likely   - single vs
+   (auth,          touched          multi-file
+   payment,      - existing       - new vs
+   database)       patterns         modify
+ - risk words    - module         - dependency
+   (migrate,       boundaries       changes
+   delete,       - test coverage  - API surface
+   deploy)                          changes
+    │               │               │
+    └───────────────┼───────────────┘
+                    ▼
+            Process Level Decision
+```
+
+**Risk signals → process level mapping:**
+
+| Signal | Weight | Example |
+|---|---|---|
+| Keywords: auth, payment, security, migrate, delete, deploy | High | "Add payment processing" → financial risk |
+| Touches database schema | High | Detected via file analysis of migration/schema files |
+| New external dependency | Medium | New package not in package.json |
+| Touches auth/session code | High | Files in auth/, middleware/ directories |
+| Multi-file change (>5 files estimated) | Medium | Scope analysis from objective |
+| Single-file change | Low | "Fix typo in README" |
+| Documentation only | Minimal | "Update API docs" |
+
+### Step 2: Workflow Generator
+
+Based on the process level, dynamically builds `workflow.json`:
+
+**Base templates per process level:**
+
+| Process Level | Base Stages | Base Gates | Base Approvals |
+|---|---|---|---|
+| Light | plan, build, review(optional) | tests-pass | 0 |
+| Standard | onboard, define, plan, build, verify, review, ship | spec-approved, plan-approved, tests-pass, code-review | 2 (spec, review) |
+| Thorough | All Standard + architecture | All Standard + security, performance, docs | 3-4 |
+| Guarded | All Thorough (none skippable) | All Thorough + rollback-tested, data-integrity | Multiple + restricted |
+
+**Then conditional additions based on detected context:**
+
+| Detected Context | Added Gate | Added Skill | Added Approval |
+|---|---|---|---|
+| Touches payment/financial data | security-review | security-and-hardening | Explicit: security review |
+| New external dependency | dependency-audit | — | Review: dependency approval |
+| Touches auth/session code | security-review | security-and-hardening | Restricted: auth change |
+| Database schema change | rollback-tested, data-integrity | deprecation-and-migration | Restricted: schema migration |
+| New API endpoint | api-contract-review | api-and-interface-design | — |
+| UI changes | accessibility-check | frontend-ui-engineering, browser-testing | — |
+| Uses new library/framework | source-verification | source-driven-development | — |
+| Performance-sensitive path | performance-budget | performance-optimization | — |
+| External service integration | — | observability-and-instrumentation | Review: external integration |
+
+### Step 3: Mid-Workflow Promotion
+
+The workflow is a **living document** — it can evolve during execution:
+
+- If the agent discovers during BUILD that the task is riskier than initially assessed (e.g., needs to modify auth middleware), it can **promote** the process level
+- Promotion adds gates and approvals but never removes completed ones
+- The user is notified: "Risk level increased — security review gate added because Task 4 modifies authentication middleware"
+- The user can accept or override the promotion
+
+**Promotion rules:**
+- Light → Standard: when agent discovers multi-file changes or architectural decisions needed
+- Standard → Thorough: when agent encounters security-sensitive code, database changes, or new API surfaces
+- Any → Guarded: only by explicit user action (never auto-promoted to Guarded)
+
+### Example: Three Requests → Three Different Workflows
+
+**"Fix typo in README"** → Light: 3 stages, 0 approvals, 0 gates, 1 skill  
+**"Add Stripe payments"** → Standard + security gate: 7 stages, 4 approvals, 5 gates, 8 skills  
+**"Migrate MySQL to PostgreSQL"** → Guarded: 7 stages (none skippable), 8 approvals (2 restricted), 10 gates, 12 skills
+
+**Rationale:**
+- Static templates can't account for the infinite variety of work requests
+- The same "Standard" process level needs different gates depending on what the code touches
+- Mid-workflow promotion prevents the "we assessed it as low-risk but it turned out to be high-risk" failure mode
+- Dynamic generation means the extension gets smarter as the risk assessment engine improves — without changing the workflow templates
+
+**Alternatives Considered:**
+- *Static workflow templates only* — Rejected: can't add security gates dynamically when payment code is detected; every template would need to include every possible gate
+- *Fully manual workflow configuration* — Rejected: users don't know what gates they need; the system should figure it out
+- *AI-generated workflows (LLM decides the stages)* — Rejected for MVP: too unpredictable; the risk assessment engine uses deterministic rules. LLM-enhanced risk assessment is a V2 feature
+- *No mid-workflow changes* — Rejected: risk assessment at the start can't predict everything the agent will encounter during implementation
+
+---
+
+## DD-015: Workflow Definition Schema
+
+**Date:** 10 July 2026  
+**Status:** Accepted  
+**Context:** The dynamically generated workflow needs a machine-readable format that the extension can execute, the UI can render, and git can track.
+
+**Decision:** Use a typed JSON schema for `workflow.json`:
+
+```typescript
+interface WorkflowDefinition {
+  id: string;                          // Unique ID (e.g., "stripe-payments")
+  version: number;                     // Incremented on mid-workflow changes
+  objective: string;                   // One-line description
+  processLevel: ProcessLevel;          // light | standard | thorough | guarded
+  detectedRisks: RiskSignal[];         // What the risk engine found
+  
+  stages: Stage[];                     // Ordered list of stages
+  qualityGates: QualityGate[];         // All gates (base + conditional)
+  approvals: Approval[];               // All approval requirements
+  activeSkills: string[];              // Currently activated skills
+  
+  state: {
+    currentStage: string;              // ID of the active stage
+    currentTask: string | null;        // ID of the active task (during BUILD)
+    tasksCompleted: number;
+    tasksTotal: number;
+    startedAt: string;                 // ISO 8601
+    lastActivityAt: string;            // ISO 8601
+  };
+}
+
+interface Stage {
+  id: string;                          // onboard | define | plan | build | verify | review | ship
+  name: string;                        // Display name
+  status: StageStatus;                 // pending | active | completed | skipped | blocked
+  skippable: boolean;                  // Can the user skip this stage?
+  entryConditions: Condition[];        // What must be true to enter
+  exitConditions: Condition[];         // What must be true to leave
+  artifacts: string[];                 // Artifact IDs produced by this stage
+  startedAt?: string;
+  completedAt?: string;
+}
+
+interface QualityGate {
+  id: string;                          // Unique gate ID
+  name: string;                        // Display name
+  type: 'automated' | 'review' | 'approval';
+  status: 'pending' | 'passed' | 'failed' | 'skipped';
+  stage: string;                       // Which stage this gate belongs to
+  blocking: boolean;                   // Does failure block progression?
+  conditional: boolean;                // Was this gate added dynamically?
+  reason?: string;                     // Why this gate was added (for conditional gates)
+  result?: {                           // Gate execution result
+    passedAt?: string;
+    failedAt?: string;
+    details?: string;
+  };
+}
+
+interface RiskSignal {
+  type: string;                        // keyword | file-pattern | dependency | scope
+  signal: string;                      // What was detected
+  severity: 'low' | 'medium' | 'high';
+  impact: string;                      // What gate/skill/approval this triggered
+}
+
+interface Approval {
+  id: string;
+  level: 'informational' | 'review' | 'explicit' | 'restricted';
+  artifact: string;                    // What's being approved
+  status: 'pending' | 'approved' | 'rejected' | 'auto-approved';
+  reason?: string;                     // Why this approval is needed
+  approvedBy?: string;                 // Who approved
+  approvedAt?: string;                 // When
+  comment?: string;                    // Reviewer's comment
+}
+
+type ProcessLevel = 'light' | 'standard' | 'thorough' | 'guarded';
+type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
+```
+
+**Key design choices:**
+- **`detectedRisks`** — records what the risk engine found, so the user can see *why* the process level was chosen
+- **`conditional` flag on gates** — distinguishes base gates from dynamically-added ones
+- **`reason` on gates and approvals** — explains *why* this gate exists (e.g., "Task touches payment data")
+- **`version` number** — incremented when mid-workflow promotion adds stages/gates
+- **Flat arrays, not nested** — stages, gates, and approvals are top-level arrays linked by IDs, not deeply nested. This makes git diffs readable and merge conflicts manageable.
+
+**Rationale:** A well-typed schema ensures the workflow engine, UI, and persistence layer all agree on the data shape. The schema is designed for git-friendliness (flat structure, readable diffs) and debuggability (every dynamic decision is recorded with a reason).
+
+**Alternatives Considered:**
+- *YAML format* — Rejected: JSON is natively parseable in TypeScript; YAML adds a dependency and is harder to validate
+- *Deeply nested structure (stages contain their gates)* — Rejected: harder to diff in git; harder to query "all pending gates across all stages"
+- *Separate files per stage* — Rejected: too many files; one `workflow.json` is simpler to read and commit
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -447,3 +652,5 @@ The summary is ~2 KB and serves as the **sole artifact** for warm/cold tier entr
 | DD-011 | Temporary Task Board, Not Permanent Backlog | Accepted |
 | DD-012 | .codestudio/ Directory Naming | Accepted |
 | DD-013 | Summary Auto-Generation on Archive | Accepted |
+| DD-014 | Dynamic Workflow Generation (risk engine + conditional gates + mid-workflow promotion) | Accepted |
+| DD-015 | Workflow Definition Schema (typed JSON with flat arrays, risk signals, reasons) | Accepted |
