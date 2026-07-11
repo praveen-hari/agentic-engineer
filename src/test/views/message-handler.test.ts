@@ -29,6 +29,10 @@ function createMockDeps(): MessageHandlerDeps {
     } as unknown as MessageHandlerDeps['stateManager'],
 
     workflowEngine: {
+      start: vi.fn().mockResolvedValue({
+        ...SAMPLE_WORKFLOW,
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
+      }),
       advanceStage: vi
         .fn()
         .mockResolvedValue({
@@ -197,16 +201,25 @@ describe('handleWebviewMessage', () => {
   // ─── startWorkflow ────────────────────────────────────────────
 
   describe('startWorkflow', () => {
-    it('generates a workflow and replies with state', async () => {
+    it('generates, starts, saves workflow and objective', async () => {
+      // workflowEngine.start returns the started workflow
+      vi.mocked(deps.workflowEngine.start).mockResolvedValue({
+        ...SAMPLE_WORKFLOW,
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
+      });
+
       await handler({
         type: 'startWorkflow',
         objective: 'Add auth',
         assessment: SAMPLE_ASSESSMENT,
       });
+
       expect(deps.workflowGenerator.generate).toHaveBeenCalled();
-      expect(deps.stateManager.save).toHaveBeenCalledWith(SAMPLE_WORKFLOW);
+      expect(deps.workflowEngine.start).toHaveBeenCalled();
+      expect(deps.stateManager.save).toHaveBeenCalled();
+      expect(deps.artifactManager.saveObjective).toHaveBeenCalledWith('Add auth');
       expect(replies).toHaveLength(1);
-      expect(replies[0]).toEqual({ type: 'state', workflow: SAMPLE_WORKFLOW });
+      expect(replies[0].type).toBe('state');
     });
   });
 

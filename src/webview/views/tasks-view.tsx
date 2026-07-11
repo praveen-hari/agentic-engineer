@@ -378,7 +378,7 @@ const PhaseGroup: FunctionalComponent<PhaseGroupProps> = ({ stage, approvals, is
         <div style="margin-top: var(--space-sm); display: flex; gap: var(--space-sm);">
           <button
             class="btn btn-primary btn-sm"
-            onClick={() => bridge.send({ type: 'advanceStage' })}
+            onClick={() => bridge.send({ type: 'executeStage' })}
           >
             <Icon name="pass" size={12} /> Complete Stage
           </button>

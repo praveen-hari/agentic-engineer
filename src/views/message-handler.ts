@@ -195,9 +195,19 @@ async function handleStartWorkflow(
   objective: string,
   assessment: RiskAssessment,
 ): Promise<void> {
+  // 1. Generate workflow definition (stages, gates, skills, approvals)
   const wf = deps.workflowGenerator.generate(`wf-${Date.now()}`, objective, assessment as never);
-  await deps.stateManager.save(wf);
-  reply({ type: 'state', workflow: wf });
+
+  // 2. Start the workflow — transitions from idle → active, activates first stage
+  const started = await deps.workflowEngine.start(wf);
+
+  // 3. Save workflow state to .codestudio/workflows/current/workflow.json
+  await deps.stateManager.save(started);
+
+  // 4. Save objective to .codestudio/workflows/current/objective.md
+  await deps.artifactManager.saveObjective(objective);
+
+  reply({ type: 'state', workflow: started });
 }
 
 async function handleAdvanceStage(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
