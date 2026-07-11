@@ -13,7 +13,6 @@ import { StateManager } from '../../core/state-manager';
 import { StageExecutor } from '../../core/stage-executor';
 import { SkillRegistry } from '../../core/skill-registry';
 import { SkillEngine } from '../../core/skill-engine';
-import { EventStream } from '../../core/event-stream';
 import { ArtifactManager } from '../../services/artifact-manager.service';
 import { InMemoryFileIO } from '../../test-utils/in-memory-file-io';
 import type { WorkflowDefinition } from '../../core/types';
@@ -46,8 +45,7 @@ describe('StartWorkflowTool', () => {
     const skillRegistry = new SkillRegistry();
     const skillEngine = new SkillEngine(skillRegistry);
     workflowGenerator = new WorkflowGenerator(skillEngine);
-    const eventStream = new EventStream(fs, '/project/.codestudio/events.jsonl');
-    workflowEngine = new WorkflowEngine(eventStream);
+    workflowEngine = new WorkflowEngine();
     stateManager = new StateManager(fs, '/project/.codestudio/workflow.json');
     stageExecutor = new StageExecutor(skillRegistry);
     artifactManager = new ArtifactManager(fs, '/project');
@@ -77,7 +75,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
 
       expect(parsed.workflowId).toBeDefined();
@@ -154,7 +152,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
 
       expect(parsed.stageAction).not.toBeNull();
@@ -174,7 +172,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
 
       expect(parsed.nextSteps).toBeDefined();
@@ -194,7 +192,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
 
       expect(parsed.instructions).toBeDefined();
@@ -218,7 +216,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
       expect(parsed.processLevel).toBe('guarded');
     });
@@ -236,7 +234,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
       expect(parsed.processLevel).toBe('thorough');
     });
@@ -254,7 +252,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
       expect(parsed.processLevel).toBe('light');
     });
@@ -273,7 +271,7 @@ describe('StartWorkflowTool', () => {
         { isCancellationRequested: false } as never,
       );
 
-      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
       const parsed = JSON.parse(text);
       expect(parsed.processLevel).toBe('thorough');
     });
@@ -305,7 +303,7 @@ describe('StartWorkflowTool', () => {
           { isCancellationRequested: false } as never,
         );
 
-        const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+        const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
         const parsed = JSON.parse(text);
         expect(parsed.workType).toBe(workType);
       });

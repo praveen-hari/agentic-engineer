@@ -5,12 +5,20 @@ import type { FileIO } from '../core/types';
  *
  * Manages the `.codestudio/` directory and all file operations.
  * Implements the {@link FileIO} interface so it can be injected into
- * `EventStream` and `StateManager` as the production I/O layer.
+ * `StateManager` and `ArtifactManager` as the production I/O layer.
  *
  * Uses `vscode.workspace.fs` (not Node.js `fs`) for proper virtual
  * filesystem support (remote workspaces, WSL, etc.).
  */
 export class FileSystemService implements FileIO {
+  /**
+   * Per-path write queues to serialize append operations.
+   * Prevents the read-modify-write race condition where concurrent
+   * appends both read the same content and the second overwrites the first.
+   * Pattern: SQLite single-writer — one writer per file at a time.
+   */
+  private readonly appendQueues = new Map<string, Promise<void>>();
+
   constructor(private readonly vscode: typeof import('vscode')) {}
 
   // ─── FileIO Interface ────────────────────────────────────────────────
@@ -27,11 +35,19 @@ export class FileSystemService implements FileIO {
   }
 
   async append(path: string, content: string): Promise<void> {
-    let existing = '';
-    if (await this.exists(path)) {
-      existing = await this.read(path);
-    }
-    await this.write(path, existing + content);
+    // Serialize appends per-path to prevent read-modify-write races.
+    // Each append waits for the previous one on the same path to finish
+    // before starting its own read-modify-write cycle.
+    const prev = this.appendQueues.get(path) ?? Promise.resolve();
+    const next = prev.then(async () => {
+      let existing = '';
+      if (await this.exists(path)) {
+        existing = await this.read(path);
+      }
+      await this.write(path, existing + content);
+    });
+    this.appendQueues.set(path, next);
+    await next;
   }
 
   async exists(path: string): Promise<boolean> {
@@ -56,9 +72,10 @@ export class FileSystemService implements FileIO {
 
   /**
    * Ensure a directory exists, creating it (and parents) if needed.
+   * Always calls createDirectory — it's idempotent in VS Code's API,
+   * so no exists() check is needed (avoids TOCTOU race).
    */
   async ensureDirectory(path: string): Promise<void> {
-    if (await this.exists(path)) return;
     const uri = this.vscode.Uri.file(path);
     await this.vscode.workspace.fs.createDirectory(uri);
   }

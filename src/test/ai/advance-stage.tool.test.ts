@@ -12,7 +12,6 @@ import { StateManager } from '../../core/state-manager';
 import { StageExecutor } from '../../core/stage-executor';
 import { SkillRegistry } from '../../core/skill-registry';
 import { SkillEngine } from '../../core/skill-engine';
-import { EventStream } from '../../core/event-stream';
 import { ArtifactManager } from '../../services/artifact-manager.service';
 import { InMemoryFileIO } from '../../test-utils/in-memory-file-io';
 import type { RiskAssessment, WorkflowDefinition } from '../../core/types';
@@ -55,8 +54,7 @@ describe('AdvanceStageTool', () => {
     const skillRegistry = new SkillRegistry();
     const skillEngine = new SkillEngine(skillRegistry);
     workflowGenerator = new WorkflowGenerator(skillEngine);
-    const eventStream = new EventStream(fs, '/project/.codestudio/events.jsonl');
-    workflowEngine = new WorkflowEngine(eventStream);
+    workflowEngine = new WorkflowEngine();
     stateManager = new StateManager(fs, '/project/.codestudio/workflow.json');
     stageExecutor = new StageExecutor(skillRegistry);
     artifactManager = new ArtifactManager(fs, '/project');

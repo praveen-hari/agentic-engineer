@@ -34,12 +34,19 @@ export class InMemoryFileIO implements FileIO {
 
   async readDir(path: string): Promise<readonly string[]> {
     const prefix = path.endsWith('/') ? path : path + '/';
-    const results: string[] = [];
+    const seen = new Set<string>();
     for (const key of this.files.keys()) {
       if (key.startsWith(prefix)) {
-        results.push(key.slice(prefix.length));
+        // Extract only the immediate child name (first path segment)
+        // e.g., for prefix '/a/' and key '/a/sub/file.md', extract 'sub'
+        // This matches vscode.workspace.fs.readDirectory() behavior
+        const relative = key.slice(prefix.length);
+        const firstSegment = relative.split('/')[0];
+        if (firstSegment) {
+          seen.add(firstSegment);
+        }
       }
     }
-    return results;
+    return [...seen];
   }
 }

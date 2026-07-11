@@ -119,7 +119,6 @@ describe('ArtifactManager', () => {
 
       // updatedAt is refreshed (may be same ms in fast tests)
       expect(updated.updatedAt).toBeDefined();
-      expect(fs.write).toHaveBeenCalledTimes(2);
 
       // Verify the updated content was written
       const content = await manager.read(updated);
@@ -136,14 +135,12 @@ describe('ArtifactManager', () => {
       expect(artifacts).toEqual([]);
     });
 
-    it('lists artifacts from all directories', async () => {
+    it('lists artifacts from manifest after save', async () => {
       const fs = createMockFS();
-      (fs.readDir as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
-        if (path.includes('specs')) return ['auth-spec.md'];
-        if (path.includes('plans')) return ['impl-plan.md'];
-        return [];
-      });
       const manager = new ArtifactManager(fs, '/workspace');
+
+      await manager.save('spec', 'Auth Spec', '# Spec', 'define');
+      await manager.save('plan', 'Impl Plan', '# Plan', 'plan');
 
       const artifacts = await manager.listAll();
       expect(artifacts).toHaveLength(2);
@@ -151,13 +148,11 @@ describe('ArtifactManager', () => {
       expect(artifacts[1].type).toBe('plan');
     });
 
-    it('ignores non-markdown files', async () => {
+    it('only lists artifacts that were saved through save()', async () => {
       const fs = createMockFS();
-      (fs.readDir as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
-        if (path.includes('specs')) return ['spec.md', 'notes.txt', '.DS_Store'];
-        return [];
-      });
       const manager = new ArtifactManager(fs, '/workspace');
+
+      await manager.save('spec', 'Auth Spec', '# Spec', 'define');
 
       const artifacts = await manager.listAll();
       expect(artifacts).toHaveLength(1);

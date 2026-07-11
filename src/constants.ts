@@ -27,11 +27,11 @@ export const WORKFLOWS_DIR = 'workflows';
 export const CURRENT_WORKFLOW_DIR = 'workflows/current';
 export const WORKFLOW_FILE = 'workflow.json';
 export const OBJECTIVE_FILE = 'objective.md';
-export const EVENTS_FILE = 'events.jsonl';
 
 // ─── Artifacts (DD-002: per work-request, temporary) ────────────────────────
 
 export const ARTIFACTS_DIR = 'workflows/current/artifacts';
+export const ARTIFACTS_MANIFEST = 'workflows/current/artifacts/manifest.json';
 export const ARTIFACTS_SPECS_DIR = 'workflows/current/artifacts/specs';
 export const ARTIFACTS_PLANS_DIR = 'workflows/current/artifacts/plans';
 export const ARTIFACTS_REVIEWS_DIR = 'workflows/current/artifacts/reviews';
@@ -56,7 +56,7 @@ export const HOOKS_DIR = 'hooks';
 
 export const ARCHIVE_DIR = 'archive';
 export const HISTORY_DIR = 'history';
-export const HISTORY_INDEX_FILE = 'index.json';
+export const HISTORY_META_FILE = 'history/meta.json';
 
 // ─── All directories to create on initialization ────────────────────────────
 

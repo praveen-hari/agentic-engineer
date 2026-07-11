@@ -60,24 +60,23 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
       throw new Error(`Workflow is ${wf.state.status}, not active. Cannot advance.`);
     }
 
-    // Auto-approve all pending approvals and pass all pending gates
-    // for the current stage. The agent calling advance_stage means
-    // the work is done — treat it as implicit approval.
-    let currentWf = wf;
-    const currentStage = wf.state.currentStage;
-    const hasPending =
-      wf.approvals.some((a) => a.status === 'pending') ||
-      wf.qualityGates.some((g) => g.status === 'pending' && g.stage === currentStage);
+    // Step 1: Auto-approve all pending approvals and gates via update()
+    const approved = await this.stateManager.update((current) => {
+      const stage = current.state.currentStage;
+      const hasPending =
+        current.approvals.some((a) => a.status === 'pending') ||
+        current.qualityGates.some((g) => g.status === 'pending' && g.stage === stage);
 
-    if (hasPending) {
+      if (!hasPending) return current;
+
       const now = new Date().toISOString();
-      currentWf = {
-        ...wf,
-        approvals: wf.approvals.map((a) =>
+      return {
+        ...current,
+        approvals: current.approvals.map((a) =>
           a.status === 'pending' ? { ...a, status: 'approved' as const, approvedAt: now } : a,
         ),
-        qualityGates: wf.qualityGates.map((g) => {
-          if (g.status !== 'pending' || g.stage !== currentStage) return g;
+        qualityGates: current.qualityGates.map((g) => {
+          if (g.status !== 'pending' || g.stage !== stage) return g;
           return {
             ...g,
             status: 'passed' as const,
@@ -85,12 +84,11 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
           };
         }),
       };
-      await this.stateManager.save(currentWf);
-    }
+    });
 
-    // Check stage completion
+    // Step 2: Check stage completion
     const artifacts = await this.artifactManager.listAll();
-    const result = this.stageExecutor.evaluateStageCompletion(currentWf, artifacts);
+    const result = this.stageExecutor.evaluateStageCompletion(approved, artifacts);
 
     if (result.status === 'blocked') {
       return new vscodeModule.LanguageModelToolResult([
@@ -111,9 +109,10 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
       ]);
     }
 
-    // Advance to next stage
-    const updated = await this.workflowEngine.advanceStage(currentWf);
-    await this.stateManager.save(updated);
+    // Step 3: Advance to next stage via update()
+    const updated = await this.stateManager.update((current) =>
+      this.workflowEngine.advanceStage(current),
+    );
 
     // Get next stage instructions
     const nextAction = this.stageExecutor.getStageAction(updated);

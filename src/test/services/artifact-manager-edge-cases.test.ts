@@ -194,32 +194,25 @@ describe('ArtifactManager — Edge Cases', () => {
   // ─── listAll Edge Cases ───────────────────────────────────────────
 
   describe('listAll edge cases', () => {
-    it('handles readDir throwing for some directories', async () => {
+    it('returns empty array when manifest is missing', async () => {
       const fs = createMockFS();
-      (fs.readDir as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
-        if (path.includes('specs')) return ['auth.md'];
-        if (path.includes('plans')) throw new Error('Permission denied');
-        return [];
-      });
       const manager = new ArtifactManager(fs, '/workspace');
 
-      // Should not throw — gracefully handles directory errors
       const artifacts = await manager.listAll();
-      expect(artifacts).toHaveLength(1);
-      expect(artifacts[0].type).toBe('spec');
+      expect(artifacts).toEqual([]);
     });
 
-    it('handles readDir returning files with various extensions', async () => {
+    it('returns empty array when manifest is corrupt', async () => {
       const fs = createMockFS();
-      (fs.readDir as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
-        if (path.includes('specs')) return ['spec.md', 'draft.txt', '.gitkeep', 'notes.json'];
-        return [];
-      });
+      // Write corrupt manifest
+      await fs.write(
+        '/workspace/.codestudio/workflows/current/artifacts/manifest.json',
+        '{ this is not valid json',
+      );
       const manager = new ArtifactManager(fs, '/workspace');
 
       const artifacts = await manager.listAll();
-      expect(artifacts).toHaveLength(1);
-      expect(artifacts[0].title).toBeDefined();
+      expect(artifacts).toEqual([]);
     });
 
     it('handles readDir returning empty arrays for all directories', async () => {

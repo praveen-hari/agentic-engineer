@@ -83,6 +83,13 @@ function createMockDeps(): MessageHandlerDeps {
       sendViaParticipant: vi.fn(),
       sendToAgentMode: vi.fn(),
     } as unknown as MessageHandlerDeps['agentBridge'],
+
+    historyManager: {
+      loadHistory: vi.fn().mockResolvedValue([]),
+      loadMeta: vi.fn().mockResolvedValue({ years: [], totalWorkflows: 0 }),
+      archiveWorkflow: vi.fn().mockResolvedValue({}),
+      loadArchivedWorkflow: vi.fn().mockResolvedValue(null),
+    } as unknown as MessageHandlerDeps['historyManager'],
   };
 }
 

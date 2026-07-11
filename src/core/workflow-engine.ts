@@ -1,4 +1,3 @@
-import type { EventStream } from './event-stream';
 import type {
   LifecycleStage,
   ProcessLevel,
@@ -11,28 +10,24 @@ import type {
 import { BASE_STAGES, STAGE_NAMES } from '../constants';
 
 /**
- * State machine for workflow lifecycle (DD-014, DD-015).
+ * Pure state machine for workflow lifecycle (DD-014, DD-015).
  *
  * Manages stage transitions (pending → active → completed/skipped),
- * enforces ordering, validates transitions, and emits events for each
- * state change via the injected {@link EventStream}.
+ * enforces ordering, and validates transitions.
+ *
+ * No side effects — returns new state objects. Persistence is the
+ * caller's responsibility (via StateManager).
  */
 export class WorkflowEngine {
-  constructor(private readonly eventStream: EventStream) {}
-
   /**
    * Create a new workflow from a risk assessment.
    * Workflow starts in 'idle' state — call {@link start} to activate it.
    */
-  async create(
-    id: string,
-    objective: string,
-    assessment: RiskAssessment,
-  ): Promise<WorkflowDefinition> {
+  create(id: string, objective: string, assessment: RiskAssessment): WorkflowDefinition {
     const stages = this.generateStages(assessment.processLevel);
     const now = new Date().toISOString();
 
-    const workflow: WorkflowDefinition = {
+    return {
       id,
       version: 1,
       objective,
@@ -53,10 +48,6 @@ export class WorkflowEngine {
         status: 'idle',
       },
     };
-
-    await this.emit('workflow.created', id, { objective, processLevel: assessment.processLevel });
-
-    return workflow;
   }
 
   /**
@@ -64,7 +55,7 @@ export class WorkflowEngine {
    * Activates the first stage.
    * @throws Error if workflow is not in 'idle' state
    */
-  async start(workflow: WorkflowDefinition): Promise<WorkflowDefinition> {
+  start(workflow: WorkflowDefinition): WorkflowDefinition {
     if (workflow.state.status !== 'idle') {
       throw new Error(`Cannot start: workflow is already ${workflow.state.status}`);
     }
@@ -79,7 +70,7 @@ export class WorkflowEngine {
       i === 0 ? { ...s, status: 'active' as StageStatus, startedAt: now } : s,
     );
 
-    const updated: WorkflowDefinition = {
+    return {
       ...workflow,
       stages: updatedStages,
       state: {
@@ -90,11 +81,6 @@ export class WorkflowEngine {
         lastActivityAt: now,
       },
     };
-
-    await this.emit('workflow.started', workflow.id, { firstStage: firstStage.id });
-    await this.emit('stage.entered', workflow.id, { stage: firstStage.id });
-
-    return updated;
   }
 
   /**
@@ -102,7 +88,7 @@ export class WorkflowEngine {
    * activates the next one. If this is the last stage, completes the workflow.
    * @throws Error if no active stage or workflow is not active
    */
-  async advanceStage(workflow: WorkflowDefinition): Promise<WorkflowDefinition> {
+  advanceStage(workflow: WorkflowDefinition): WorkflowDefinition {
     if (workflow.state.status !== 'active') {
       throw new Error(`Cannot advance: workflow is ${workflow.state.status}`);
     }
@@ -113,7 +99,6 @@ export class WorkflowEngine {
     }
 
     const now = new Date().toISOString();
-    const activeStage = workflow.stages[activeIndex];
 
     // Complete the current stage
     const updatedStages = workflow.stages.map((s, i) => {
@@ -123,13 +108,11 @@ export class WorkflowEngine {
       return s;
     });
 
-    await this.emit('stage.completed', workflow.id, { stage: activeStage.id });
-
     // Check if there's a next stage
     const nextIndex = activeIndex + 1;
     if (nextIndex >= workflow.stages.length) {
       // Last stage — complete the workflow
-      const completed: WorkflowDefinition = {
+      return {
         ...workflow,
         stages: updatedStages,
         state: {
@@ -139,25 +122,19 @@ export class WorkflowEngine {
           lastActivityAt: now,
         },
       };
-
-      await this.emit('workflow.completed', workflow.id, {});
-      return completed;
     }
 
     // Activate the next stage
-    const nextStage = updatedStages[nextIndex];
     const finalStages = updatedStages.map((s, i) =>
       i === nextIndex ? { ...s, status: 'active' as StageStatus, startedAt: now } : s,
     );
-
-    await this.emit('stage.entered', workflow.id, { stage: nextStage.id });
 
     return {
       ...workflow,
       stages: finalStages,
       state: {
         ...workflow.state,
-        currentStage: nextStage.id,
+        currentStage: finalStages[nextIndex].id,
         lastActivityAt: now,
       },
     };
@@ -167,10 +144,7 @@ export class WorkflowEngine {
    * Skip the current stage if it's skippable.
    * @throws Error if stage is not skippable or not active
    */
-  async skipStage(
-    workflow: WorkflowDefinition,
-    stageId: LifecycleStage,
-  ): Promise<WorkflowDefinition> {
+  skipStage(workflow: WorkflowDefinition, stageId: LifecycleStage): WorkflowDefinition {
     if (workflow.state.status !== 'active') {
       throw new Error(`Cannot skip: workflow is ${workflow.state.status}`);
     }
@@ -193,8 +167,6 @@ export class WorkflowEngine {
       i === stageIndex ? { ...s, status: 'skipped' as StageStatus, completedAt: now } : s,
     );
 
-    await this.emit('stage.skipped', workflow.id, { stage: stageId });
-
     // Activate next stage or complete workflow
     const nextIndex = stageIndex + 1;
     if (nextIndex >= workflow.stages.length) {
@@ -210,19 +182,16 @@ export class WorkflowEngine {
       };
     }
 
-    const nextStage = updatedStages[nextIndex];
     const finalStages = updatedStages.map((s, i) =>
       i === nextIndex ? { ...s, status: 'active' as StageStatus, startedAt: now } : s,
     );
-
-    await this.emit('stage.entered', workflow.id, { stage: nextStage.id });
 
     return {
       ...workflow,
       stages: finalStages,
       state: {
         ...workflow.state,
-        currentStage: nextStage.id,
+        currentStage: finalStages[nextIndex].id,
         lastActivityAt: now,
       },
     };
@@ -256,24 +225,4 @@ export class WorkflowEngine {
     // Standard/Thorough: onboard and review are skippable
     return stage === 'onboard' || stage === 'review';
   }
-
-  // ─── Event Emission ────────────────────────────────────────────────────
-
-  private async emit(
-    type: WorkflowEvent['type'],
-    workflowId: string,
-    payload: Record<string, unknown>,
-  ): Promise<void> {
-    const event: WorkflowEvent = {
-      id: `${workflowId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: new Date().toISOString(),
-      type,
-      workflowId,
-      payload,
-    };
-    await this.eventStream.append(event);
-  }
 }
-
-// Import the WorkflowEvent type for the emit method
-import type { WorkflowEvent } from './types';

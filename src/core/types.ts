@@ -183,38 +183,6 @@ export interface WorkflowDefinition {
   readonly state: WorkflowState;
 }
 
-// ─── Event Sourcing (DD-008) ───────────────────────────────────────────────
-
-export type WorkflowEventType =
-  | 'workflow.created'
-  | 'workflow.started'
-  | 'workflow.completed'
-  | 'workflow.failed'
-  | 'stage.entered'
-  | 'stage.completed'
-  | 'stage.skipped'
-  | 'gate.passed'
-  | 'gate.failed'
-  | 'gate.skipped'
-  | 'approval.requested'
-  | 'approval.granted'
-  | 'approval.rejected'
-  | 'approval.auto-approved'
-  | 'skill.activated'
-  | 'task.started'
-  | 'task.completed'
-  | 'workflow.promoted'
-  | 'artifact.created'
-  | 'artifact.updated';
-
-export interface WorkflowEvent {
-  readonly id: string;
-  readonly timestamp: string;
-  readonly type: WorkflowEventType;
-  readonly workflowId: string;
-  readonly payload: Readonly<Record<string, unknown>>;
-}
-
 // ─── Project Context ───────────────────────────────────────────────────────
 
 export interface ProjectContext {
@@ -361,9 +329,7 @@ export interface GetWorkflowStatusInput {
 
 export interface GetProjectContextInput {}
 
-// ─── History (DD-006, DD-007) ──────────────────────────────────────────────
-
-export type HistoryTier = 'hot' | 'warm' | 'cold';
+// ─── History (DD-006, DD-007 — Phase 4: yearly shards) ─────────────────────
 
 export interface HistoryEntry {
   readonly id: string;
@@ -372,23 +338,31 @@ export interface HistoryEntry {
   readonly processLevel: ProcessLevel;
   readonly startedAt: string;
   readonly completedAt: string;
-  readonly tier: HistoryTier;
+  readonly archivePath: string;
   readonly summary?: string;
   readonly stats?: {
     readonly stagesCompleted: number;
     readonly stagesSkipped: number;
     readonly approvalsGranted: number;
     readonly approvalsRejected: number;
-    readonly events: number;
   };
 }
 
-export interface HistoryIndex {
+export interface HistoryYearFile {
+  readonly year: number;
   readonly entries: readonly HistoryEntry[];
-  readonly total: number;
-  readonly page: number;
-  readonly pageSize: number;
-  readonly hasMore: boolean;
+}
+
+export interface HistoryMeta {
+  readonly years: readonly number[];
+  readonly totalWorkflows: number;
+}
+
+export interface WorkflowArchive {
+  readonly version: number;
+  readonly archivedAt: string;
+  readonly workflow: WorkflowDefinition;
+  readonly artifacts: readonly ArtifactManifestEntry[];
 }
 
 // ─── Workspace Config (DD-027) ─────────────────────────────────────────────
@@ -430,6 +404,8 @@ export interface NewProjectInput {
 
 export type ArtifactType = 'spec' | 'plan' | 'adr' | 'review' | 'report';
 
+export type ArtifactStatus = 'draft' | 'pending-review' | 'approved' | 'rejected';
+
 export interface Artifact {
   readonly id: string;
   readonly type: ArtifactType;
@@ -438,8 +414,26 @@ export interface Artifact {
   readonly stage: LifecycleStage;
   readonly createdAt: string;
   readonly updatedAt: string;
-  readonly status: 'draft' | 'pending-review' | 'approved' | 'rejected';
+  readonly status: ArtifactStatus;
   readonly content?: string;
+}
+
+// ─── Artifact Manifest (Phase 2: PDF xref pattern) ─────────────────────────
+
+export interface ArtifactManifestEntry {
+  readonly id: string;
+  readonly type: ArtifactType;
+  readonly title: string;
+  readonly filename: string;
+  readonly stage: LifecycleStage;
+  readonly status: ArtifactStatus;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface ArtifactManifest {
+  readonly version: number;
+  readonly artifacts: readonly ArtifactManifestEntry[];
 }
 
 export interface StageAction {

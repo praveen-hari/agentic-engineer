@@ -3,7 +3,6 @@ import { FileSystemService } from './services/file-system.service';
 import { GitService } from './services/git.service';
 import { WorkspaceService } from './services/workspace.service';
 import { NotificationService } from './services/notification.service';
-import { EventStream } from './core/event-stream';
 import { StateManager } from './core/state-manager';
 import { RiskEngine } from './core/risk-engine';
 import { WorkflowEngine } from './core/workflow-engine';
@@ -15,7 +14,9 @@ import { ContextAnalyzer } from './core/context-analyzer';
 import { StageExecutor } from './core/stage-executor';
 import { ArtifactManager } from './services/artifact-manager.service';
 import { AgentBridge } from './services/agent-bridge.service';
+import { HistoryManager } from './services/history-manager.service';
 import { ArtifactWatcher } from './services/artifact-watcher.service';
+import { BranchWatcher } from './services/branch-watcher.service';
 import { PromptTemplates } from './core/prompt-templates';
 import { AiRiskAnalyzer } from './ai/risk-analyzer';
 import { AnalyzeWorkRequestTool } from './ai/tools/analyze-work-request.tool';
@@ -29,7 +30,7 @@ import { ChatParticipantHandler } from './chat/chat-participant';
 import { NavigationTreeProvider } from './views/navigation-tree';
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
-import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
+import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE } from './constants';
 
 /**
  * Extension entry point — Engineering Workspace.
@@ -52,12 +53,10 @@ export function activate(context: vscode.ExtensionContext): void {
     ? `${workspaceRoot}/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}`
     : `/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}`;
   const workflowPath = `${workflowBase}/${WORKFLOW_FILE}`;
-  const eventsPath = `${workflowBase}/${EVENTS_FILE}`;
 
-  const eventStream = new EventStream(fsService, eventsPath);
   const stateManager = new StateManager(fsService, workflowPath);
   const riskEngine = new RiskEngine();
-  const workflowEngine = new WorkflowEngine(eventStream);
+  const workflowEngine = new WorkflowEngine();
   const skillRegistry = new SkillRegistry();
   const skillEngine = new SkillEngine(skillRegistry);
   const workflowGenerator = new WorkflowGenerator(skillEngine);
@@ -65,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const contextAnalyzer = new ContextAnalyzer();
   const stageExecutor = new StageExecutor(skillRegistry);
   const artifactManager = new ArtifactManager(fsService, workspaceRoot ?? '/');
+  const historyManager = new HistoryManager(fsService, workspaceRoot ?? '/');
   const promptTemplates = new PromptTemplates();
   const agentBridge = new AgentBridge(vscodeApi);
 
@@ -204,6 +204,7 @@ export function activate(context: vscode.ExtensionContext): void {
       artifactManager,
       promptTemplates,
       agentBridge,
+      historyManager,
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),
@@ -246,6 +247,19 @@ export function activate(context: vscode.ExtensionContext): void {
         hasExistingFiles: true,
       });
       notificationService.showInfo(`Project setup detected (${fileName}). Ready to start working!`);
+    });
+
+    // ─── Branch-Change Watcher (Phase 5) ──────────────────────────
+    // Detects git branch switches and reloads workflow state so the
+    // webview always shows the correct branch's workflow.
+    const branchWatcher = new BranchWatcher(vscodeApi, workspaceRoot);
+    const branchDisposable = branchWatcher.start();
+    context.subscriptions.push(branchDisposable);
+
+    branchWatcher.onBranchChange(() => {
+      void stateManager.load().then((wf) => {
+        panelProvider.postMessage({ type: 'state', workflow: wf });
+      });
     });
   }
 

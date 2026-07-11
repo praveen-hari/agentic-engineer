@@ -69,11 +69,12 @@ export class StateManager {
       throw new Error(`Version conflict: expected ${expectedVersion}, found ${current.version}`);
     }
 
+    const transformed = fn(current);
     const updated: WorkflowDefinition = {
-      ...fn(current),
+      ...transformed,
       version: current.version + 1,
       state: {
-        ...current.state,
+        ...transformed.state,
         lastActivityAt: new Date().toISOString(),
       },
     };

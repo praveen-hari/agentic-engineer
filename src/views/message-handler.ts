@@ -7,6 +7,7 @@ import type { NotificationService } from '../services/notification.service';
 import type { WorkspaceService } from '../services/workspace.service';
 import type { ArtifactManager } from '../services/artifact-manager.service';
 import type { AgentBridge } from '../services/agent-bridge.service';
+import type { HistoryManager } from '../services/history-manager.service';
 import type {
   Artifact,
   FileIO,
@@ -41,6 +42,7 @@ export interface MessageHandlerDeps {
   readonly artifactManager: ArtifactManager;
   readonly promptTemplates: PromptTemplates;
   readonly agentBridge: AgentBridge;
+  readonly historyManager: HistoryManager;
 }
 
 /**
@@ -216,14 +218,12 @@ async function handleStartWorkflow(
 }
 
 async function handleAdvanceStage(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
-  const wf = await deps.stateManager.load();
-  if (!wf) {
-    reply({ type: 'error', message: 'No active workflow' });
-    return;
+  try {
+    const updated = await deps.stateManager.update((wf) => deps.workflowEngine.advanceStage(wf));
+    reply({ type: 'state', workflow: updated });
+  } catch (err) {
+    reply({ type: 'error', message: err instanceof Error ? err.message : 'No active workflow' });
   }
-  const updated = await deps.workflowEngine.advanceStage(wf);
-  await deps.stateManager.save(updated);
-  reply({ type: 'state', workflow: updated });
 }
 
 async function handleSkipStage(
@@ -231,14 +231,14 @@ async function handleSkipStage(
   reply: ReplyFn,
   stageId: LifecycleStage,
 ): Promise<void> {
-  const wf = await deps.stateManager.load();
-  if (!wf) {
-    reply({ type: 'error', message: 'No active workflow' });
-    return;
+  try {
+    const updated = await deps.stateManager.update((wf) =>
+      deps.workflowEngine.skipStage(wf, stageId),
+    );
+    reply({ type: 'state', workflow: updated });
+  } catch (err) {
+    reply({ type: 'error', message: err instanceof Error ? err.message : 'No active workflow' });
   }
-  const updated = await deps.workflowEngine.skipStage(wf, stageId);
-  await deps.stateManager.save(updated);
-  reply({ type: 'state', workflow: updated });
 }
 
 async function handleApprove(
@@ -247,21 +247,19 @@ async function handleApprove(
   approvalId: string,
   comment?: string,
 ): Promise<void> {
-  const wf = await deps.stateManager.load();
-  if (!wf) {
-    reply({ type: 'error', message: 'No active workflow' });
-    return;
+  try {
+    const updated = await deps.stateManager.update((wf) => ({
+      ...wf,
+      approvals: wf.approvals.map((a) =>
+        a.id === approvalId
+          ? { ...a, status: 'approved' as const, approvedAt: new Date().toISOString(), comment }
+          : a,
+      ),
+    }));
+    reply({ type: 'state', workflow: updated });
+  } catch (err) {
+    reply({ type: 'error', message: err instanceof Error ? err.message : 'No active workflow' });
   }
-  const updated: WorkflowDefinition = {
-    ...wf,
-    approvals: wf.approvals.map((a) =>
-      a.id === approvalId
-        ? { ...a, status: 'approved', approvedAt: new Date().toISOString(), comment }
-        : a,
-    ),
-  };
-  await deps.stateManager.save(updated);
-  reply({ type: 'state', workflow: updated });
 }
 
 async function handleReject(
@@ -270,19 +268,17 @@ async function handleReject(
   approvalId: string,
   comment?: string,
 ): Promise<void> {
-  const wf = await deps.stateManager.load();
-  if (!wf) {
-    reply({ type: 'error', message: 'No active workflow' });
-    return;
+  try {
+    const updated = await deps.stateManager.update((wf) => ({
+      ...wf,
+      approvals: wf.approvals.map((a) =>
+        a.id === approvalId ? { ...a, status: 'rejected' as const, comment } : a,
+      ),
+    }));
+    reply({ type: 'state', workflow: updated });
+  } catch (err) {
+    reply({ type: 'error', message: err instanceof Error ? err.message : 'No active workflow' });
   }
-  const updated: WorkflowDefinition = {
-    ...wf,
-    approvals: wf.approvals.map((a) =>
-      a.id === approvalId ? { ...a, status: 'rejected', comment } : a,
-    ),
-  };
-  await deps.stateManager.save(updated);
-  reply({ type: 'state', workflow: updated });
 }
 
 async function handleRequestHistory(
@@ -290,9 +286,8 @@ async function handleRequestHistory(
   reply: ReplyFn,
   _page?: number,
 ): Promise<void> {
-  // TODO: load history from archive index
-  void deps;
-  reply({ type: 'history', entries: [], hasMore: false });
+  const entries = await deps.historyManager.loadHistory();
+  reply({ type: 'history', entries, hasMore: false });
 }
 
 // ─── Stage Execution Handlers ───────────────────────────────────────────────
@@ -308,56 +303,46 @@ async function handleRequestStageActions(deps: MessageHandlerDeps, reply: ReplyF
 }
 
 async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
-  let wf = await deps.stateManager.load();
-  if (!wf) {
-    reply({ type: 'error', message: 'No active workflow' });
-    return;
-  }
+  try {
+    // Step 1: Auto-approve all pending approvals and gates for current stage
+    const approved = await deps.stateManager.update((wf) => {
+      const currentStage = wf.state.currentStage;
+      const hasPendingWork =
+        wf.approvals.some((a) => a.status === 'pending') ||
+        wf.qualityGates.some((g) => g.status === 'pending' && g.stage === currentStage);
 
-  // "Approve & Continue" is a single-click action. The user has
-  // reviewed the document and is explicitly approving everything
-  // for the current stage. We:
-  // 1. Mark all pending approvals as approved
-  // 2. Pass ALL pending gates for the current stage
-  // This ensures the stage can always advance when the user clicks.
-  const currentStage = wf.state.currentStage;
-  const hasPendingWork =
-    wf.approvals.some((a) => a.status === 'pending') ||
-    wf.qualityGates.some((g) => g.status === 'pending' && g.stage === currentStage);
+      if (!hasPendingWork) return wf;
 
-  if (hasPendingWork) {
-    const now = new Date().toISOString();
-    wf = {
-      ...wf,
-      approvals: wf.approvals.map((a) =>
-        a.status === 'pending' ? { ...a, status: 'approved' as const, approvedAt: now } : a,
-      ),
-      qualityGates: wf.qualityGates.map((g) => {
-        if (g.status !== 'pending' || g.stage !== currentStage) return g;
-        return {
-          ...g,
-          status: 'passed' as const,
-          result: { passedAt: now, details: 'Approved by user' },
-        };
-      }),
-    };
-    await deps.stateManager.save(wf);
-  }
+      const now = new Date().toISOString();
+      return {
+        ...wf,
+        approvals: wf.approvals.map((a) =>
+          a.status === 'pending' ? { ...a, status: 'approved' as const, approvedAt: now } : a,
+        ),
+        qualityGates: wf.qualityGates.map((g) => {
+          if (g.status !== 'pending' || g.stage !== currentStage) return g;
+          return {
+            ...g,
+            status: 'passed' as const,
+            result: { passedAt: now, details: 'Approved by user' },
+          };
+        }),
+      };
+    });
 
-  // Get artifacts for the current stage
-  const artifacts = await deps.artifactManager.listAll();
+    // Step 2: Check if stage can advance
+    const artifacts = await deps.artifactManager.listAll();
+    const result = deps.stageExecutor.evaluateStageCompletion(approved, artifacts);
 
-  // Evaluate stage completion
-  const result = deps.stageExecutor.evaluateStageCompletion(wf, artifacts);
-
-  if (result.status === 'completed') {
-    // Auto-advance to next stage
-    const updated = await deps.workflowEngine.advanceStage(wf);
-    await deps.stateManager.save(updated);
-    reply({ type: 'state', workflow: updated });
-  } else {
-    // Stage is blocked — tell the webview what's needed
-    reply({ type: 'stageResult', result });
+    if (result.status === 'completed') {
+      // Step 3: Advance to next stage (separate update for version safety)
+      const advanced = await deps.stateManager.update((wf) => deps.workflowEngine.advanceStage(wf));
+      reply({ type: 'state', workflow: advanced });
+    } else {
+      reply({ type: 'stageResult', result });
+    }
+  } catch (err) {
+    reply({ type: 'error', message: err instanceof Error ? err.message : 'No active workflow' });
   }
 }
 

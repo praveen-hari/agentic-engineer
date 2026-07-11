@@ -1,6 +1,15 @@
-import type { Artifact, ArtifactType, FileIO, LifecycleStage } from '../core/types';
+import type {
+  Artifact,
+  ArtifactManifest,
+  ArtifactManifestEntry,
+  ArtifactStatus,
+  ArtifactType,
+  FileIO,
+  LifecycleStage,
+} from '../core/types';
 import {
   WORKFLOW_DIR,
+  ARTIFACTS_MANIFEST,
   ARTIFACTS_SPECS_DIR,
   ARTIFACTS_PLANS_DIR,
   ARTIFACTS_REVIEWS_DIR,
@@ -8,11 +17,18 @@ import {
 } from '../constants';
 
 /**
- * Manages artifact files in `.codestudio/workflows/current/artifacts/`.
+ * Manages artifact files and their manifest in
+ * `.codestudio/workflows/current/artifacts/`.
  *
- * Artifacts are the outputs of each workflow stage — specs, plans,
- * reviews, reports. They live in the current workflow directory and
- * are archived when the workflow completes.
+ * Uses a **manifest.json** (PDF xref pattern) as the single source
+ * of truth for artifact metadata: IDs, timestamps, status, and titles.
+ * Content lives in separate `.md` files.
+ *
+ * Key invariants:
+ * - Every `save()` writes both the content file AND updates the manifest.
+ * - `listAll()` reads from the manifest, never scans the filesystem.
+ * - IDs are stable — generated once on first save, preserved on overwrite.
+ * - Status is persistent — survives `listAll()` calls and git checkouts.
  *
  * @see DESIGN_DECISIONS.md DD-002 (Git-Tracked Workflow State)
  */
@@ -22,9 +38,13 @@ export class ArtifactManager {
     private readonly rootPath: string,
   ) {}
 
+  // ─── Public API ───────────────────────────────────────────────────────
+
   /**
-   * Save an artifact to the appropriate directory.
-   * Creates the file and returns the Artifact metadata.
+   * Save an artifact to the appropriate directory and update the manifest.
+   *
+   * If an artifact of the same type already exists, it is overwritten
+   * (same file, same ID, updated content and updatedAt).
    */
   async save(
     type: ArtifactType,
@@ -33,26 +53,49 @@ export class ArtifactManager {
     stage: LifecycleStage,
   ): Promise<Artifact> {
     const dir = this.getArtifactDir(type);
-    // Use a standard filename per type (spec.md, plan.md, etc.)
-    // so there's always exactly one artifact per type per workflow.
-    // If the agent calls save multiple times, it overwrites.
     const filename = `${type}.md`;
     const path = `${dir}/${filename}`;
     const fullPath = `${this.rootPath}/${WORKFLOW_DIR}/${path}`;
     const now = new Date().toISOString();
 
+    // Write content file
     await this.fs.write(fullPath, content);
 
-    return {
-      id: `${type}-${type}`,
-      type,
-      title,
-      path,
-      stage,
-      createdAt: now,
-      updatedAt: now,
-      status: 'draft',
-    };
+    // Update manifest — reuse existing entry if same type (overwrite)
+    const manifest = await this.loadManifest();
+    const existingIndex = manifest.artifacts.findIndex((a) => a.type === type);
+
+    let entry: ArtifactManifestEntry;
+    if (existingIndex >= 0) {
+      // Overwrite: preserve ID and createdAt, update title and updatedAt
+      const existing = manifest.artifacts[existingIndex];
+      entry = {
+        ...existing,
+        title,
+        updatedAt: now,
+      };
+      const updated = [...manifest.artifacts];
+      updated[existingIndex] = entry;
+      await this.saveManifest({ ...manifest, artifacts: updated });
+    } else {
+      // New: generate unique ID
+      entry = {
+        id: this.generateId(),
+        type,
+        title,
+        filename,
+        stage,
+        status: 'draft',
+        createdAt: now,
+        updatedAt: now,
+      };
+      await this.saveManifest({
+        ...manifest,
+        artifacts: [...manifest.artifacts, entry],
+      });
+    }
+
+    return this.entryToArtifact(entry, path);
   }
 
   /**
@@ -68,50 +111,42 @@ export class ArtifactManager {
   }
 
   /**
-   * Update an existing artifact's content.
+   * Update an existing artifact's content and bump updatedAt in manifest.
    */
   async update(artifact: Artifact, content: string): Promise<Artifact> {
     const fullPath = `${this.rootPath}/${WORKFLOW_DIR}/${artifact.path}`;
     await this.fs.write(fullPath, content);
 
-    return {
-      ...artifact,
-      updatedAt: new Date().toISOString(),
-    };
+    const now = new Date().toISOString();
+    const manifest = await this.loadManifest();
+    const updated = manifest.artifacts.map((a) =>
+      a.id === artifact.id ? { ...a, updatedAt: now } : a,
+    );
+    await this.saveManifest({ ...manifest, artifacts: updated });
+
+    return { ...artifact, updatedAt: now };
+  }
+
+  /**
+   * Update an artifact's status in the manifest.
+   */
+  async updateStatus(artifactId: string, status: ArtifactStatus): Promise<void> {
+    const manifest = await this.loadManifest();
+    const updated = manifest.artifacts.map((a) => (a.id === artifactId ? { ...a, status } : a));
+    await this.saveManifest({ ...manifest, artifacts: updated });
   }
 
   /**
    * List all artifacts for the current workflow.
+   * Reads from the manifest — never scans the filesystem.
    */
   async listAll(): Promise<readonly Artifact[]> {
-    const artifacts: Artifact[] = [];
-
-    for (const type of ['spec', 'plan', 'review', 'report'] as ArtifactType[]) {
-      const dir = this.getArtifactDir(type);
-      const fullDir = `${this.rootPath}/${WORKFLOW_DIR}/${dir}`;
-
-      try {
-        const files = await this.fs.readDir(fullDir);
-        for (const file of files) {
-          if (!file.endsWith('.md')) continue;
-          const name = file.replace(/\.md$/, '');
-          artifacts.push({
-            id: `${type}-${name}`,
-            type,
-            title: this.unslugify(name),
-            path: `${dir}/${file}`,
-            stage: this.inferStageFromType(type),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            status: 'draft',
-          });
-        }
-      } catch {
-        // Directory doesn't exist or can't be read — skip
-      }
-    }
-
-    return artifacts;
+    const manifest = await this.loadManifest();
+    return manifest.artifacts.map((entry) => {
+      const dir = this.getArtifactDir(entry.type);
+      const path = `${dir}/${entry.filename}`;
+      return this.entryToArtifact(entry, path);
+    });
   }
 
   /**
@@ -123,7 +158,14 @@ export class ArtifactManager {
   }
 
   /**
-   * Save the objective statement to `.codestudio/workflows/current/objective.md`.
+   * Clear all artifacts and the manifest (for workflow reset/archive).
+   */
+  async clearAll(): Promise<void> {
+    await this.saveManifest({ version: 1, artifacts: [] });
+  }
+
+  /**
+   * Save the objective statement.
    */
   async saveObjective(objective: string): Promise<void> {
     const fullPath = `${this.rootPath}/${WORKFLOW_DIR}/workflows/current/objective.md`;
@@ -143,7 +185,48 @@ export class ArtifactManager {
     }
   }
 
+  // ─── Manifest I/O ─────────────────────────────────────────────────────
+
+  private get manifestPath(): string {
+    return `${this.rootPath}/${WORKFLOW_DIR}/${ARTIFACTS_MANIFEST}`;
+  }
+
+  private async loadManifest(): Promise<ArtifactManifest> {
+    try {
+      if (await this.fs.exists(this.manifestPath)) {
+        const content = await this.fs.read(this.manifestPath);
+        return JSON.parse(content) as ArtifactManifest;
+      }
+    } catch {
+      // Corrupt manifest — start fresh
+    }
+    return { version: 1, artifacts: [] };
+  }
+
+  private async saveManifest(manifest: ArtifactManifest): Promise<void> {
+    await this.fs.write(this.manifestPath, JSON.stringify(manifest, null, 2));
+  }
+
   // ─── Private Helpers ──────────────────────────────────────────────────
+
+  private entryToArtifact(entry: ArtifactManifestEntry, path: string): Artifact {
+    return {
+      id: entry.id,
+      type: entry.type,
+      title: entry.title,
+      path,
+      stage: entry.stage,
+      createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt,
+      status: entry.status,
+    };
+  }
+
+  private generateId(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).slice(2, 8);
+    return `art_${timestamp}_${random}`;
+  }
 
   private getArtifactDir(type: ArtifactType): string {
     switch (type) {
@@ -159,36 +242,5 @@ export class ArtifactManager {
       default:
         return ARTIFACTS_REPORTS_DIR;
     }
-  }
-
-  private inferStageFromType(type: ArtifactType): LifecycleStage {
-    switch (type) {
-      case 'spec':
-        return 'define';
-      case 'plan':
-        return 'plan';
-      case 'review':
-        return 'review';
-      case 'report':
-        return 'verify';
-      case 'adr':
-        return 'define';
-      default:
-        return 'build';
-    }
-  }
-
-  private slugify(text: string): string {
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  }
-
-  private unslugify(slug: string): string {
-    return slug
-      .split('-')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
   }
 }
