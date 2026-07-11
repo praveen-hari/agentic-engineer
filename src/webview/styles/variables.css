@@ -25,19 +25,28 @@
   --vscode-errorForeground: var(--vscode-errorForeground, #f48771);
   --vscode-icon-foreground: var(--vscode-icon-foreground, #c5c5c5);
 
-  /* Semantic tokens */
+  /* Semantic tokens — all derived from --vscode-* so themes work */
   --color-bg: var(--vscode-editor-background);
   --color-bg-sidebar: var(--vscode-sideBar-background);
   --color-text: var(--vscode-foreground);
   --color-text-muted: var(--vscode-descriptionForeground);
-  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border: var(--vscode-panel-border, rgba(128, 128, 128, 0.15));
   --color-accent: var(--vscode-button-background);
   --color-accent-hover: var(--vscode-button-hoverBackground);
-  --color-success: #4ec9b0;
-  --color-warning: #dcdcaa;
-  --color-error: var(--vscode-errorForeground);
+  --color-accent-fg: var(--vscode-button-foreground);
+  --color-success: var(--vscode-testing-iconPassed, #4ec9b0);
+  --color-warning: var(--vscode-editorWarning-foreground, #cca700);
+  --color-error: var(--vscode-errorForeground, #f48771);
+  --color-info: var(--vscode-editorInfo-foreground, #3794ff);
   --color-badge-bg: var(--vscode-badge-background);
   --color-badge-fg: var(--vscode-badge-foreground);
+  --color-surface: var(--vscode-sideBar-background);
+  --color-surface-hover: var(--vscode-list-hoverBackground);
+  --color-surface-active: var(--vscode-list-activeSelectionBackground);
+  --color-input-bg: var(--vscode-input-background);
+  --color-input-fg: var(--vscode-input-foreground);
+  --color-link: var(--vscode-textLink-foreground, var(--color-accent));
+  --color-focus-border: var(--vscode-focusBorder);
 
   /* Spacing */
   --space-xs: 4px;
@@ -45,6 +54,8 @@
   --space-md: 12px;
   --space-lg: 16px;
   --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 40px;
 
   /* Font */
   --font-ui: var(--vscode-font-family, 'Inter', -apple-system, sans-serif);
@@ -54,6 +65,8 @@
   --font-size-md: 13px;
   --font-size-lg: 15px;
   --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-h1: 26px;
 
   /* Border radius */
   --radius-sm: 3px;

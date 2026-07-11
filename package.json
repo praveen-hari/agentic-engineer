@@ -32,10 +32,28 @@
     "views": {
       "engineering-workspace": [
         {
-          "type": "webview",
-          "id": "engineeringWorkspace.mainView",
+          "id": "engineeringWorkspace.navigation",
           "name": "Engineering Workspace",
           "visibility": "visible"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "engineeringWorkspace.newWorkRequest",
+          "when": "view == engineeringWorkspace.navigation",
+          "group": "navigation@1"
+        },
+        {
+          "command": "engineeringWorkspace.refresh",
+          "when": "view == engineeringWorkspace.navigation",
+          "group": "navigation@2"
+        },
+        {
+          "command": "engineeringWorkspace.openSettings",
+          "when": "view == engineeringWorkspace.navigation",
+          "group": "navigation@3"
         }
       ]
     },
@@ -54,6 +72,29 @@
         "command": "engineeringWorkspace.showHistory",
         "title": "Engineering Workspace: Show History",
         "category": "Engineering Workspace"
+      },
+      {
+        "command": "engineeringWorkspace.navigateTo",
+        "title": "Engineering Workspace: Navigate To View",
+        "category": "Engineering Workspace"
+      },
+      {
+        "command": "engineeringWorkspace.newWorkRequest",
+        "title": "New Work Request",
+        "category": "Engineering Workspace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "engineeringWorkspace.refresh",
+        "title": "Refresh",
+        "category": "Engineering Workspace",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "engineeringWorkspace.openSettings",
+        "title": "Settings",
+        "category": "Engineering Workspace",
+        "icon": "$(gear)"
       }
     ],
     "chatParticipants": [
@@ -82,7 +123,8 @@
     "languageModelTools": [
       {
         "name": "analyze_work_request",
-        "description": "Analyze a work request objective and return a risk assessment (work type, complexity, risk signals, recommended process level).",
+        "displayName": "Analyze Work Request",
+        "modelDescription": "Analyzes a work request objective to determine work type, complexity, risk level, risk signals, and recommended process level (light/standard/thorough/guarded).",
         "tags": [
           "engineering",
           "risk-assessment"
@@ -117,7 +159,8 @@
       },
       {
         "name": "get_workflow_status",
-        "description": "Return the current workflow state — active stage, completed stages, pending stages, and any pending approvals.",
+        "displayName": "Get Workflow Status",
+        "modelDescription": "Returns the current engineering workflow state including active stage, completed/pending stages, progress percentage, and any pending approvals.",
         "tags": [
           "engineering",
           "workflow"
@@ -134,7 +177,8 @@
       },
       {
         "name": "get_project_context",
-        "description": "Return the auto-generated project context — detected stack, conventions, and relevant context signals.",
+        "displayName": "Get Project Context",
+        "modelDescription": "Returns the auto-generated project context including detected languages, frameworks, test frameworks, package managers, build tools, and conventions.",
         "tags": [
           "engineering",
           "context"

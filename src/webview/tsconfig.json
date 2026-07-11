@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.webview.json",
+  "include": ["**/*.ts", "**/*.tsx", "../core/types.ts"],
+  "exclude": ["node_modules", "out"]
+}

@@ -34,6 +34,11 @@ export const activeView = signal<string>('tasks');
 export const isLoading = signal<boolean>(false);
 export const error = signal<string | null>(null);
 
+// Tasks view UI state — lifted here so it survives view switches
+export const objectiveInput = signal<string>('');
+export const isAnalyzing = signal<boolean>(false);
+export const tasksActiveTab = signal<'tasks' | 'artifacts'>('tasks');
+
 // ─── Assessment State ──────────────────────────────────────────────────────
 
 export const assessmentStore = signal<RiskAssessment | null>(null);

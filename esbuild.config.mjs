@@ -27,7 +27,8 @@ const extensionOptions = {
 const webviewOptions = {
   bundle: true,
   entryPoints: ['src/webview/index.tsx'],
-  outfile: 'out/webview.js',
+  outdir: 'out',
+  entryNames: 'webview',
   platform: 'browser',
   format: 'esm',
   target: 'es2020',
@@ -35,7 +36,7 @@ const webviewOptions = {
   minify: isProduction,
   jsx: 'automatic',
   jsxImportSource: 'preact',
-  loader: { '.css': 'text' },
+  // CSS imports produce a separate webview.css file
   define: {
     'process.env.NODE_ENV': isProduction ? '"production"' : '"development"',
   },

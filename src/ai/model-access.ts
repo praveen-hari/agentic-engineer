@@ -32,9 +32,5 @@ export interface ModelAccess {
   getModel(): Promise<ModelInfo | null>;
 
   /** Send a chat request to the model and return the text response. */
-  sendRequest(
-    model: ModelInfo,
-    messages: readonly ChatMessage[],
-    token?: unknown,
-  ): Promise<string>;
+  sendRequest(model: ModelInfo, messages: readonly ChatMessage[], token?: unknown): Promise<string>;
 }

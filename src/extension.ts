@@ -19,9 +19,10 @@ import { AnalyzeWorkRequestTool } from './ai/tools/analyze-work-request.tool';
 import { GetWorkflowStatusTool } from './ai/tools/get-workflow-status.tool';
 import { GetProjectContextTool } from './ai/tools/get-project-context.tool';
 import { ChatParticipantHandler } from './chat/chat-participant';
-import { EngineeringWorkspaceViewProvider } from './views/sidebar-provider';
+import { NavigationTreeProvider } from './views/navigation-tree';
+import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
-import { WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE, WEBVIEW_VIEW_ID } from './constants';
+import { WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
 
 /**
  * Extension entry point — Engineering Workspace.
@@ -40,9 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // ─── Core Engine ──────────────────────────────────────────────────
   const workspaceRoot = workspaceService.getWorkspaceRoot();
-  const codestudioDir = workspaceRoot
-    ? `${workspaceRoot}/${WORKFLOW_DIR}`
-    : `/${WORKFLOW_DIR}`;
+  const codestudioDir = workspaceRoot ? `${workspaceRoot}/${WORKFLOW_DIR}` : `/${WORKFLOW_DIR}`;
   const workflowPath = `${codestudioDir}/${WORKFLOW_FILE}`;
   const eventsPath = `${codestudioDir}/${EVENTS_FILE}`;
 
@@ -91,7 +90,11 @@ export function activate(context: vscode.ExtensionContext): void {
           : vscode.LanguageModelChatMessage.User(m.text),
       );
 
-      const response = await lm.sendRequest(chatMessages, undefined, token as vscode.CancellationToken | undefined);
+      const response = await lm.sendRequest(
+        chatMessages,
+        undefined,
+        token as vscode.CancellationToken | undefined,
+      );
       let text = '';
       for await (const part of response.stream) {
         if (part instanceof vscode.LanguageModelTextPart) {
@@ -108,25 +111,47 @@ export function activate(context: vscode.ExtensionContext): void {
   void new GetWorkflowStatusTool(stateManager);
   void new GetProjectContextTool(projectDetector, contextAnalyzer);
 
-  // ─── Webview ──────────────────────────────────────────────────────
-  const messageHandler = handleWebviewMessage({
-    stateManager,
-    workflowEngine,
-    riskEngine,
-    workflowGenerator,
-    skillEngine,
-    projectDetector,
-    contextAnalyzer,
-    contextSignalDetector,
-    capabilityRecommender,
-    notificationService,
-    workspaceService,
+  // ─── Sidebar TreeView ──────────────────────────────────────────────
+  const navigationTree = new NavigationTreeProvider();
+  const treeView = vscode.window.createTreeView('engineeringWorkspace.navigation', {
+    treeDataProvider: navigationTree,
+    showCollapseAll: false,
   });
+  context.subscriptions.push(treeView);
 
-  const viewProvider = new EngineeringWorkspaceViewProvider(context, messageHandler);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(WEBVIEW_VIEW_ID, viewProvider),
+  // ─── Editor Panel (Webview) ──────────────────────────────────────
+  // PanelProvider is created first so the reply callback can reference it.
+  // The message handler is wired after, using a closure over panelProvider.
+  let panelProvider: EngineeringWorkspacePanelProvider;
+
+  const messageHandler = handleWebviewMessage(
+    {
+      stateManager,
+      workflowEngine,
+      riskEngine,
+      workflowGenerator,
+      skillEngine,
+      projectDetector,
+      contextAnalyzer,
+      contextSignalDetector,
+      capabilityRecommender,
+      notificationService,
+      workspaceService,
+    },
+    // Reply callback — sends MessageToWebview back to the webview
+    (message) => panelProvider.postMessage(message),
   );
+
+  panelProvider = new EngineeringWorkspacePanelProvider(context, messageHandler);
+
+  // Auto-open Tasks view when the sidebar becomes visible
+  treeView.onDidChangeVisibility((e) => {
+    if (e.visible && !panelProvider.isVisible) {
+      const tasksItem = navigationTree.getChildren()[0];
+      void treeView.reveal(tasksItem, { select: true, focus: false });
+      panelProvider.open('tasks');
+    }
+  });
 
   // ─── Chat Participant ────────────────────────────────────────────
   const chatHandler = new ChatParticipantHandler(
@@ -140,7 +165,31 @@ export function activate(context: vscode.ExtensionContext): void {
   // ─── Commands ────────────────────────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand('engineeringWorkspace.openView', () => {
-      vscode.commands.executeCommand(`${WEBVIEW_VIEW_ID}.focus`);
+      panelProvider.open();
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('engineeringWorkspace.navigateTo', (viewId: string) => {
+      panelProvider.navigateTo(viewId);
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('engineeringWorkspace.newWorkRequest', () => {
+      panelProvider.navigateTo('tasks');
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('engineeringWorkspace.refresh', () => {
+      navigationTree.refresh();
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('engineeringWorkspace.openSettings', () => {
+      panelProvider.navigateTo('settings');
     }),
   );
 
@@ -172,7 +221,13 @@ export function activate(context: vscode.ExtensionContext): void {
   // ─── Initialize .codestudio directory ────────────────────────────
   void fsService.ensureDirectory(codestudioDir).then(() => {
     // Auto-generate project context on first activation
-    void maybeGenerateContext(fsService, projectDetector, contextAnalyzer, workspaceRoot, codestudioDir);
+    void maybeGenerateContext(
+      fsService,
+      projectDetector,
+      contextAnalyzer,
+      workspaceRoot,
+      codestudioDir,
+    );
   });
 
   void gitService.getCurrentBranch().then((branch) => {

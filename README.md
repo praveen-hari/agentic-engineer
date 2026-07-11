@@ -59,6 +59,7 @@ Use `@engineering` in the chat panel:
 ### Agent Mode
 
 The extension contributes three tools that agent mode invokes automatically:
+
 - `analyze_work_request` — Analyzes a task description for type, risk, and process level
 - `get_workflow_status` — Returns current workflow state
 - `get_project_context` — Returns detected tech stack and conventions

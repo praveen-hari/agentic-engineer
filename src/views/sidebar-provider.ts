@@ -19,13 +19,29 @@ export class EngineeringWorkspaceViewProvider implements vscode.WebviewViewProvi
   ): void {
     const distPath = vscode.Uri.joinPath(this.context.extensionUri, 'out');
 
+    // Codicons font from the VS Code built-in extension
+    const codiconsUri = vscode.Uri.joinPath(
+      this.context.extensionUri,
+      'node_modules',
+      '@vscode/codicons',
+      'dist',
+    );
+
     webviewView.webview.options = {
       enableScripts: true,
-      localResourceRoots: [distPath],
+      localResourceRoots: [distPath, codiconsUri],
     };
 
     const webviewJs = webviewView.webview
       .asWebviewUri(vscode.Uri.joinPath(distPath, 'webview.js'))
+      .toString();
+
+    const webviewCss = webviewView.webview
+      .asWebviewUri(vscode.Uri.joinPath(distPath, 'webview.css'))
+      .toString();
+
+    const codiconsCss = webviewView.webview
+      .asWebviewUri(vscode.Uri.joinPath(codiconsUri, 'codicon.css'))
       .toString();
 
     const nonce = getNonce();
@@ -35,8 +51,10 @@ export class EngineeringWorkspaceViewProvider implements vscode.WebviewViewProvi
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webviewView.webview.cspSource}; script-src 'nonce-${nonce}';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webviewView.webview.cspSource}; style-src ${webviewView.webview.cspSource}; script-src 'nonce-${nonce}';" />
   <title>Engineering Workspace</title>
+  <link rel="stylesheet" href="${codiconsCss}" />
+  <link rel="stylesheet" href="${webviewCss}" />
 </head>
 <body>
   <div id="root"></div>

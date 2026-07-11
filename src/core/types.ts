@@ -275,7 +275,8 @@ export type MessageToWebview =
       readonly entries: readonly HistoryEntry[];
       readonly hasMore: boolean;
     }
-  | { readonly type: 'error'; readonly message: string };
+  | { readonly type: 'error'; readonly message: string }
+  | { readonly type: 'navigateTo'; readonly view: string };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
 

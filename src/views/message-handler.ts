@@ -9,7 +9,18 @@ import type { ContextSignalDetector } from '../core/context-signal-detector';
 import type { CapabilityRecommender } from '../core/capability-recommender';
 import type { NotificationService } from '../services/notification.service';
 import type { WorkspaceService } from '../services/workspace.service';
-import type { LifecycleStage, MessageToHost, RiskAssessment, WorkflowDefinition } from '../core/types';
+import type {
+  LifecycleStage,
+  MessageToHost,
+  MessageToWebview,
+  RiskAssessment,
+  WorkflowDefinition,
+} from '../core/types';
+
+/**
+ * Callback to send a response message back to the webview.
+ */
+export type ReplyFn = (message: MessageToWebview) => void;
 
 /**
  * Dependencies for the webview message handler.
@@ -30,115 +41,148 @@ export interface MessageHandlerDeps {
 
 /**
  * Handle messages from the webview and route them to the appropriate
- * core engine operations. Returns responses via the webview.
+ * core engine operations. Sends responses back via the `reply` callback.
  *
- * This is a factory function that returns a message handler suitable
- * for passing to the WebviewViewProvider.
+ * @param deps  — core engines and services
+ * @param reply — callback to send a {@link MessageToWebview} back to the webview
  */
-export function handleWebviewMessage(deps: MessageHandlerDeps): (message: unknown) => Promise<void> {
+export function handleWebviewMessage(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): (message: unknown) => Promise<void> {
   return async (message: unknown) => {
     const msg = message as MessageToHost;
     if (!msg || typeof msg !== 'object' || !('type' in msg)) return;
 
-    // The webview is accessed via the view provider — this handler
-    // processes the message and would send a response back via
-    // webviewView.webview.postMessage(). The actual webview reference
-    // is managed by the view provider.
-    switch (msg.type) {
-      case 'requestState':
-        await handleRequestState(deps);
-        break;
-      case 'requestContext':
-        await handleRequestContext(deps);
-        break;
-      case 'analyzeObjective':
-        await handleAnalyzeObjective(deps, msg.objective);
-        break;
-      case 'startWorkflow':
-        await handleStartWorkflow(deps, msg.objective, msg.assessment);
-        break;
-      case 'advanceStage':
-        await handleAdvanceStage(deps);
-        break;
-      case 'skipStage':
-        await handleSkipStage(deps, msg.stageId);
-        break;
-      case 'approve':
-        await handleApprove(deps, msg.approvalId, msg.comment);
-        break;
-      case 'reject':
-        await handleReject(deps, msg.approvalId, msg.comment);
-        break;
-      case 'navigate':
-        // Navigation is handled in the webview — no host action needed
-        break;
-      case 'requestHistory':
-        await handleRequestHistory(deps, msg.page);
-        break;
+    try {
+      switch (msg.type) {
+        case 'requestState':
+          await handleRequestState(deps, reply);
+          break;
+        case 'requestContext':
+          await handleRequestContext(deps, reply);
+          break;
+        case 'analyzeObjective':
+          await handleAnalyzeObjective(deps, reply, msg.objective);
+          break;
+        case 'startWorkflow':
+          await handleStartWorkflow(deps, reply, msg.objective, msg.assessment);
+          break;
+        case 'advanceStage':
+          await handleAdvanceStage(deps, reply);
+          break;
+        case 'skipStage':
+          await handleSkipStage(deps, reply, msg.stageId);
+          break;
+        case 'approve':
+          await handleApprove(deps, reply, msg.approvalId, msg.comment);
+          break;
+        case 'reject':
+          await handleReject(deps, reply, msg.approvalId, msg.comment);
+          break;
+        case 'navigate':
+          // Navigation is handled in the webview — no host action needed
+          break;
+        case 'requestHistory':
+          await handleRequestHistory(deps, reply, msg.page);
+          break;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      reply({ type: 'error', message });
     }
   };
 }
 
-async function handleRequestState(deps: MessageHandlerDeps): Promise<void> {
+// ─── Handler Implementations ────────────────────────────────────────────────
+
+async function handleRequestState(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const workflow = await deps.stateManager.load();
-  // Response would be sent back via webview.postMessage
-  void workflow;
+  reply({ type: 'state', workflow });
 }
 
-async function handleRequestContext(deps: MessageHandlerDeps): Promise<void> {
+async function handleRequestContext(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const root = deps.workspaceService.getWorkspaceRoot();
-  if (!root) return;
-  // In production, scan workspace files and generate context
-  void deps.projectDetector;
-  void deps.contextAnalyzer;
+  if (!root) {
+    reply({ type: 'context', context: null });
+    return;
+  }
+
+  // ProjectDetector.detect() requires FileEntry[] — in production this
+  // would list workspace files via FileSystemService. For now, return
+  // a minimal context so the webview has something to display.
+  reply({
+    type: 'context',
+    context: {
+      rootPath: root,
+      languages: [],
+      frameworks: [],
+      testFramework: null,
+      packageManager: null,
+      detectedStack: [],
+      conventions: [],
+      generatedAt: new Date().toISOString(),
+    },
+  });
 }
 
-async function handleAnalyzeObjective(deps: MessageHandlerDeps, objective: string): Promise<void> {
+async function handleAnalyzeObjective(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  objective: string,
+): Promise<void> {
   const assessment = deps.riskEngine.assess(objective);
-  deps.notificationService.showInfo(
-    `Analyzed: ${assessment.workType} / ${assessment.processLevel}`,
-  );
+  reply({ type: 'assessment', assessment });
 }
 
 async function handleStartWorkflow(
   deps: MessageHandlerDeps,
+  reply: ReplyFn,
   objective: string,
   assessment: RiskAssessment,
 ): Promise<void> {
-  // Generate workflow from assessment and save
-  const wf = deps.workflowGenerator.generate(
-    `wf-${Date.now()}`,
-    objective,
-    assessment as never,
-  );
+  const wf = deps.workflowGenerator.generate(`wf-${Date.now()}`, objective, assessment as never);
   await deps.stateManager.save(wf);
-  deps.notificationService.showInfo('Workflow started');
+  reply({ type: 'state', workflow: wf });
 }
 
-async function handleAdvanceStage(deps: MessageHandlerDeps): Promise<void> {
+async function handleAdvanceStage(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const wf = await deps.stateManager.load();
-  if (!wf) return;
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow' });
+    return;
+  }
   const updated = await deps.workflowEngine.advanceStage(wf);
   await deps.stateManager.save(updated);
+  reply({ type: 'state', workflow: updated });
 }
 
 async function handleSkipStage(
   deps: MessageHandlerDeps,
+  reply: ReplyFn,
   stageId: LifecycleStage,
 ): Promise<void> {
   const wf = await deps.stateManager.load();
-  if (!wf) return;
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow' });
+    return;
+  }
   const updated = await deps.workflowEngine.skipStage(wf, stageId);
   await deps.stateManager.save(updated);
+  reply({ type: 'state', workflow: updated });
 }
 
 async function handleApprove(
   deps: MessageHandlerDeps,
+  reply: ReplyFn,
   approvalId: string,
   comment?: string,
 ): Promise<void> {
   const wf = await deps.stateManager.load();
-  if (!wf) return;
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow' });
+    return;
+  }
   const updated: WorkflowDefinition = {
     ...wf,
     approvals: wf.approvals.map((a) =>
@@ -148,29 +192,36 @@ async function handleApprove(
     ),
   };
   await deps.stateManager.save(updated);
-  deps.notificationService.showInfo('Approved');
+  reply({ type: 'state', workflow: updated });
 }
 
 async function handleReject(
   deps: MessageHandlerDeps,
+  reply: ReplyFn,
   approvalId: string,
   comment?: string,
 ): Promise<void> {
   const wf = await deps.stateManager.load();
-  if (!wf) return;
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow' });
+    return;
+  }
   const updated: WorkflowDefinition = {
     ...wf,
     approvals: wf.approvals.map((a) =>
-      a.id === approvalId
-        ? { ...a, status: 'rejected', comment }
-        : a,
+      a.id === approvalId ? { ...a, status: 'rejected', comment } : a,
     ),
   };
   await deps.stateManager.save(updated);
-  deps.notificationService.showError('Rejected');
+  reply({ type: 'state', workflow: updated });
 }
 
-async function handleRequestHistory(deps: MessageHandlerDeps, _page?: number): Promise<void> {
-  // History loading would go here — for now, placeholder
+async function handleRequestHistory(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  _page?: number,
+): Promise<void> {
+  // TODO: load history from state manager
   void deps;
+  reply({ type: 'history', entries: [], hasMore: false });
 }
