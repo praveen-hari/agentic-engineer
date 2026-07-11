@@ -160,9 +160,101 @@
     ],
     "languageModelTools": [
       {
+        "name": "engineering_setup_project",
+        "displayName": "Set Up Engineering Workspace",
+        "modelDescription": "Initializes the .codestudio/ directory with project context (config.json, context.md). Scans the workspace to detect languages, frameworks, test frameworks, and conventions. Use when the user wants to set up a project for AI-assisted engineering workflows, or when .codestudio/ doesn't exist yet. After this tool runs, create a codestudio-instructions.md file with the project's coding conventions.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "setupProject",
+        "icon": "$(folder-library)",
+        "userDescription": "Initialize Engineering Workspace for this project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectName": {
+              "type": "string",
+              "description": "Optional project name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional project description"
+            }
+          }
+        }
+      },
+      {
+        "name": "engineering_start_workflow",
+        "displayName": "Start Engineering Workflow",
+        "modelDescription": "Starts a structured SDLC workflow for a development task. Analyzes the objective for risk, determines the process level (light/standard/thorough/guarded), creates workflow stages (Define → Plan → Build → Verify → Review → Ship), and activates the first stage. Use when the user describes what they want to build. Returns the workflow state and instructions for the current stage. The agent should then follow the stage instructions (e.g., generate a spec for the DEFINE stage using the spec-driven-development skill).",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "startWorkflow",
+        "icon": "$(play)",
+        "userDescription": "Start a structured engineering workflow for a task",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "objective": {
+              "type": "string",
+              "description": "What the user wants to build — the work request objective"
+            }
+          },
+          "required": ["objective"]
+        }
+      },
+      {
+        "name": "engineering_save_artifact",
+        "displayName": "Save Engineering Artifact",
+        "modelDescription": "Saves a workflow artifact (spec, plan, review, or report) to the .codestudio/workflows/current/artifacts/ directory. Use after generating a specification, task plan, code review, or verification report. The artifact will appear in the Engineering Workspace sidebar for user review and approval.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "saveArtifact",
+        "icon": "$(file-add)",
+        "userDescription": "Save a spec, plan, review, or report to the workflow",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["spec", "plan", "review", "report"],
+              "description": "Artifact type: spec (specification), plan (task breakdown), review (code review), report (verification report)"
+            },
+            "title": {
+              "type": "string",
+              "description": "Human-readable title for the artifact"
+            },
+            "content": {
+              "type": "string",
+              "description": "The full markdown content of the artifact"
+            },
+            "stage": {
+              "type": "string",
+              "enum": ["define", "plan", "build", "verify", "review", "ship"],
+              "description": "Which workflow stage produced this artifact"
+            }
+          },
+          "required": ["type", "title", "content", "stage"]
+        }
+      },
+      {
+        "name": "engineering_advance_stage",
+        "displayName": "Advance Workflow Stage",
+        "modelDescription": "Checks if the current workflow stage requirements are met (required artifacts saved, quality gates passing, approvals granted) and advances to the next stage. Returns the next stage's instructions. Use after completing the work for the current stage. If requirements are not met, returns what's still needed.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "advanceStage",
+        "icon": "$(arrow-right)",
+        "userDescription": "Check requirements and advance to the next workflow stage",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "force": {
+              "type": "boolean",
+              "description": "Force advance even if some non-blocking requirements are not met"
+            }
+          }
+        }
+      },
+      {
         "name": "analyze_work_request",
         "displayName": "Analyze Work Request",
-        "modelDescription": "Analyzes a work request objective to determine work type, complexity, risk level, risk signals, and recommended process level (light/standard/thorough/guarded).",
+        "modelDescription": "Analyzes a work request objective to determine work type, complexity, risk level, risk signals, and recommended process level (light/standard/thorough/guarded). Use when you need to understand the risk profile of a task without starting a full workflow.",
         "tags": [
           "engineering",
           "risk-assessment"

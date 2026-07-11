@@ -24,6 +24,10 @@ import { AiRiskAnalyzer } from './ai/risk-analyzer';
 import { AnalyzeWorkRequestTool } from './ai/tools/analyze-work-request.tool';
 import { GetWorkflowStatusTool } from './ai/tools/get-workflow-status.tool';
 import { GetProjectContextTool } from './ai/tools/get-project-context.tool';
+import { SetupProjectTool } from './ai/tools/setup-project.tool';
+import { StartWorkflowTool } from './ai/tools/start-workflow.tool';
+import { SaveArtifactTool } from './ai/tools/save-artifact.tool';
+import { AdvanceStageTool } from './ai/tools/advance-stage.tool';
 import { ChatParticipantHandler } from './chat/chat-participant';
 import { NavigationTreeProvider } from './views/navigation-tree';
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
@@ -119,11 +123,82 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   });
 
-  // Tools are registered via package.json languageModelTools contribution point.
-  // The tool implementations are available for the extension host to use.
-  void new AnalyzeWorkRequestTool(aiRiskAnalyzer, workflowGenerator);
-  void new GetWorkflowStatusTool(stateManager);
-  void new GetProjectContextTool(projectDetector, contextAnalyzer);
+  // ─── Language Model Tools (registered with vscode.lm) ────────────
+  // These tools are invoked by the agent in agent mode automatically.
+  // Each tool is registered with the name matching package.json.
+
+  // Shared context getter for tools
+  let toolCachedContext: import('./core/types').ProjectContext | null = null;
+
+  // Existing tools (read-only)
+  const analyzeWorkRequestTool = new AnalyzeWorkRequestTool(aiRiskAnalyzer, workflowGenerator);
+  const getWorkflowStatusTool = new GetWorkflowStatusTool(stateManager);
+  const getProjectContextTool = new GetProjectContextTool(projectDetector, contextAnalyzer);
+
+  // New workflow tools
+  const setupProjectTool = new SetupProjectTool(
+    fsService,
+    workspaceRoot ?? '/',
+    projectDetector,
+    contextAnalyzer,
+    contextSignalDetector,
+    (ctx) => {
+      toolCachedContext = ctx;
+      panelProvider.postMessage({
+        type: 'onboardingStatus',
+        status: 'ready',
+        projectType: 'brownfield',
+        context: ctx,
+        hasExistingFiles: true,
+      });
+      panelProvider.postMessage({ type: 'context', context: ctx });
+    },
+  );
+
+  const startWorkflowTool = new StartWorkflowTool(
+    riskEngine,
+    workflowGenerator,
+    workflowEngine,
+    stateManager,
+    stageExecutor,
+    contextSignalDetector,
+    artifactManager,
+    () => toolCachedContext,
+    (wf) => {
+      panelProvider.postMessage({ type: 'state', workflow: wf });
+    },
+  );
+
+  const saveArtifactTool = new SaveArtifactTool(
+    artifactManager,
+    (artifact) => {
+      panelProvider.postMessage({ type: 'artifactDetected', artifact });
+    },
+  );
+
+  const advanceStageTool = new AdvanceStageTool(
+    workflowEngine,
+    stateManager,
+    stageExecutor,
+    artifactManager,
+    (wf) => {
+      panelProvider.postMessage({ type: 'state', workflow: wf });
+    },
+  );
+
+  // Register all tools with vscode.lm
+  context.subscriptions.push(
+    vscode.lm.registerTool('engineering_setup_project', setupProjectTool),
+    vscode.lm.registerTool('engineering_start_workflow', startWorkflowTool),
+    vscode.lm.registerTool('engineering_save_artifact', saveArtifactTool),
+    vscode.lm.registerTool('engineering_advance_stage', advanceStageTool),
+  );
+
+  // Keep existing tools as internal (not registered with vscode.lm
+  // since they don't implement the full LanguageModelTool interface yet)
+  void analyzeWorkRequestTool;
+  void getWorkflowStatusTool;
+  void getProjectContextTool;
 
   // ─── Sidebar TreeView ──────────────────────────────────────────────
   const navigationTree = new NavigationTreeProvider();
