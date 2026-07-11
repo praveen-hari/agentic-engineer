@@ -504,37 +504,42 @@ async function handleSetupNewProject(
   projectName: string,
   description: string,
 ): Promise<void> {
-  // For new projects, we send the details to the agent via chat
-  // The agent will use the interview-me skill to gather more details
-  // and then set up the project structure
-  const prompt = `Follow the **interview-me** skill to set up a new project.
+  // For new projects, the agent ONLY sets up the project scaffold
+  // and .codestudio/ context. It does NOT build features — that
+  // happens through the SDLC workflow (DEFINE → PLAN → BUILD → etc.)
+  // after onboarding completes.
+  const prompt = `Set up a new project scaffold. Do NOT implement any features yet.
 
 ## Project Details
 - **Name:** ${projectName}
 ${description ? `- **Description:** ${description}` : ''}
 
-## Instructions
-1. Interview me to understand what I want to build (use the interview-me skill).
-2. Based on my answers, help me choose the right tech stack.
-3. Set up the project structure with:
-   - Package manager initialization
-   - Dependencies installation
-   - Folder structure
-   - Configuration files (tsconfig, eslint, prettier, etc.)
-4. Create \`.codestudio/\` directory with:
-   - \`context.md\` — project context
-   - \`codestudio-instructions.md\` — project conventions and instructions
-   - \`config.json\` — extension settings
-5. Initialize git if not already initialized.
+## What To Do (Project Scaffold ONLY)
+1. Ask me a few questions to understand the tech stack I want (framework, language, testing, etc.)
+2. Initialize the project:
+   - Create package.json (or equivalent for the chosen stack)
+   - Install core dependencies
+   - Set up folder structure
+   - Add configuration files (tsconfig, eslint, prettier, etc.)
+   - Initialize git if not already done
+3. Create \`.codestudio/\` directory with:
+   - \`config.json\` — \`{"version":1,"processLevelDefault":"auto","autoApproveLowRisk":false,"reviewTimeoutMinutes":5,"historyHotThreshold":5,"historyWarmThreshold":20,"historyColdAgeDays":180,"autoRefreshContext":true}\`
+   - \`context.md\` — project context (languages, frameworks, conventions detected)
+   - \`codestudio-instructions.md\` — project conventions and coding standards
 
-Start by asking me clarifying questions about what I want to build.`;
+## What NOT To Do
+- Do NOT implement any application features
+- Do NOT create application screens, routes, or business logic
+- Do NOT start building what the user described — that comes later through the SDLC workflow
+- ONLY set up the empty project scaffold with tooling
+
+After the scaffold is ready, the user will use the Engineering Workspace sidebar to start a work request, which will go through the proper SDLC stages (Define → Plan → Build → Verify → Review → Ship).`;
 
   await deps.agentBridge.sendToChat(prompt);
 
   // Keep webview in 'scanning' state (the button already set this).
   // The ArtifactWatcher will transition to 'ready' when the agent
   // creates .codestudio/config.json.
-  // We don't send 'setup-new' back — that would show the form again.
 }
 
 async function handleRequestOnboardingStatus(

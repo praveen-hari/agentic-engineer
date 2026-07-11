@@ -121,11 +121,11 @@ const ScanningScreen: FunctionalComponent = () => {
         <div class="onboarding__icon">
           <Icon name="loading" size={32} spin />
         </div>
-        <h2 class="onboarding__title">Setting Up Your Project...</h2>
+        <h2 class="onboarding__title">Setting Up Project Scaffold...</h2>
         <p class="onboarding__subtitle">
-          The agent is working in the chat panel.
+          The agent is setting up your project structure in the chat panel.
           <br />
-          This screen will update automatically when setup is complete.
+          No features will be built yet — just the scaffold and tooling.
         </p>
       </div>
 
@@ -134,20 +134,21 @@ const ScanningScreen: FunctionalComponent = () => {
           <Icon name="check" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
-          <Icon name="loading" size={14} spin /> Agent is setting up project context
+          <Icon name="loading" size={14} spin /> Agent is creating project scaffold
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Creating project instructions
+          <Icon name="circle-outline" size={14} /> Creating <code>.codestudio/</code> context
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Ready to start working
+          <Icon name="circle-outline" size={14} /> Ready to start your first work request
         </div>
       </div>
 
       <div class="onboarding__footer">
-        <strong>Check the Chat panel</strong> — the agent may ask you questions.
+        <strong>Check the Chat panel</strong> — the agent may ask you questions about your tech stack.
         <br />
-        This screen will auto-transition when <code>.codestudio/</code> is created.
+        Once the scaffold is ready, you'll use the <strong>Tasks view</strong> to start a work request
+        that goes through the proper SDLC stages.
       </div>
     </div>
   );
