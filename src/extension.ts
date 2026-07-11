@@ -136,6 +136,7 @@ export function activate(context: vscode.ExtensionContext): void {
       promptTemplates,
       agentBridge,
       historyManager,
+      approvalMode: 'user',
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),

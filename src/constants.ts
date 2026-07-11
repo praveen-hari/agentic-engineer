@@ -108,21 +108,14 @@ export const STAGE_NAMES: Readonly<Record<LifecycleStage, string>> = {
   ship: 'Ship',
 };
 
-/** History pagination (DD-007). */
-export const HISTORY_PAGE_SIZE = 20;
-export const HISTORY_HOT_THRESHOLD = 5;
-export const HISTORY_WARM_THRESHOLD = 20;
-
 // ─── Default Config (DD-027) ────────────────────────────────────────────────
 
 export const DEFAULT_CONFIG: WorkspaceConfig = {
   version: 1,
   processLevelDefault: 'auto',
+  approvalMode: 'user',
   autoApproveLowRisk: false,
   reviewTimeoutMinutes: 5,
-  historyHotThreshold: HISTORY_HOT_THRESHOLD,
-  historyWarmThreshold: HISTORY_WARM_THRESHOLD,
-  historyColdAgeDays: 180,
   autoRefreshContext: true,
 };
 

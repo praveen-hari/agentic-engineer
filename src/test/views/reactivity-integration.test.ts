@@ -103,6 +103,8 @@ function createMockDeps(): MessageHandlerDeps {
       archiveWorkflow: vi.fn().mockResolvedValue({}),
       loadArchivedWorkflow: vi.fn().mockResolvedValue(null),
     } as unknown as MessageHandlerDeps['historyManager'],
+
+    approvalMode: 'user' as const,
   };
 }
 

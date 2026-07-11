@@ -43,6 +43,7 @@ export interface MessageHandlerDeps {
   readonly promptTemplates: PromptTemplates;
   readonly agentBridge: AgentBridge;
   readonly historyManager: HistoryManager;
+  readonly approvalMode: 'user' | 'agent';
 }
 
 /**
@@ -130,6 +131,9 @@ export function handleWebviewMessage(
           break;
         case 'openArtifact':
           await handleOpenArtifact(deps, reply, msg.artifactId);
+          break;
+        case 'updateSettings':
+          await handleUpdateSettings(deps, reply, msg.settings);
           break;
       }
     } catch (err) {
@@ -288,6 +292,37 @@ async function handleRequestHistory(
 ): Promise<void> {
   const entries = await deps.historyManager.loadHistory();
   reply({ type: 'history', entries, hasMore: false });
+}
+
+// ─── Settings Handler ───────────────────────────────────────────────────────
+
+async function handleUpdateSettings(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  settings: Record<string, unknown>,
+): Promise<void> {
+  const root = deps.workspaceService.getWorkspaceRoot();
+  if (!root) {
+    reply({ type: 'error', message: 'No workspace open' });
+    return;
+  }
+
+  const configPath = `${root}/${WORKFLOW_DIR}/config.json`;
+
+  // Load existing config or start fresh
+  let existing: Record<string, unknown> = {};
+  try {
+    if (await deps.fileSystem.exists(configPath)) {
+      const content = await deps.fileSystem.read(configPath);
+      existing = JSON.parse(content) as Record<string, unknown>;
+    }
+  } catch {
+    // Corrupt config — start fresh
+  }
+
+  // Merge new settings
+  const updated = { ...existing, ...settings };
+  await deps.fileSystem.write(configPath, JSON.stringify(updated, null, 2));
 }
 
 // ─── Stage Execution Handlers ───────────────────────────────────────────────

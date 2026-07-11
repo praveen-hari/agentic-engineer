@@ -41,6 +41,8 @@ export type ApprovalLevel = 'informational' | 'review' | 'explicit' | 'restricte
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'auto-approved';
 
+export type ApprovalMode = 'user' | 'agent';
+
 export type GateStatus = 'pending' | 'passed' | 'failed' | 'skipped';
 
 export type GateType = 'automated' | 'review' | 'approval';
@@ -245,7 +247,8 @@ export type MessageToHost =
   | { readonly type: 'requestArtifactContent'; readonly artifactId: string }
   | { readonly type: 'sendToAgent'; readonly stage: LifecycleStage }
   | { readonly type: 'notifyArtifactDetected'; readonly artifact: Artifact }
-  | { readonly type: 'openArtifact'; readonly artifactId: string };
+  | { readonly type: 'openArtifact'; readonly artifactId: string }
+  | { readonly type: 'updateSettings'; readonly settings: Partial<WorkspaceConfig> };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -370,11 +373,9 @@ export interface WorkflowArchive {
 export interface WorkspaceConfig {
   readonly version: number;
   readonly processLevelDefault: ProcessLevel | 'auto';
+  readonly approvalMode: ApprovalMode;
   readonly autoApproveLowRisk: boolean;
   readonly reviewTimeoutMinutes: number;
-  readonly historyHotThreshold: number;
-  readonly historyWarmThreshold: number;
-  readonly historyColdAgeDays: number;
   readonly autoRefreshContext: boolean;
 }
 
