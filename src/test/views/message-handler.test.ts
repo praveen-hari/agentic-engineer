@@ -26,6 +26,7 @@ function createMockDeps(): MessageHandlerDeps {
     stateManager: {
       load: vi.fn().mockResolvedValue(SAMPLE_WORKFLOW),
       save: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
       update: vi
         .fn()
         .mockImplementation(async (fn: (wf: typeof SAMPLE_WORKFLOW) => typeof SAMPLE_WORKFLOW) => {
@@ -308,7 +309,7 @@ describe('handleWebviewMessage', () => {
   describe('requestHistory', () => {
     it('replies with empty history', async () => {
       await handler({ type: 'requestHistory' });
-      expect(replies[0]).toEqual({ type: 'history', entries: [], hasMore: false });
+      expect(replies[0]).toEqual({ type: 'history', entries: [] });
     });
   });
 

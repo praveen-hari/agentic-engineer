@@ -459,9 +459,9 @@
 /* ─── Progress Bar ──────────────────────────────────────────────── */
 
 .progress-bar {
-  height: 4px;
+  height: 6px;
   background: var(--color-border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: var(--space-md);
 }
@@ -1121,13 +1121,13 @@
 }
 
 .btn-success {
-  background: color-mix(in srgb, var(--color-success) 80%, transparent);
-  color: var(--color-bg);
+  background: var(--color-success);
+  color: #fff;
 }
 
 .btn-danger {
-  background: color-mix(in srgb, var(--color-error) 80%, transparent);
-  color: var(--color-bg);
+  background: var(--color-error);
+  color: #fff;
 }
 
 /* ─── Badge Variiants ────────────────────────────────────────────── */
@@ -1427,31 +1427,6 @@
   pointer-events: none;
 }
 
-.btn-full {
-  width: 100%;
-  justify-content: center;
-}
-
-.btn-success {
-  background: var(--color-success);
-  color: #fff;
-}
-
-.btn-danger {
-  background: var(--color-error);
-  color: #fff;
-}
-
-.btn-sm {
-  padding: var(--space-xs) var(--space-sm);
-  font-size: var(--font-size-sm);
-}
-
-.badge-accent {
-  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  color: var(--color-accent);
-}
-
 .risk-badge {
   display: inline-flex;
   align-items: center;
@@ -1612,4 +1587,236 @@
 .artifact-list-item-arrow {
   color: var(--color-text-muted);
   flex-shrink: 0;
+}
+
+/* ─── Settings View ────────────────────────────────────────────── */
+
+.settings-field {
+  margin-bottom: var(--space-md);
+}
+
+.settings-label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-sm);
+}
+
+.settings-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.settings-number-input {
+  max-width: 100px;
+}
+
+.settings-save-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.settings-save-status--saved {
+  color: var(--color-success);
+}
+
+.settings-history-tiers {
+  margin-bottom: var(--space-md);
+}
+
+.settings-tier-list {
+  margin-left: var(--space-lg);
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-sm);
+}
+
+.settings-recovery-details {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.settings-recovery-summary {
+  cursor: pointer;
+  margin-bottom: var(--space-xs);
+}
+
+.settings-recovery-text {
+  margin-top: var(--space-xs);
+  padding-left: var(--space-md);
+}
+
+/* ─── History View ─────────────────────────────────────────────── */
+
+.history-entry {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.history-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.history-entry-dates {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.history-entry-summary {
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
+}
+
+.history-entry-stats {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-xs);
+}
+
+/* ─── Knowledge View ───────────────────────────────────────────── */
+
+.knowledge-field {
+  margin-bottom: var(--space-sm);
+}
+
+/* ─── Capabilities View ────────────────────────────────────────── */
+
+.capability-rec {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.capability-rec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.capability-rec-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.capability-rec-reason {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.capability-rec-action {
+  font-size: var(--font-size-xs);
+}
+
+.capability-marketplace-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.capability-marketplace-item {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.capability-marketplace-name {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.capability-marketplace-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ─── Analyze Cancel Button ────────────────────────────────────── */
+
+.analyze-cancel-btn {
+  margin-top: var(--space-sm);
+  align-self: center;
+}
+
+/* ─── Error Banner ─────────────────────────────────────────────── */
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(244, 135, 113, 0.15);
+  border-bottom: 1px solid var(--color-error);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.error-banner-text {
+  flex: 1;
+}
+
+.error-banner-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  padding: 0 var(--space-xs);
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.error-banner-dismiss:hover {
+  opacity: 1;
+}
+
+/* ─── Approval Card Content ────────────────────────────────────── */
+
+.approval-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Quick Start Item Text ────────────────────────────────────── */
+
+.quick-start-item-text {
+  flex: 1;
+}
+
+/* ─── color-mix fallbacks for older Chromium ───────────────────── */
+
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .approval-card {
+    background: rgba(204, 167, 0, 0.06);
+  }
+  .complete-banner {
+    background: rgba(78, 201, 176, 0.06);
+  }
+  .agent-status-banner--working {
+    background: rgba(14, 99, 156, 0.1);
+  }
+  .agent-status-banner--waiting-approval {
+    background: rgba(204, 167, 0, 0.1);
+  }
+  .tasks-empty-hero-icon {
+    background: rgba(14, 99, 156, 0.12);
+  }
+  .badge-accent {
+    background: rgba(14, 99, 156, 0.2);
+  }
+  .badge-info {
+    background: rgba(55, 148, 255, 0.2);
+  }
+  .skill-badge {
+    background: rgba(14, 99, 156, 0.12);
+  }
 }

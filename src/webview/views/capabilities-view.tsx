@@ -1,7 +1,14 @@
 import { type FunctionalComponent } from 'preact';
+import { useEffect } from 'preact/hooks';
 import { capabilitiesStore } from '../store/workflow.store';
+import { bridge } from '../bridge';
 
 export const CapabilitiesView: FunctionalComponent = () => {
+  // Request context on mount — capabilities are derived from project context
+  useEffect(() => {
+    bridge.send({ type: 'requestContext' });
+  }, []);
+
   const recommendations = capabilitiesStore.value.recommendations as readonly {
     type: string;
     title: string;
@@ -24,11 +31,8 @@ export const CapabilitiesView: FunctionalComponent = () => {
           </div>
         ) : (
           recommendations.map((rec) => (
-            <div
-              key={rec.title}
-              style="margin-bottom: var(--space-md); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border);"
-            >
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xs);">
+            <div key={rec.title} class="capability-rec">
+              <div class="capability-rec-header">
                 <strong>{rec.title}</strong>
                 <span
                   class={`badge ${rec.type === 'skill-pack' ? 'badge-success' : 'badge-warning'}`}
@@ -36,13 +40,11 @@ export const CapabilitiesView: FunctionalComponent = () => {
                   {rec.type === 'skill-pack' ? 'Skill Pack' : 'Instruction'}
                 </span>
               </div>
-              <p style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                {rec.description}
-              </p>
-              <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-xs);">
+              <p class="capability-rec-desc">{rec.description}</p>
+              <p class="capability-rec-reason">
                 <em>Why: {rec.reason}</em>
               </p>
-              <code style="font-size: var(--font-size-xs);">{rec.action}</code>
+              <code class="capability-rec-action">{rec.action}</code>
             </div>
           ))
         )}
@@ -54,7 +56,7 @@ export const CapabilitiesView: FunctionalComponent = () => {
           <span class="card-title">Current Setup</span>
         </div>
         <div class="card-body">
-          <p style="margin-bottom: var(--space-sm);">
+          <p class="capability-rec-desc">
             Manage your agents, skills, instructions, hooks, and MCP servers in Code Studio's native
             Agent Customizations panel.
           </p>
@@ -73,10 +75,10 @@ export const CapabilitiesView: FunctionalComponent = () => {
           <span class="card-title">Syncfusion Skill Pack Marketplace</span>
         </div>
         <div class="card-body">
-          <p style="margin-bottom: var(--space-md);">
+          <p class="capability-rec-desc">
             14 packs covering 700+ skills across Web, .NET, and Document platforms.
           </p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+          <div class="capability-marketplace-grid">
             {[
               'React',
               'Angular',
@@ -93,14 +95,9 @@ export const CapabilitiesView: FunctionalComponent = () => {
               'DOCX Editor',
               'Spreadsheet Editor',
             ].map((name) => (
-              <div
-                key={name}
-                style="padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm);"
-              >
-                <div style="font-size: var(--font-size-sm); font-weight: 500;">{name}</div>
-                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
-                  60+ skills
-                </div>
+              <div key={name} class="capability-marketplace-item">
+                <div class="capability-marketplace-name">{name}</div>
+                <div class="capability-marketplace-count">60+ skills</div>
               </div>
             ))}
           </div>

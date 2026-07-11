@@ -22,11 +22,8 @@ export const ProgressBar: FunctionalComponent<ProgressBarProps> = ({
   const fillClass = variant === 'success' ? 'progress-bar-fill--success' : 'progress-bar-fill';
 
   return (
-    <div
-      class="progress-bar"
-      style={`height: ${height}px; border-radius: var(--radius-full); overflow: hidden;`}
-    >
-      <div class={fillClass} style={`width: ${clamped}%; height: 100%; transition: width 0.3s;`} />
+    <div class="progress-bar" style={height !== 6 ? `height: ${height}px` : undefined}>
+      <div class={fillClass} style={`width: ${clamped}%`} />
     </div>
   );
 };

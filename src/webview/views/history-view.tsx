@@ -1,8 +1,14 @@
 import { type FunctionalComponent } from 'preact';
-import { historyStore, historyHasMore } from '../store/workflow.store';
+import { useEffect } from 'preact/hooks';
+import { historyStore } from '../store/workflow.store';
 import { bridge } from '../bridge';
 
 export const HistoryView: FunctionalComponent = () => {
+  // Load history on mount
+  useEffect(() => {
+    bridge.send({ type: 'requestHistory' });
+  }, []);
+
   const entries = historyStore.value;
 
   if (entries.length === 0) {
@@ -26,11 +32,8 @@ export const HistoryView: FunctionalComponent = () => {
         </div>
         <div class="card-body">
           {entries.map((entry) => (
-            <div
-              key={entry.id}
-              style="margin-bottom: var(--space-md); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border);"
-            >
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xs);">
+            <div key={entry.id} class="history-entry">
+              <div class="history-entry-header">
                 <strong>{entry.objective}</strong>
                 <span
                   class={`badge risk-badge--${entry.processLevel === 'light' ? 'low' : entry.processLevel === 'guarded' ? 'high' : 'medium'}`}
@@ -38,17 +41,13 @@ export const HistoryView: FunctionalComponent = () => {
                   {entry.processLevel}
                 </span>
               </div>
-              <div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+              <div class="history-entry-dates">
                 {new Date(entry.startedAt).toLocaleDateString()} →{' '}
                 {new Date(entry.completedAt).toLocaleDateString()}
               </div>
-              {entry.summary && (
-                <p style="font-size: var(--font-size-sm); margin-top: var(--space-xs);">
-                  {entry.summary}
-                </p>
-              )}
+              {entry.summary && <p class="history-entry-summary">{entry.summary}</p>}
               {entry.stats && (
-                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-xs);">
+                <div class="history-entry-stats">
                   {entry.stats.stagesCompleted} stages completed · {entry.stats.approvalsGranted}{' '}
                   approvals · {entry.stats.events} events
                 </div>
@@ -57,12 +56,6 @@ export const HistoryView: FunctionalComponent = () => {
           ))}
         </div>
       </div>
-
-      {historyHasMore.value && (
-        <button class="btn-secondary btn" onClick={() => bridge.send({ type: 'requestHistory' })}>
-          Load More
-        </button>
-      )}
     </div>
   );
 };

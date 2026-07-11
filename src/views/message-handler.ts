@@ -15,7 +15,6 @@ import type {
   MessageToHost,
   MessageToWebview,
   RiskAssessment,
-  WorkflowDefinition,
 } from '../core/types';
 import { WORKFLOW_DIR } from '../constants';
 
@@ -58,8 +57,8 @@ export function handleWebviewMessage(
   reply: ReplyFn,
 ): (message: unknown) => Promise<void> {
   return async (message: unknown) => {
+    if (!isValidMessage(message)) return;
     const msg = message as MessageToHost;
-    if (!msg || typeof msg !== 'object' || !('type' in msg)) return;
 
     try {
       switch (msg.type) {
@@ -91,7 +90,7 @@ export function handleWebviewMessage(
           // Navigation is handled in the webview — no host action needed
           break;
         case 'requestHistory':
-          await handleRequestHistory(deps, reply, msg.page);
+          await handleRequestHistory(deps, reply);
           break;
         case 'requestStageActions':
           await handleRequestStageActions(deps, reply);
@@ -146,6 +145,47 @@ export function handleWebviewMessage(
   };
 }
 
+// ─── Message Validation ─────────────────────────────────────────────────────
+
+/** Known message types from the webview — used for runtime validation. */
+const VALID_MESSAGE_TYPES = new Set<string>([
+  'requestState',
+  'requestContext',
+  'analyzeObjective',
+  'startWorkflow',
+  'advanceStage',
+  'skipStage',
+  'approve',
+  'reject',
+  'navigate',
+  'requestHistory',
+  'requestStageActions',
+  'executeStage',
+  'requestArtifacts',
+  'requestGateStatus',
+  'generateArtifact',
+  'setupExistingProject',
+  'setupNewProject',
+  'requestOnboardingStatus',
+  'requestStageDetail',
+  'requestArtifactContent',
+  'sendToAgent',
+  'notifyArtifactDetected',
+  'openArtifact',
+  'cancelWorkflow',
+  'updateSettings',
+]);
+
+/**
+ * Runtime validation for incoming messages.
+ * Checks structure and that the type is a known message type.
+ */
+function isValidMessage(message: unknown): message is MessageToHost {
+  if (!message || typeof message !== 'object' || !('type' in message)) return false;
+  const msg = message as { type: unknown };
+  return typeof msg.type === 'string' && VALID_MESSAGE_TYPES.has(msg.type);
+}
+
 // ─── Handler Implementations ────────────────────────────────────────────────
 
 async function handleRequestState(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
@@ -160,26 +200,92 @@ async function handleRequestContext(deps: MessageHandlerDeps, reply: ReplyFn): P
     return;
   }
 
-  // Read context from .codestudio/context.md if it exists (agent creates this)
-  // We don't scan — the agent handles all context generation via tools.
+  // Read context from .codestudio/stack.md if it exists (agent creates this)
+  const stackPath = `${root}/${WORKFLOW_DIR}/stack.md`;
+  let languages: string[] = [];
+  let frameworks: string[] = [];
+  let testFramework: string | null = null;
+  let packageManager: string | null = null;
+  let detectedStack: string[] = [];
+
+  try {
+    if (await deps.fileSystem.exists(stackPath)) {
+      const content = await deps.fileSystem.read(stackPath);
+      // Parse simple key-value patterns from the markdown
+      const lines = content.split('\n');
+      for (const line of lines) {
+        const lower = line.toLowerCase();
+        if (lower.includes('language') && line.includes(':')) {
+          languages = extractListValues(line);
+        } else if (lower.includes('framework') && line.includes(':')) {
+          frameworks = extractListValues(line);
+        } else if (lower.includes('test') && line.includes(':')) {
+          testFramework = extractSingleValue(line);
+        } else if (lower.includes('package manager') && line.includes(':')) {
+          packageManager = extractSingleValue(line);
+        }
+      }
+      detectedStack = [...languages, ...frameworks].filter(Boolean);
+    }
+  } catch {
+    // stack.md not yet created by agent — return defaults
+  }
+
+  // Read conventions from .codestudio/conventions.md if it exists
+  let conventions: string[] = [];
+  try {
+    const convPath = `${root}/${WORKFLOW_DIR}/conventions.md`;
+    if (await deps.fileSystem.exists(convPath)) {
+      const content = await deps.fileSystem.read(convPath);
+      // Extract bullet points as conventions
+      conventions = content
+        .split('\n')
+        .filter((l) => l.trim().startsWith('- '))
+        .map((l) => l.trim().replace(/^- /, ''))
+        .slice(0, 20); // Cap at 20 to avoid flooding the UI
+    }
+  } catch {
+    // conventions.md not yet created
+  }
+
   reply({
     type: 'context',
     context: {
       rootPath: root,
-      languages: [],
-      frameworks: [],
-      testFramework: null,
-      packageManager: null,
-      detectedStack: [],
-      conventions: [],
+      languages,
+      frameworks,
+      testFramework,
+      packageManager,
+      detectedStack,
+      conventions,
       generatedAt: new Date().toISOString(),
     },
   });
 }
 
+/** Extract comma-separated values after the colon in a line. */
+function extractListValues(line: string): string[] {
+  const after = line.split(':').slice(1).join(':').trim();
+  return after
+    .split(/[,;]/)
+    .map((s) => s.trim().replace(/^[*_`]+|[*_`]+$/g, ''))
+    .filter(Boolean);
+}
+
+/** Extract a single value after the colon in a line. */
+function extractSingleValue(line: string): string | null {
+  const after = line
+    .split(':')
+    .slice(1)
+    .join(':')
+    .trim()
+    .replace(/^[*_`]+|[*_`]+$/g, '');
+  return after || null;
+}
+
 async function handleAnalyzeObjective(
   deps: MessageHandlerDeps,
-  reply: ReplyFn,
+  _reply: ReplyFn,
   objective: string,
 ): Promise<void> {
   // Send the objective to the agent — the agent will call
@@ -209,10 +315,11 @@ async function handleStartWorkflow(
   objective: string,
   assessment: RiskAssessment,
 ): Promise<void> {
-  // 0. Archive previous completed workflow if one exists
+  // 0. Archive previous workflow if one exists (completed or failed)
   const existing = await deps.stateManager.load();
-  if (existing && existing.state.status === 'completed') {
+  if (existing && (existing.state.status === 'completed' || existing.state.status === 'failed')) {
     await deps.historyManager.archiveWorkflow(existing);
+    await deps.stateManager.clear();
   }
 
   // 1. Generate workflow definition (stages, gates, skills, approvals)
@@ -221,7 +328,7 @@ async function handleStartWorkflow(
   // 2. Start the workflow — transitions from idle → active, activates first stage
   const started = await deps.workflowEngine.start(wf);
 
-  // 3. Save workflow state to .codestudio/workflows/current/workflow.json
+  // 3. Save workflow state atomically
   await deps.stateManager.save(started);
 
   // 4. Save objective to .codestudio/workflows/current/objective.md
@@ -294,13 +401,9 @@ async function handleReject(
   }
 }
 
-async function handleRequestHistory(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-  _page?: number,
-): Promise<void> {
+async function handleRequestHistory(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const entries = await deps.historyManager.loadHistory();
-  reply({ type: 'history', entries, hasMore: false });
+  reply({ type: 'history', entries });
 }
 
 // ─── Settings Handler ───────────────────────────────────────────────────────
@@ -333,7 +436,7 @@ async function handleUpdateSettings(
   const updated = { ...existing, ...settings };
   await deps.fileSystem.write(configPath, JSON.stringify(updated, null, 2));
 
-  reply({ type: 'settingsUpdated' as MessageToWebview['type'] });
+  reply({ type: 'settingsUpdated' });
 }
 
 // ─── Cancel Workflow Handler ────────────────────────────────────────────────
@@ -347,6 +450,9 @@ async function handleCancelWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): P
 
   // Archive the workflow (even if incomplete — preserves history)
   await deps.historyManager.archiveWorkflow(wf);
+
+  // Clear the on-disk state so requestState doesn't reload the old workflow
+  await deps.stateManager.clear();
 
   // Reply with null workflow — webview shows empty state
   reply({ type: 'state', workflow: null });
@@ -378,9 +484,16 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
       const now = new Date().toISOString();
       return {
         ...wf,
-        approvals: wf.approvals.map((a) =>
-          a.status === 'pending' ? { ...a, status: 'approved' as const, approvedAt: now } : a,
-        ),
+        approvals: wf.approvals.map((a) => {
+          // Only auto-approve approvals for the current stage
+          const isCurrentStage = wf.qualityGates.some(
+            (g) => g.stage === currentStage && a.artifact === g.id.replace('-approved', ''),
+          );
+          if (a.status === 'pending' && isCurrentStage) {
+            return { ...a, status: 'approved' as const, approvedAt: now };
+          }
+          return a;
+        }),
         qualityGates: wf.qualityGates.map((g) => {
           if (g.status !== 'pending' || g.stage !== currentStage) return g;
           return {

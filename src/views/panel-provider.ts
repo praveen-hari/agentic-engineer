@@ -11,6 +11,13 @@ export class EngineeringWorkspacePanelProvider {
   private panel: vscode.WebviewPanel | undefined;
   private currentView = 'tasks';
 
+  /**
+   * Messages queued while the panel is not yet created.
+   * Drained when the panel opens. Capped to prevent unbounded growth.
+   */
+  private pendingMessages: unknown[] = [];
+  private static readonly MAX_PENDING = 50;
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly messageHandler: (message: unknown) => Promise<void>,
@@ -109,6 +116,14 @@ export class EngineeringWorkspacePanelProvider {
 
     // Navigate to the initial view
     this.postNavigate(this.currentView);
+
+    // Drain any messages that were queued before the panel existed
+    if (this.pendingMessages.length > 0) {
+      const queued = this.pendingMessages.splice(0);
+      for (const msg of queued) {
+        void this.panel.webview.postMessage(msg);
+      }
+    }
   }
 
   /**
@@ -127,9 +142,17 @@ export class EngineeringWorkspacePanelProvider {
 
   /**
    * Send a message to the webview.
+   * If the panel doesn't exist yet, queues the message for delivery
+   * when the panel is opened (up to MAX_PENDING messages).
    */
   postMessage(message: unknown): void {
-    void this.panel?.webview.postMessage(message);
+    if (this.panel) {
+      void this.panel.webview.postMessage(message);
+    } else {
+      if (this.pendingMessages.length < EngineeringWorkspacePanelProvider.MAX_PENDING) {
+        this.pendingMessages.push(message);
+      }
+    }
   }
 
   /**

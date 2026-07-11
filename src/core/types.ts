@@ -234,7 +234,7 @@ export type MessageToHost =
   | { readonly type: 'approve'; readonly approvalId: string; readonly comment?: string }
   | { readonly type: 'reject'; readonly approvalId: string; readonly comment?: string }
   | { readonly type: 'navigate'; readonly view: string }
-  | { readonly type: 'requestHistory'; readonly page?: number }
+  | { readonly type: 'requestHistory' }
   | { readonly type: 'requestStageActions' }
   | { readonly type: 'executeStage' }
   | { readonly type: 'requestArtifacts' }
@@ -258,7 +258,6 @@ export type MessageToWebview =
   | {
       readonly type: 'history';
       readonly entries: readonly HistoryEntry[];
-      readonly hasMore: boolean;
     }
   | { readonly type: 'error'; readonly message: string }
   | { readonly type: 'navigateTo'; readonly view: string }

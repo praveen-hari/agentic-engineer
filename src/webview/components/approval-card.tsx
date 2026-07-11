@@ -41,7 +41,7 @@ export const ApprovalCard: FunctionalComponent<ApprovalCardProps> = ({
       <div class="card approval-card approval-card--compact">
         <div class="approval-card-header">
           <Icon name={icon} size={16} class="task-card-icon--pending" />
-          <div style="flex: 1;">
+          <div class="approval-card-content">
             <div class="approval-card-title">{title}</div>
             {subtitle && <div class="approval-card-subtitle">{subtitle}</div>}
           </div>

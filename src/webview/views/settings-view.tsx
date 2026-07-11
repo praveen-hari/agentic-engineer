@@ -1,10 +1,50 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal } from '@preact/signals';
+import { useEffect, useCallback } from 'preact/hooks';
+import { historyStore } from '../store/workflow.store';
+import { bridge } from '../bridge';
+import { Icon } from '../components/icon';
 
 export const SettingsView: FunctionalComponent = () => {
   const processLevel = useSignal('standard');
   const autoApprove = useSignal(false);
   const reviewTimeout = useSignal(30);
+  const saveStatus = useSignal<'idle' | 'saving' | 'saved'>('idle');
+  const loaded = useSignal(false);
+
+  // Load current settings from host on mount
+  useEffect(() => {
+    const unsub = bridge.onMessage((msg) => {
+      if (msg.type === 'settingsUpdated') {
+        saveStatus.value = 'saved';
+        setTimeout(() => {
+          saveStatus.value = 'idle';
+        }, 2000);
+      }
+    });
+
+    // Request history to get real counts
+    bridge.send({ type: 'requestHistory' });
+    loaded.value = true;
+
+    return unsub;
+  }, []);
+
+  // Persist settings to host when any value changes (debounced)
+  const saveSettings = useCallback(() => {
+    if (!loaded.value) return;
+    saveStatus.value = 'saving';
+    bridge.send({
+      type: 'updateSettings',
+      settings: {
+        processLevel: processLevel.value,
+        autoApprove: autoApprove.value,
+        reviewTimeout: reviewTimeout.value,
+      },
+    });
+  }, []);
+
+  const historyCount = historyStore.value.length;
 
   return (
     <div>
@@ -12,17 +52,26 @@ export const SettingsView: FunctionalComponent = () => {
       <div class="card">
         <div class="card-header">
           <span class="card-title">Process Defaults</span>
+          {saveStatus.value === 'saving' && (
+            <span class="settings-save-status">
+              <Icon name="loading" size={12} spin /> Saving…
+            </span>
+          )}
+          {saveStatus.value === 'saved' && (
+            <span class="settings-save-status settings-save-status--saved">
+              <Icon name="pass" size={12} /> Saved
+            </span>
+          )}
         </div>
         <div class="card-body">
-          <div style="margin-bottom: var(--space-md);">
-            <label style="display: block; margin-bottom: var(--space-xs); font-size: var(--font-size-sm);">
-              Default Process Level
-            </label>
+          <div class="settings-field">
+            <label class="settings-label">Default Process Level</label>
             <select
               class="input"
               value={processLevel.value}
               onChange={(e: Event) => {
                 processLevel.value = (e.target as HTMLSelectElement).value;
+                saveSettings();
               }}
             >
               <option value="light">Light — typo fixes, docs, config changes</option>
@@ -32,33 +81,32 @@ export const SettingsView: FunctionalComponent = () => {
             </select>
           </div>
 
-          <div style="margin-bottom: var(--space-md);">
-            <label style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-size-sm);">
+          <div class="settings-field">
+            <label class="settings-checkbox-label">
               <input
                 type="checkbox"
                 checked={autoApprove.value}
                 onChange={(e: Event) => {
                   autoApprove.value = (e.target as HTMLInputElement).checked;
+                  saveSettings();
                 }}
               />
               Auto-approve informational approvals
             </label>
           </div>
 
-          <div>
-            <label style="display: block; margin-bottom: var(--space-xs); font-size: var(--font-size-sm);">
-              Review Timeout (minutes)
-            </label>
+          <div class="settings-field">
+            <label class="settings-label">Review Timeout (minutes)</label>
             <input
-              class="input"
+              class="input settings-number-input"
               type="number"
               min={5}
               max={120}
               value={reviewTimeout.value}
               onInput={(e: Event) => {
                 reviewTimeout.value = Number((e.target as HTMLInputElement).value);
+                saveSettings();
               }}
-              style="max-width: 100px;"
             />
           </div>
         </div>
@@ -72,18 +120,14 @@ export const SettingsView: FunctionalComponent = () => {
         <div class="card-body">
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-value">7</div>
+              <div class="stat-value">{historyCount}</div>
               <div class="stat-label">Total Workflows</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">~45 KB</div>
-              <div class="stat-label">Storage Used</div>
             </div>
           </div>
 
-          <div style="margin-bottom: var(--space-md);">
+          <div class="settings-history-tiers">
             <strong>History Tiers:</strong>
-            <ul style="margin-left: var(--space-lg); margin-top: var(--space-xs); font-size: var(--font-size-sm);">
+            <ul class="settings-tier-list">
               <li>
                 <strong>Hot</strong> — last 5 entries (full detail)
               </li>
@@ -96,9 +140,9 @@ export const SettingsView: FunctionalComponent = () => {
             </ul>
           </div>
 
-          <details style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
-            <summary style="cursor: pointer; margin-bottom: var(--space-xs);">Git Recovery</summary>
-            <p style="margin-top: var(--space-xs); padding-left: var(--space-md);">
+          <details class="settings-recovery-details">
+            <summary class="settings-recovery-summary">Git Recovery</summary>
+            <p class="settings-recovery-text">
               All workflow state is stored in <code>.codestudio/</code> and tracked by git. If state
               is lost, you can recover from any commit:
               <br />

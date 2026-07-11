@@ -11,9 +11,12 @@
  * completion requirements, artifacts, gates, actions).
  */
 import { type FunctionalComponent } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import { useComputed } from '@preact/signals';
+import type { WorkflowDefinition, AgentActivityStatus, Artifact } from '../../core/types';
+import type { StageDetailData } from '../store/workflow.store';
 import {
+  activeView,
   workflowStore,
   isWorkflowComplete,
   progress,
@@ -23,6 +26,7 @@ import {
   stageDetailStore,
   agentStatus as agentStatusSignal,
   agentStatusMessage,
+  actions,
 } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
@@ -40,10 +44,36 @@ const QUICK_START_SUGGESTIONS: readonly { readonly icon: string; readonly text: 
 
 // ─── Tasks View ─────────────────────────────────────────────────────────────
 
+/** Timeout for the analyzing spinner (30 seconds). */
+const ANALYZE_TIMEOUT_MS = 30_000;
+
 export const TasksView: FunctionalComponent = () => {
   const objective = objectiveInput;
   const analyzing = isAnalyzing;
   const showStart = useComputed(() => objective.value.trim().length >= 10);
+  const analyzeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-cancel analyzing state after timeout
+  useEffect(() => {
+    if (analyzing.value) {
+      analyzeTimer.current = setTimeout(() => {
+        analyzing.value = false;
+        // Import error from store to show timeout message
+        import('../store/workflow.store').then(({ error }) => {
+          error.value = 'The agent did not respond in time. Check the Chat panel or try again.';
+          setTimeout(() => {
+            error.value = null;
+          }, 8000);
+        });
+      }, ANALYZE_TIMEOUT_MS);
+    } else if (analyzeTimer.current) {
+      clearTimeout(analyzeTimer.current);
+      analyzeTimer.current = null;
+    }
+    return () => {
+      if (analyzeTimer.current) clearTimeout(analyzeTimer.current);
+    };
+  }, [analyzing.value]);
 
   // ─── Empty State ───────────────────────────────────────────────
   if (!workflowStore.value) {
@@ -96,7 +126,7 @@ export const TasksView: FunctionalComponent = () => {
           </div>
         )}
 
-        {/* Analyzing spinner */}
+        {/* Analyzing spinner with cancel */}
         {analyzing.value && (
           <div class="analyze-section">
             <div class="card analyzing-card">
@@ -108,6 +138,14 @@ export const TasksView: FunctionalComponent = () => {
                 </div>
               </div>
             </div>
+            <button
+              class="btn btn-secondary btn-sm analyze-cancel-btn"
+              onClick={() => {
+                analyzing.value = false;
+              }}
+            >
+              Cancel
+            </button>
           </div>
         )}
 
@@ -118,13 +156,22 @@ export const TasksView: FunctionalComponent = () => {
             <div class="quick-start-list">
               {QUICK_START_SUGGESTIONS.map((s) => (
                 <div
+                  key={s.text}
                   class="quick-start-item"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => {
                     objective.value = s.text;
                   }}
+                  onKeyDown={(e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      objective.value = s.text;
+                    }
+                  }}
                 >
                   <span class="quick-start-item-icon">{s.icon}</span>
-                  <span style="flex: 1;">{s.text}</span>
+                  <span class="quick-start-item-text">{s.text}</span>
                 </div>
               ))}
             </div>
@@ -209,10 +256,6 @@ const ActiveState: FunctionalComponent = () => {
 
 // ─── Stages Tab ─────────────────────────────────────────────────────────────
 
-import type { WorkflowDefinition } from '../../core/types';
-import type { StageDetailData } from '../store/workflow.store';
-import type { AgentActivityStatus } from '../../core/types';
-
 interface StagesTabProps {
   readonly wf: WorkflowDefinition;
   readonly detail: StageDetailData | null;
@@ -255,8 +298,6 @@ const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, a
 );
 
 // ─── Artifacts Tab ──────────────────────────────────────────────────────────
-
-import type { Artifact } from '../../core/types';
 
 interface ArtifactsTabProps {
   readonly artifacts: readonly Artifact[];
@@ -384,7 +425,7 @@ const CompleteState: FunctionalComponent = () => {
         </div>
         <div class="plan-vs-actual-list">
           {wf.stages.map((s) => (
-            <div class="plan-vs-actual-item">
+            <div key={s.id} class="plan-vs-actual-item">
               <Icon
                 name={
                   s.status === 'completed'
@@ -415,13 +456,17 @@ const CompleteState: FunctionalComponent = () => {
       <div class="complete-actions">
         <button
           class="btn btn-secondary"
-          onClick={() => bridge.send({ type: 'navigate', view: 'history' })}
+          onClick={() => {
+            activeView.value = 'history';
+          }}
         >
           <Icon name="history" size={14} /> View in History
         </button>
         <button
           class="btn btn-primary"
-          onClick={() => bridge.send({ type: 'navigate', view: 'tasks' })}
+          onClick={() => {
+            bridge.send({ type: 'cancelWorkflow' });
+          }}
         >
           <Icon name="add" size={14} /> Archive &amp; Start New
         </button>

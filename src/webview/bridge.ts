@@ -15,15 +15,18 @@ type MessageHandler = (message: MessageToWebview) => void;
  */
 export class Bridge {
   private handlers: Set<MessageHandler> = new Set();
+  private readonly listener: (event: MessageEvent) => void;
 
   constructor() {
-    // Listen for messages from the extension host
-    window.addEventListener('message', (event: MessageEvent) => {
+    // Listen for messages from the extension host.
+    // Stored as a named reference so it can be removed via destroy().
+    this.listener = (event: MessageEvent) => {
       const message = event.data as MessageToWebview;
       if (message && typeof message === 'object' && 'type' in message) {
         this.handlers.forEach((handler) => handler(message));
       }
-    });
+    };
+    window.addEventListener('message', this.listener);
   }
 
   /**
@@ -44,6 +47,16 @@ export class Bridge {
   onMessage(handler: MessageHandler): () => void {
     this.handlers.add(handler);
     return () => this.handlers.delete(handler);
+  }
+
+  /**
+   * Remove the global event listener and clear all handlers.
+   * Safe to call multiple times. In a webview context the panel
+   * destruction handles cleanup, but this is useful for tests.
+   */
+  destroy(): void {
+    window.removeEventListener('message', this.listener);
+    this.handlers.clear();
   }
 }
 

@@ -6,7 +6,6 @@ import {
   assessmentStore,
   contextStore,
   historyStore,
-  historyHasMore,
   isAnalyzing,
   hasExistingFiles,
   isOnboarded,
@@ -19,7 +18,7 @@ import {
   agentStatus,
   agentStatusMessage,
   agentStatusStage,
-  artifactContents,
+  actions,
 } from './store/workflow.store';
 import { bridge } from './bridge';
 import { OnboardingView } from './views/onboarding-view';
@@ -85,10 +84,9 @@ export const App: FunctionalComponent = () => {
           break;
         case 'history':
           historyStore.value = msg.entries;
-          historyHasMore.value = msg.hasMore;
           break;
         case 'error':
-          error.value = msg.message;
+          actions.setError(msg.message, 8000);
           isAnalyzing.value = false;
           break;
         case 'onboardingStatus':
@@ -122,10 +120,7 @@ export const App: FunctionalComponent = () => {
           break;
         case 'artifactContent':
           if (msg.content !== null) {
-            artifactContents.value = {
-              ...artifactContents.value,
-              [msg.artifactId]: msg.content,
-            };
+            actions.cacheArtifactContent(msg.artifactId, msg.content);
           }
           break;
       }
@@ -148,9 +143,25 @@ export const App: FunctionalComponent = () => {
 
   // ─── Normal Views ──────────────────────────────────────────────
   const view = activeView.value;
+  const currentError = error.value;
 
   return (
     <div class="app-panel">
+      {/* Global error banner — renders errors from host and timeouts */}
+      {currentError && (
+        <div class="error-banner" role="alert" aria-live="assertive">
+          <span class="error-banner-text">{currentError}</span>
+          <button
+            class="error-banner-dismiss"
+            onClick={() => {
+              error.value = null;
+            }}
+            aria-label="Dismiss error"
+          >
+            ×
+          </button>
+        </div>
+      )}
       <main class="panel-content">
         {view === 'tasks' && <TasksView />}
         {view === 'capabilities' && <CapabilitiesView />}

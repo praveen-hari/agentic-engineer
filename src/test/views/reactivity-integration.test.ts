@@ -26,6 +26,7 @@ function createMockDeps(): MessageHandlerDeps {
     stateManager: {
       load: vi.fn().mockResolvedValue(SAMPLE_WORKFLOW),
       save: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
     } as unknown as MessageHandlerDeps['stateManager'],
     workflowEngine: {
       start: vi.fn().mockResolvedValue(SAMPLE_WORKFLOW),

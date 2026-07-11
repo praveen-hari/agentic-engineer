@@ -1,7 +1,14 @@
 import { type FunctionalComponent } from 'preact';
+import { useEffect } from 'preact/hooks';
 import { contextStore } from '../store/workflow.store';
+import { bridge } from '../bridge';
 
 export const KnowledgeView: FunctionalComponent = () => {
+  // Request context on mount so the view shows real data
+  useEffect(() => {
+    bridge.send({ type: 'requestContext' });
+  }, []);
+
   const ctx = contextStore.value;
 
   return (
@@ -12,20 +19,20 @@ export const KnowledgeView: FunctionalComponent = () => {
         </div>
         {ctx ? (
           <div class="card-body">
-            <div style="margin-bottom: var(--space-sm);">
+            <div class="knowledge-field">
               <strong>Languages:</strong> {ctx.languages.join(', ') || 'None detected'}
             </div>
-            <div style="margin-bottom: var(--space-sm);">
+            <div class="knowledge-field">
               <strong>Frameworks:</strong> {ctx.frameworks.join(', ') || 'None detected'}
             </div>
-            <div style="margin-bottom: var(--space-sm);">
+            <div class="knowledge-field">
               <strong>Test Framework:</strong> {ctx.testFramework ?? 'Not detected'}
             </div>
-            <div style="margin-bottom: var(--space-sm);">
+            <div class="knowledge-field">
               <strong>Package Manager:</strong> {ctx.packageManager ?? 'Not detected'}
             </div>
             {ctx.conventions.length > 0 && (
-              <div>
+              <div class="knowledge-field">
                 <strong>Conventions:</strong> {ctx.conventions.join(', ')}
               </div>
             )}

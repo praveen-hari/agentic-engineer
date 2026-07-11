@@ -22,14 +22,40 @@ const COMPLETED_WORKFLOW: WorkflowDefinition = {
   processLevel: 'standard',
   detectedRisks: [],
   stages: [
-    { id: 'define', name: 'Define', status: 'completed', skippable: false, entryConditions: [], exitConditions: [], artifacts: [], completedAt: '2026-07-11T10:00:00Z' },
-    { id: 'plan', name: 'Plan', status: 'completed', skippable: false, entryConditions: [], exitConditions: [], artifacts: [], completedAt: '2026-07-11T11:00:00Z' },
+    {
+      id: 'define',
+      name: 'Define',
+      status: 'completed',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+      completedAt: '2026-07-11T10:00:00Z',
+    },
+    {
+      id: 'plan',
+      name: 'Plan',
+      status: 'completed',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+      completedAt: '2026-07-11T11:00:00Z',
+    },
   ],
   qualityGates: [],
   approvals: [],
   activeSkills: [],
   skillActivationReason: {},
-  state: { currentStage: null, currentTask: null, tasksCompleted: 2, tasksTotal: 2, startedAt: '2026-07-11T09:00:00Z', lastActivityAt: '2026-07-11T11:00:00Z', status: 'completed' },
+  state: {
+    currentStage: null,
+    currentTask: null,
+    tasksCompleted: 2,
+    tasksTotal: 2,
+    startedAt: '2026-07-11T09:00:00Z',
+    lastActivityAt: '2026-07-11T11:00:00Z',
+    status: 'completed',
+  },
 };
 
 const ACTIVE_WORKFLOW: WorkflowDefinition = {
@@ -39,15 +65,49 @@ const ACTIVE_WORKFLOW: WorkflowDefinition = {
   processLevel: 'light',
   detectedRisks: [],
   stages: [
-    { id: 'plan', name: 'Plan', status: 'completed', skippable: false, entryConditions: [], exitConditions: [], artifacts: [], completedAt: '2026-07-11T10:00:00Z' },
-    { id: 'build', name: 'Build', status: 'completed', skippable: false, entryConditions: [], exitConditions: [], artifacts: [], completedAt: '2026-07-11T11:00:00Z' },
-    { id: 'verify', name: 'Verify', status: 'active', skippable: false, entryConditions: [], exitConditions: [], artifacts: [] },
+    {
+      id: 'plan',
+      name: 'Plan',
+      status: 'completed',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+      completedAt: '2026-07-11T10:00:00Z',
+    },
+    {
+      id: 'build',
+      name: 'Build',
+      status: 'completed',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+      completedAt: '2026-07-11T11:00:00Z',
+    },
+    {
+      id: 'verify',
+      name: 'Verify',
+      status: 'active',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+    },
   ],
   qualityGates: [],
   approvals: [],
   activeSkills: [],
   skillActivationReason: {},
-  state: { currentStage: 'verify', currentTask: null, tasksCompleted: 0, tasksTotal: 0, startedAt: '2026-07-11T09:00:00Z', lastActivityAt: '2026-07-11T11:00:00Z', status: 'active' },
+  state: {
+    currentStage: 'verify',
+    currentTask: null,
+    tasksCompleted: 0,
+    tasksTotal: 0,
+    startedAt: '2026-07-11T09:00:00Z',
+    lastActivityAt: '2026-07-11T11:00:00Z',
+    status: 'active',
+  },
 };
 
 const SAMPLE_ASSESSMENT = {
@@ -68,16 +128,30 @@ function createMockDeps(currentWorkflow: WorkflowDefinition | null = null): Mess
     stateManager: {
       load: vi.fn().mockResolvedValue(MOCK_WF),
       save: vi.fn().mockResolvedValue(undefined),
-      update: vi.fn().mockImplementation(async (fn: (wf: WorkflowDefinition) => WorkflowDefinition) => {
-        const transformed = fn(MOCK_WF);
-        return { ...transformed, version: MOCK_WF.version + 1, state: { ...transformed.state, lastActivityAt: new Date().toISOString() } };
-      }),
+      clear: vi.fn().mockResolvedValue(undefined),
+      update: vi
+        .fn()
+        .mockImplementation(async (fn: (wf: WorkflowDefinition) => WorkflowDefinition) => {
+          const transformed = fn(MOCK_WF);
+          return {
+            ...transformed,
+            version: MOCK_WF.version + 1,
+            state: { ...transformed.state, lastActivityAt: new Date().toISOString() },
+          };
+        }),
     } as unknown as MessageHandlerDeps['stateManager'],
     workflowEngine: {
-      start: vi.fn().mockReturnValue({ ...ACTIVE_WORKFLOW, state: { ...ACTIVE_WORKFLOW.state, status: 'active' } }),
+      start: vi
+        .fn()
+        .mockReturnValue({
+          ...ACTIVE_WORKFLOW,
+          state: { ...ACTIVE_WORKFLOW.state, status: 'active' },
+        }),
       advanceStage: vi.fn().mockImplementation((wf: WorkflowDefinition) => {
         // Simulate advancing last stage → completed
-        const allCompleted = wf.stages.every((s) => s.status === 'completed' || s.status === 'active');
+        const allCompleted = wf.stages.every(
+          (s) => s.status === 'completed' || s.status === 'active',
+        );
         if (allCompleted) {
           return { ...wf, state: { ...wf.state, status: 'completed', currentStage: null } };
         }
@@ -85,22 +159,68 @@ function createMockDeps(currentWorkflow: WorkflowDefinition | null = null): Mess
       }),
       skipStage: vi.fn().mockReturnValue(ACTIVE_WORKFLOW),
     } as unknown as MessageHandlerDeps['workflowEngine'],
-    workflowGenerator: { generate: vi.fn().mockReturnValue(ACTIVE_WORKFLOW) } as unknown as MessageHandlerDeps['workflowGenerator'],
+    workflowGenerator: {
+      generate: vi.fn().mockReturnValue(ACTIVE_WORKFLOW),
+    } as unknown as MessageHandlerDeps['workflowGenerator'],
     stageExecutor: {
       getStageAction: vi.fn().mockReturnValue(null),
-      evaluateStageCompletion: vi.fn().mockReturnValue({ stage: 'verify', status: 'completed', artifacts: [], pendingGates: [], pendingApprovals: [], message: 'Ready' }),
+      evaluateStageCompletion: vi
+        .fn()
+        .mockReturnValue({
+          stage: 'verify',
+          status: 'completed',
+          artifacts: [],
+          pendingGates: [],
+          pendingApprovals: [],
+          message: 'Ready',
+        }),
       getStageInstructions: vi.fn().mockReturnValue(''),
     } as unknown as MessageHandlerDeps['stageExecutor'],
-    notificationService: { showInfo: vi.fn(), showError: vi.fn() } as unknown as MessageHandlerDeps['notificationService'],
-    workspaceService: { getWorkspaceRoot: vi.fn().mockReturnValue('/project'), openFileInEditor: vi.fn() } as unknown as MessageHandlerDeps['workspaceService'],
-    fileSystem: { read: vi.fn().mockRejectedValue(new Error('not found')), write: vi.fn().mockResolvedValue(undefined), append: vi.fn().mockResolvedValue(undefined), exists: vi.fn().mockResolvedValue(false), mkdir: vi.fn().mockResolvedValue(undefined), readDir: vi.fn().mockResolvedValue([]) } as unknown as MessageHandlerDeps['fileSystem'],
-    artifactManager: { listAll: vi.fn().mockResolvedValue([]), save: vi.fn(), read: vi.fn(), saveObjective: vi.fn(), clearAll: vi.fn() } as unknown as MessageHandlerDeps['artifactManager'],
-    promptTemplates: { getPromptForStage: vi.fn().mockReturnValue('prompt') } as unknown as MessageHandlerDeps['promptTemplates'],
-    agentBridge: { sendToChat: vi.fn().mockResolvedValue(undefined), sendViaParticipant: vi.fn(), sendToAgentMode: vi.fn() } as unknown as MessageHandlerDeps['agentBridge'],
+    notificationService: {
+      showInfo: vi.fn(),
+      showError: vi.fn(),
+    } as unknown as MessageHandlerDeps['notificationService'],
+    workspaceService: {
+      getWorkspaceRoot: vi.fn().mockReturnValue('/project'),
+      openFileInEditor: vi.fn(),
+    } as unknown as MessageHandlerDeps['workspaceService'],
+    fileSystem: {
+      read: vi.fn().mockRejectedValue(new Error('not found')),
+      write: vi.fn().mockResolvedValue(undefined),
+      append: vi.fn().mockResolvedValue(undefined),
+      exists: vi.fn().mockResolvedValue(false),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      readDir: vi.fn().mockResolvedValue([]),
+    } as unknown as MessageHandlerDeps['fileSystem'],
+    artifactManager: {
+      listAll: vi.fn().mockResolvedValue([]),
+      save: vi.fn(),
+      read: vi.fn(),
+      saveObjective: vi.fn(),
+      clearAll: vi.fn(),
+    } as unknown as MessageHandlerDeps['artifactManager'],
+    promptTemplates: {
+      getPromptForStage: vi.fn().mockReturnValue('prompt'),
+    } as unknown as MessageHandlerDeps['promptTemplates'],
+    agentBridge: {
+      sendToChat: vi.fn().mockResolvedValue(undefined),
+      sendViaParticipant: vi.fn(),
+      sendToAgentMode: vi.fn(),
+    } as unknown as MessageHandlerDeps['agentBridge'],
     historyManager: {
       loadHistory: vi.fn().mockResolvedValue([]),
       loadMeta: vi.fn().mockResolvedValue({ years: [], totalWorkflows: 0 }),
-      archiveWorkflow: vi.fn().mockResolvedValue({ id: 'hist-1', workflowId: 'wf-old', objective: 'Previous task', processLevel: 'standard', startedAt: '', completedAt: '', archivePath: 'archive/2026/07/wf-old' }),
+      archiveWorkflow: vi
+        .fn()
+        .mockResolvedValue({
+          id: 'hist-1',
+          workflowId: 'wf-old',
+          objective: 'Previous task',
+          processLevel: 'standard',
+          startedAt: '',
+          completedAt: '',
+          archivePath: 'archive/2026/07/wf-old',
+        }),
       loadArchivedWorkflow: vi.fn().mockResolvedValue(null),
     } as unknown as MessageHandlerDeps['historyManager'],
     approvalMode: 'user' as const,
@@ -116,7 +236,11 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       const replies: MessageToWebview[] = [];
       const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
 
-      await handler({ type: 'startWorkflow', objective: 'New task', assessment: SAMPLE_ASSESSMENT });
+      await handler({
+        type: 'startWorkflow',
+        objective: 'New task',
+        assessment: SAMPLE_ASSESSMENT,
+      });
 
       expect(deps.historyManager.archiveWorkflow).toHaveBeenCalledWith(COMPLETED_WORKFLOW);
     });
@@ -127,7 +251,11 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       const replies: MessageToWebview[] = [];
       const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
 
-      await handler({ type: 'startWorkflow', objective: 'New task', assessment: SAMPLE_ASSESSMENT });
+      await handler({
+        type: 'startWorkflow',
+        objective: 'New task',
+        assessment: SAMPLE_ASSESSMENT,
+      });
 
       expect(deps.historyManager.archiveWorkflow).not.toHaveBeenCalled();
     });
@@ -137,7 +265,11 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       const replies: MessageToWebview[] = [];
       const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
 
-      await handler({ type: 'startWorkflow', objective: 'New task', assessment: SAMPLE_ASSESSMENT });
+      await handler({
+        type: 'startWorkflow',
+        objective: 'New task',
+        assessment: SAMPLE_ASSESSMENT,
+      });
 
       // Active workflow should NOT be archived — only completed ones
       expect(deps.historyManager.archiveWorkflow).not.toHaveBeenCalled();
@@ -152,7 +284,10 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       // Make update return a completed workflow after advance
       vi.mocked(deps.stateManager.update)
         .mockResolvedValueOnce(ACTIVE_WORKFLOW) // first update: approve gates
-        .mockResolvedValueOnce({ ...ACTIVE_WORKFLOW, state: { ...ACTIVE_WORKFLOW.state, status: 'completed', currentStage: null } }); // second update: advance → completed
+        .mockResolvedValueOnce({
+          ...ACTIVE_WORKFLOW,
+          state: { ...ACTIVE_WORKFLOW.state, status: 'completed', currentStage: null },
+        }); // second update: advance → completed
 
       const replies: MessageToWebview[] = [];
       const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
@@ -167,7 +302,10 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       // Both updates return active workflow
       vi.mocked(deps.stateManager.update)
         .mockResolvedValueOnce(ACTIVE_WORKFLOW)
-        .mockResolvedValueOnce({ ...ACTIVE_WORKFLOW, state: { ...ACTIVE_WORKFLOW.state, currentStage: 'build' } });
+        .mockResolvedValueOnce({
+          ...ACTIVE_WORKFLOW,
+          state: { ...ACTIVE_WORKFLOW.state, currentStage: 'build' },
+        });
 
       const replies: MessageToWebview[] = [];
       const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));

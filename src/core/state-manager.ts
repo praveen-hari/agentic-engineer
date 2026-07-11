@@ -48,6 +48,18 @@ export class StateManager {
   }
 
   /**
+   * Clear the workflow state file from disk.
+   * Used after archiving or cancelling a workflow so that
+   * subsequent `load()` calls return null instead of stale state.
+   */
+  async clear(): Promise<void> {
+    if (await this.fs.exists(this.filePath)) {
+      // Write empty JSON null — load() will parse and return null
+      await this.fs.write(this.filePath, 'null');
+    }
+  }
+
+  /**
    * Atomically update the workflow state: load → transform → save.
    * The transform function receives the current state and returns the new state.
    * Version is automatically bumped on each update.

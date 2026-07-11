@@ -1,24 +1,8 @@
 import { type FunctionalComponent } from 'preact';
-import { signal } from '@preact/signals';
-import { onboardingStatus, contextStore, hasExistingFiles } from '../store/workflow.store';
+import { useSignal } from '@preact/signals';
+import { onboardingStatus, contextStore, hasExistingFiles, actions } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
-
-/**
- * Onboarding view — the first thing a user sees.
- *
- * Three sub-views:
- * 1. Welcome — choose between existing project or new project
- * 2. Setup Existing — scans workspace, shows detected context
- * 3. Start New — project name + description, sends to agent
- *
- * After onboarding completes, the app switches to the Tasks view.
- */
-
-// ─── Local state for new project form ───────────────────────────────────────
-
-const newProjectName = signal<string>('');
-const newProjectDescription = signal<string>('');
 
 // ─── Main Onboarding View ───────────────────────────────────────────────────
 
@@ -63,7 +47,7 @@ const WelcomeScreen: FunctionalComponent = () => {
           <button
             class="onboarding__card"
             onClick={() => {
-              onboardingStatus.value = 'scanning';
+              actions.setOnboardingStatus('scanning');
               bridge.send({ type: 'setupExistingProject' });
             }}
           >
@@ -86,7 +70,7 @@ const WelcomeScreen: FunctionalComponent = () => {
         <button
           class="onboarding__card"
           onClick={() => {
-            onboardingStatus.value = 'setup-new';
+            actions.setOnboardingStatus('setup-new');
           }}
         >
           <div class="onboarding__card-icon onboarding__card-icon--new">
@@ -134,22 +118,14 @@ const ScanningScreen: FunctionalComponent = () => {
           <Icon name="check" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
-          <Icon name="loading" size={14} spin /> Agent calling{' '}
-          <code>engineering_setup_project</code> tool
-        </div>
-        <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Agent calling{' '}
-          <code>engineering_start_workflow</code> tool
-        </div>
-        <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> DEFINE stage — generating specification
+          <Icon name="loading" size={14} spin /> Agent is setting up the workspace…
         </div>
       </div>
 
       <div class="onboarding__footer">
         <strong>Check the Chat panel</strong> — the agent is driving the workflow using tools.
         <br />
-        This screen will update as the agent progresses through the SDLC stages.
+        This screen will close automatically when setup completes.
       </div>
     </div>
   );
@@ -212,7 +188,7 @@ const SetupExistingScreen: FunctionalComponent = () => {
         <button
           class="btn btn-primary btn-full"
           onClick={() => {
-            onboardingStatus.value = 'ready';
+            actions.setOnboardingStatus('ready');
           }}
         >
           <Icon name="check" size={14} /> Looks Good — Start Working
@@ -220,7 +196,7 @@ const SetupExistingScreen: FunctionalComponent = () => {
         <button
           class="btn btn-secondary"
           onClick={() => {
-            onboardingStatus.value = 'welcome';
+            actions.setOnboardingStatus('welcome');
           }}
         >
           Back
@@ -240,6 +216,8 @@ const SetupExistingScreen: FunctionalComponent = () => {
 // ─── Start New Project Screen ───────────────────────────────────────────────
 
 const SetupNewScreen: FunctionalComponent = () => {
+  const newProjectName = useSignal('');
+  const newProjectDescription = useSignal('');
   const canStart = newProjectName.value.trim().length >= 2;
 
   return (
@@ -296,7 +274,7 @@ const SetupNewScreen: FunctionalComponent = () => {
           class="btn btn-primary"
           disabled={!canStart}
           onClick={() => {
-            onboardingStatus.value = 'scanning';
+            actions.setOnboardingStatus('scanning');
             bridge.send({
               type: 'setupNewProject',
               projectName: newProjectName.value.trim(),
@@ -309,7 +287,7 @@ const SetupNewScreen: FunctionalComponent = () => {
         <button
           class="btn btn-secondary"
           onClick={() => {
-            onboardingStatus.value = 'welcome';
+            actions.setOnboardingStatus('welcome');
           }}
         >
           Back

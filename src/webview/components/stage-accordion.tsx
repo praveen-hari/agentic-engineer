@@ -118,7 +118,19 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
   return (
     <div class={`stage-accordion stage-accordion--${stage.status}`}>
       {/* ─── Header (always visible) ─────────────────────────────── */}
-      <div class="stage-accordion-header" onClick={toggleExpand}>
+      <div
+        class="stage-accordion-header"
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded.value}
+        onClick={toggleExpand}
+        onKeyDown={(e: KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleExpand();
+          }
+        }}
+      >
         <Icon
           name={STATUS_ICON[stage.status]}
           size={16}
@@ -158,7 +170,15 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
                 <div
                   key={artifact.id}
                   class="stage-document-card"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onViewArtifact?.(artifact.id)}
+                  onKeyDown={(e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onViewArtifact?.(artifact.id);
+                    }
+                  }}
                 >
                   <Icon
                     name="file-text"
