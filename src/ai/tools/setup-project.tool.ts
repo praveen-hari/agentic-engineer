@@ -99,7 +99,11 @@ export class SetupProjectTool implements vscode.LanguageModelTool<SetupProjectIn
           packageManager: context.packageManager,
           conventions: context.conventions,
           signals,
-          message: `Project initialized. .codestudio/ created with context.md and config.json. Project type: ${projectType}. Now create a codestudio-instructions.md file in .codestudio/ with the project's coding conventions, then the user can start a work request via the Engineering Workspace sidebar.`,
+          message: `Project initialized. .codestudio/ created with context.md and config.json. Project type: ${projectType}.`,
+          nextSteps: [
+            'Create a .codestudio/codestudio-instructions.md file with the project coding conventions based on what you detected.',
+            'Then call engineering_start_workflow with the user\'s objective to begin the SDLC workflow.',
+          ],
         }, null, 2)),
       ]);
     } catch (err) {

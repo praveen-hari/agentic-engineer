@@ -162,7 +162,7 @@
       {
         "name": "engineering_setup_project",
         "displayName": "Set Up Engineering Workspace",
-        "modelDescription": "Initializes the .codestudio/ directory with project context (config.json, context.md). Scans the workspace to detect languages, frameworks, test frameworks, and conventions. Use when the user wants to set up a project for AI-assisted engineering workflows, or when .codestudio/ doesn't exist yet. After this tool runs, create a codestudio-instructions.md file with the project's coding conventions.",
+        "modelDescription": "Initializes the .codestudio/ directory with project context (config.json, context.md). Scans the workspace to detect languages, frameworks, test frameworks, and conventions. Use when the user wants to set up a project for AI-assisted engineering workflows, or when .codestudio/ doesn't exist yet. After this tool runs, create a codestudio-instructions.md file with the project's coding conventions, then call engineering_start_workflow with the user's objective to begin the SDLC workflow.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "setupProject",
         "icon": "$(folder-library)",

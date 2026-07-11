@@ -110,7 +110,15 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
           requiredGates: stageAction.requiredGates,
         } : null,
         instructions,
-        message: `Workflow started. Process level: ${started.processLevel}. Current stage: ${started.state.currentStage}. Follow the stage instructions to proceed.`,
+        message: `Workflow started. Process level: ${started.processLevel}. Current stage: ${started.state.currentStage}.`,
+        nextSteps: [
+          `Follow the skill instructions for the ${started.state.currentStage} stage.`,
+          started.state.currentStage === 'onboard'
+            ? 'This stage auto-advances. Call engineering_advance_stage to proceed.'
+            : started.state.currentStage === 'define'
+              ? 'Follow the spec-driven-development skill to generate a specification. Then call engineering_save_artifact with type "spec" to save it.'
+              : `Complete the ${started.state.currentStage} stage work, then call engineering_save_artifact to save the output.`,
+        ],
       }, null, 2)),
     ]);
   }

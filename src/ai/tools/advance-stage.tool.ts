@@ -101,7 +101,25 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
         instructions,
         message: updated.state.status === 'completed'
           ? 'Workflow completed! All stages done.'
-          : `Advanced to ${updated.state.currentStage}. Follow the stage instructions.`,
+          : `Advanced to ${updated.state.currentStage}.`,
+        nextSteps: updated.state.status === 'completed'
+          ? ['The workflow is complete. Summarize what was accomplished.']
+          : [
+              `Follow the skill instructions for the ${updated.state.currentStage} stage.`,
+              updated.state.currentStage === 'define'
+                ? 'Follow the spec-driven-development skill. Then call engineering_save_artifact with type "spec".'
+                : updated.state.currentStage === 'plan'
+                  ? 'Follow the planning-and-task-breakdown skill. Then call engineering_save_artifact with type "plan".'
+                  : updated.state.currentStage === 'build'
+                    ? 'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time.'
+                    : updated.state.currentStage === 'verify'
+                      ? 'Run tests, build, and lint. Then call engineering_save_artifact with type "report".'
+                      : updated.state.currentStage === 'review'
+                        ? 'Follow the code-review-and-quality skill. Then call engineering_save_artifact with type "review".'
+                        : updated.state.currentStage === 'ship'
+                          ? 'Follow the shipping-and-launch skill. Then call engineering_save_artifact with type "report".'
+                          : 'Follow the stage instructions.',
+            ],
       }, null, 2)),
     ]);
   }
