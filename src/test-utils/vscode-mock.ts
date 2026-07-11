@@ -24,7 +24,13 @@ export interface MockVscode {
   readonly workspaceFolders: { readonly uri: { readonly fsPath: string }; readonly name: string }[];
   readonly _files: Map<string, MockFileEntry>;
   readonly _config: Map<string, unknown>;
-  readonly _statusBarItems: { text: string; tooltip: string; show(): void; hide(): void; dispose(): void }[];
+  readonly _statusBarItems: {
+    text: string;
+    tooltip: string;
+    show(): void;
+    hide(): void;
+    dispose(): void;
+  }[];
   _messages: { type: 'info' | 'error'; message: string }[];
   _configChangeCallbacks: (() => void)[];
 }
@@ -34,7 +40,9 @@ export function createMockVscode(workspacePath = '/project'): MockVscode {
   const config = new Map<string, unknown>();
   const statusBars: MockVscode['_statusBarItems'] = [];
   const messages: MockVscode['_messages'] = [];
-  const configChangeCallbacks: ((e: { affectsConfiguration: (section: string) => boolean }) => void)[] = [];
+  const configChangeCallbacks: ((e: {
+    affectsConfiguration: (section: string) => boolean;
+  }) => void)[] = [];
 
   const workspaceFolders: MockVscode['workspaceFolders'] = [
     { uri: { fsPath: workspacePath }, name: 'project' },
@@ -122,7 +130,9 @@ export function createVscodeShim(mock: MockVscode): typeof import('vscode') {
           },
         } as never;
       },
-      onDidChangeConfiguration(handler: (e: { affectsConfiguration: (section: string) => boolean }) => void) {
+      onDidChangeConfiguration(
+        handler: (e: { affectsConfiguration: (section: string) => boolean }) => void,
+      ) {
         mock._configChangeCallbacks.push(handler as never);
         return { dispose() {} } as never;
       },

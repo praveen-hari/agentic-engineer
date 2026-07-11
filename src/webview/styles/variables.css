@@ -1,0 +1,62 @@
+/**
+ * CSS custom properties for VS Code theme integration.
+ * Uses --vscode-* tokens provided by the webview API.
+ */
+
+:root {
+  /* VS Code theme tokens (injected by webview) */
+  --vscode-editor-background: var(--vscode-editor-background, #1e1e1e);
+  --vscode-sideBar-background: var(--vscode-sideBar-background, #252526);
+  --vscode-sideBar-foreground: var(--vscode-sideBar-foreground, #cccccc);
+  --vscode-foreground: var(--vscode-foreground, #cccccc);
+  --vscode-descriptionForeground: var(--vscode-descriptionForeground, #9d9d9d);
+  --vscode-button-background: var(--vscode-button-background, #0e639c);
+  --vscode-button-foreground: var(--vscode-button-foreground, #ffffff);
+  --vscode-button-hoverBackground: var(--vscode-button-hoverBackground, #1177bb);
+  --vscode-input-background: var(--vscode-input-background, #3c3c3c);
+  --vscode-input-foreground: var(--vscode-input-foreground, #cccccc);
+  --vscode-input-border: var(--vscode-input-border, #3c3c3c);
+  --vscode-list-activeSelectionBackground: var(--vscode-list-activeSelectionBackground, #37373d);
+  --vscode-list-hoverBackground: var(--vscode-list-hoverBackground, #2a2a2a);
+  --vscode-badge-background: var(--vscode-badge-background, #4d4d4d);
+  --vscode-badge-foreground: var(--vscode-badge-foreground, #ffffff);
+  --vscode-scrollbarSlider-background: var(--vscode-scrollbarSlider-background, #79797966);
+  --vscode-focusBorder: var(--vscode-focusBorder, #007fd4);
+  --vscode-errorForeground: var(--vscode-errorForeground, #f48771);
+  --vscode-icon-foreground: var(--vscode-icon-foreground, #c5c5c5);
+
+  /* Semantic tokens */
+  --color-bg: var(--vscode-editor-background);
+  --color-bg-sidebar: var(--vscode-sideBar-background);
+  --color-text: var(--vscode-foreground);
+  --color-text-muted: var(--vscode-descriptionForeground);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-accent: var(--vscode-button-background);
+  --color-accent-hover: var(--vscode-button-hoverBackground);
+  --color-success: #4ec9b0;
+  --color-warning: #dcdcaa;
+  --color-error: var(--vscode-errorForeground);
+  --color-badge-bg: var(--vscode-badge-background);
+  --color-badge-fg: var(--vscode-badge-foreground);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* Font */
+  --font-ui: var(--vscode-font-family, 'Inter', -apple-system, sans-serif);
+  --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'SF Mono', monospace);
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+  --font-size-xl: 18px;
+
+  /* Border radius */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+}
