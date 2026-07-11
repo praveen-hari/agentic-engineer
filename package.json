@@ -184,7 +184,7 @@
       {
         "name": "engineering_start_workflow",
         "displayName": "Start Engineering Workflow",
-        "modelDescription": "Starts a structured SDLC workflow for a development task. Analyzes the objective for risk, determines the process level (light/standard/thorough/guarded), creates workflow stages (Define → Plan → Build → Verify → Review → Ship), and activates the first stage. Use when the user describes what they want to build. Returns the workflow state and instructions for the current stage. The agent should then follow the stage instructions (e.g., generate a spec for the DEFINE stage using the spec-driven-development skill).",
+        "modelDescription": "Starts a structured SDLC workflow for a development task. Analyzes the objective for risk, determines the process level (light/standard/thorough/guarded), creates workflow stages, and activates the first stage. Use when the user describes what they want to build. Returns the current stage and instructions. After calling this tool, follow the stage's skill: DEFINE stage → use spec-driven-development skill then call engineering_save_artifact(type='spec'). PLAN stage → use planning-and-task-breakdown skill then call engineering_save_artifact(type='plan'). BUILD stage → use incremental-implementation + test-driven-development skills. VERIFY stage → run tests then call engineering_save_artifact(type='report'). REVIEW stage → use code-review-and-quality skill then call engineering_save_artifact(type='review'). SHIP stage → use shipping-and-launch skill.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "startWorkflow",
         "icon": "$(play)",
@@ -203,7 +203,7 @@
       {
         "name": "engineering_save_artifact",
         "displayName": "Save Engineering Artifact",
-        "modelDescription": "Saves a workflow artifact (spec, plan, review, or report) to the .codestudio/workflows/current/artifacts/ directory. Use after generating a specification, task plan, code review, or verification report. The artifact will appear in the Engineering Workspace sidebar for user review and approval.",
+        "modelDescription": "Saves a workflow artifact (spec, plan, review, or report) to the .codestudio/workflows/current/artifacts/ directory. Use after generating content with a skill: after spec-driven-development → save type='spec'. After planning-and-task-breakdown → save type='plan'. After code-review-and-quality → save type='review'. After running tests → save type='report'. The artifact will appear in the Engineering Workspace sidebar for user review and approval. After saving, call engineering_advance_stage to move to the next stage.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "saveArtifact",
         "icon": "$(file-add)",

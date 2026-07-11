@@ -121,11 +121,11 @@ const ScanningScreen: FunctionalComponent = () => {
         <div class="onboarding__icon">
           <Icon name="loading" size={32} spin />
         </div>
-        <h2 class="onboarding__title">Setting Up Project Scaffold...</h2>
+        <h2 class="onboarding__title">Starting SDLC Workflow...</h2>
         <p class="onboarding__subtitle">
-          The agent is setting up your project structure in the chat panel.
+          The agent is initializing the engineering workspace and starting
           <br />
-          No features will be built yet — just the scaffold and tooling.
+          the structured development workflow in the chat panel.
         </p>
       </div>
 
@@ -134,21 +134,20 @@ const ScanningScreen: FunctionalComponent = () => {
           <Icon name="check" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
-          <Icon name="loading" size={14} spin /> Agent is creating project scaffold
+          <Icon name="loading" size={14} spin /> Agent calling <code>engineering_setup_project</code> tool
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Creating <code>.codestudio/</code> context
+          <Icon name="circle-outline" size={14} /> Agent calling <code>engineering_start_workflow</code> tool
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Ready to start your first work request
+          <Icon name="circle-outline" size={14} /> DEFINE stage — generating specification
         </div>
       </div>
 
       <div class="onboarding__footer">
-        <strong>Check the Chat panel</strong> — the agent may ask you questions about your tech stack.
+        <strong>Check the Chat panel</strong> — the agent is driving the workflow using tools.
         <br />
-        Once the scaffold is ready, you'll use the <strong>Tasks view</strong> to start a work request
-        that goes through the proper SDLC stages.
+        This screen will update as the agent progresses through the SDLC stages.
       </div>
     </div>
   );

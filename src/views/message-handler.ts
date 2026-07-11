@@ -459,24 +459,30 @@ async function handleSetupExistingProject(deps: MessageHandlerDeps, reply: Reply
     }
 
     // Send prompt to agent to create codestudio-instructions.md
-    // based on the detected project context
-    const instructionsPrompt = `Follow the **context-engineering** skill to set up project context.
+    // The extension already called engineering_setup_project internally
+    // (created .codestudio/, config.json, context.md). Now the agent
+    // just needs to create the instructions file.
+    const instructionsPrompt = `The Engineering Workspace has been initialized for this project.
 
-The workspace has been scanned. Here's what was detected:
+## Project Context (auto-detected)
 ${formatContextForPrompt(context)}
 
-## Instructions
-1. Read the project context above and scan the workspace for additional patterns.
-2. Create a \`.codestudio/codestudio-instructions.md\` file with:
-   - Project overview (what this project is)
-   - Tech stack details
-   - Code conventions and patterns found in the codebase
-   - Testing conventions
-   - Build and development commands
-   - Boundaries (always do / ask first / never do)
-3. This file will be used by the agent as project-level instructions.
+## Steps — use these tools in order:
 
-Base everything on the ACTUAL codebase — not generic templates.`;
+### Step 1: Create \`.codestudio/codestudio-instructions.md\`
+Follow the **context-engineering** skill. Scan the workspace and write:
+- Project overview
+- Tech stack details  
+- Code conventions and patterns found in the codebase
+- Testing conventions
+- Build and development commands
+- Boundaries (always do / ask first / never do)
+
+Base everything on the ACTUAL codebase — not generic templates.
+
+### Step 2: Done
+The project is now set up. The user can describe what they want to build,
+and you should call \`engineering_start_workflow\` tool to begin the SDLC workflow.`;
 
     await deps.agentBridge.sendToChat(instructionsPrompt);
 
@@ -504,42 +510,43 @@ async function handleSetupNewProject(
   projectName: string,
   description: string,
 ): Promise<void> {
-  // For new projects, the agent ONLY sets up the project scaffold
-  // and .codestudio/ context. It does NOT build features — that
-  // happens through the SDLC workflow (DEFINE → PLAN → BUILD → etc.)
-  // after onboarding completes.
-  const prompt = `Set up a new project scaffold. Do NOT implement any features yet.
+  // The agent should:
+  // 1. Call engineering_setup_project tool → creates .codestudio/
+  // 2. Call engineering_start_workflow tool → starts SDLC workflow
+  // 3. Follow the DEFINE stage skill → generate spec
+  // No scaffolding — the SDLC workflow handles everything.
+  const objective = description || `Build ${projectName}`;
 
-## Project Details
-- **Name:** ${projectName}
-${description ? `- **Description:** ${description}` : ''}
+  const prompt = `Start the SDLC engineering workflow for this project.
 
-## What To Do (Project Scaffold ONLY)
-1. Ask me a few questions to understand the tech stack I want (framework, language, testing, etc.)
-2. Initialize the project:
-   - Create package.json (or equivalent for the chosen stack)
-   - Install core dependencies
-   - Set up folder structure
-   - Add configuration files (tsconfig, eslint, prettier, etc.)
-   - Initialize git if not already done
-3. Create \`.codestudio/\` directory with:
-   - \`config.json\` — \`{"version":1,"processLevelDefault":"auto","autoApproveLowRisk":false,"reviewTimeoutMinutes":5,"historyHotThreshold":5,"historyWarmThreshold":20,"historyColdAgeDays":180,"autoRefreshContext":true}\`
-   - \`context.md\` — project context (languages, frameworks, conventions detected)
-   - \`codestudio-instructions.md\` — project conventions and coding standards
+## Project: ${projectName}
+## Objective: ${objective}
 
-## What NOT To Do
-- Do NOT implement any application features
-- Do NOT create application screens, routes, or business logic
-- Do NOT start building what the user described — that comes later through the SDLC workflow
-- ONLY set up the empty project scaffold with tooling
+## Steps — use these tools in order:
 
-After the scaffold is ready, the user will use the Engineering Workspace sidebar to start a work request, which will go through the proper SDLC stages (Define → Plan → Build → Verify → Review → Ship).`;
+### Step 1: Call \`engineering_setup_project\` tool
+- This initializes .codestudio/ with project context
+
+### Step 2: Create \`.codestudio/codestudio-instructions.md\`
+- Scan the workspace and write project coding conventions
+
+### Step 3: Call \`engineering_start_workflow\` tool
+- Pass objective: "${objective}"
+- This creates the SDLC workflow (DEFINE → PLAN → BUILD → VERIFY → REVIEW → SHIP)
+
+### Step 4: Follow the current stage instructions
+- The start_workflow tool returns which stage is active and which skill to follow
+- For DEFINE stage: follow the **spec-driven-development** skill
+- Generate the spec, then call \`engineering_save_artifact\` tool with type "spec"
+
+### Step 5: Continue through stages
+- After each artifact is saved and approved, call \`engineering_advance_stage\` tool
+- Follow the skill for each new stage
+- Repeat until all stages are complete
+
+Do NOT skip any tools. Do NOT implement features directly. Follow the SDLC workflow.`;
 
   await deps.agentBridge.sendToChat(prompt);
-
-  // Keep webview in 'scanning' state (the button already set this).
-  // The ArtifactWatcher will transition to 'ready' when the agent
-  // creates .codestudio/config.json.
 }
 
 async function handleRequestOnboardingStatus(
