@@ -9,9 +9,11 @@ import type { ProjectDetector } from '../core/project-detector';
 import type { ContextAnalyzer } from '../core/context-analyzer';
 import type { ContextSignalDetector } from '../core/context-signal-detector';
 import type { CapabilityRecommender } from '../core/capability-recommender';
+import type { PromptTemplates } from '../core/prompt-templates';
 import type { NotificationService } from '../services/notification.service';
 import type { WorkspaceService } from '../services/workspace.service';
 import type { ArtifactManager } from '../services/artifact-manager.service';
+import type { AgentBridge } from '../services/agent-bridge.service';
 import { WorkspaceScanner } from '../services/workspace-scanner.service';
 import type {
   FileIO,
@@ -47,6 +49,8 @@ export interface MessageHandlerDeps {
   readonly workspaceService: WorkspaceService;
   readonly fileSystem: FileIO;
   readonly artifactManager: ArtifactManager;
+  readonly promptTemplates: PromptTemplates;
+  readonly agentBridge: AgentBridge;
 }
 
 /**
@@ -113,6 +117,9 @@ export function handleWebviewMessage(
           break;
         case 'requestGateStatus':
           await handleRequestGateStatus(deps, reply);
+          break;
+        case 'generateArtifact':
+          await handleGenerateArtifact(deps, reply, msg.stage);
           break;
       }
     } catch (err) {
@@ -338,4 +345,57 @@ async function handleRequestGateStatus(deps: MessageHandlerDeps, reply: ReplyFn)
     return;
   }
   reply({ type: 'gateStatus', gates: wf.qualityGates });
+}
+
+// ─── Artifact Generation (Agent-Delegated) ──────────────────────────────────
+
+async function handleGenerateArtifact(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  stage: LifecycleStage,
+): Promise<void> {
+  const wf = await deps.stateManager.load();
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow' });
+    return;
+  }
+
+  // Find the spec path for PLAN stage (needs to reference the spec)
+  let specPath: string | undefined;
+  if (stage === 'plan') {
+    const artifacts = await deps.artifactManager.listAll();
+    const spec = artifacts.find((a) => a.type === 'spec');
+    specPath = spec?.path;
+  }
+
+  // Build the prompt for this stage
+  const prompt = deps.promptTemplates.getPromptForStage(stage, {
+    objective: wf.objective,
+    context: cachedContext,
+    signals: wf.detectedRisks,
+    processLevel: wf.processLevel,
+    specPath,
+    testCommand: cachedContext?.testFramework ? `npm test` : null,
+    buildCommand: 'npm run build',
+  });
+
+  if (!prompt) {
+    reply({
+      type: 'error',
+      message: `Stage "${stage}" does not need agent-generated artifacts`,
+    });
+    return;
+  }
+
+  // Tell the webview we're generating
+  reply({
+    type: 'generatingArtifact',
+    stage,
+    message: `Sending prompt to agent for ${stage} stage...`,
+  });
+
+  // Send the prompt to the agent — the agent will scan the workspace,
+  // generate the artifact, and save it to .codestudio/artifacts/.
+  // The ArtifactWatcher will detect the new file and notify the webview.
+  await deps.agentBridge.sendToChat(prompt);
 }

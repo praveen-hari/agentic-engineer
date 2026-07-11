@@ -135,6 +135,19 @@ function createMockDeps(): MessageHandlerDeps {
       read: vi.fn().mockResolvedValue(null),
       saveObjective: vi.fn().mockResolvedValue(undefined),
     } as unknown as MessageHandlerDeps['artifactManager'],
+
+    promptTemplates: {
+      getPromptForStage: vi.fn().mockReturnValue('Generate a spec for: test objective'),
+      getDefinePrompt: vi.fn().mockReturnValue('Generate a spec...'),
+      getPlanPrompt: vi.fn().mockReturnValue('Generate a plan...'),
+      getReviewPrompt: vi.fn().mockReturnValue('Review the code...'),
+    } as unknown as MessageHandlerDeps['promptTemplates'],
+
+    agentBridge: {
+      sendToChat: vi.fn().mockResolvedValue(undefined),
+      sendViaParticipant: vi.fn().mockResolvedValue(undefined),
+      sendToAgentMode: vi.fn().mockResolvedValue(undefined),
+    } as unknown as MessageHandlerDeps['agentBridge'],
   };
 }
 

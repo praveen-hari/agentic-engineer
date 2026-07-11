@@ -268,7 +268,8 @@ export type MessageToHost =
   | { readonly type: 'requestStageActions' }
   | { readonly type: 'executeStage' }
   | { readonly type: 'requestArtifacts' }
-  | { readonly type: 'requestGateStatus' };
+  | { readonly type: 'requestGateStatus' }
+  | { readonly type: 'generateArtifact'; readonly stage: LifecycleStage };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -284,7 +285,9 @@ export type MessageToWebview =
   | { readonly type: 'stageActions'; readonly actions: StageAction | null }
   | { readonly type: 'artifacts'; readonly artifacts: readonly Artifact[] }
   | { readonly type: 'gateStatus'; readonly gates: readonly QualityGate[] }
-  | { readonly type: 'stageResult'; readonly result: StageExecutionResult };
+  | { readonly type: 'stageResult'; readonly result: StageExecutionResult }
+  | { readonly type: 'generatingArtifact'; readonly stage: LifecycleStage; readonly message: string }
+  | { readonly type: 'artifactDetected'; readonly artifact: Artifact };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
 

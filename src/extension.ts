@@ -17,6 +17,9 @@ import { CapabilityRecommender } from './core/capability-recommender';
 import { StageExecutor } from './core/stage-executor';
 import { GateRunner } from './core/gate-runner';
 import { ArtifactManager } from './services/artifact-manager.service';
+import { AgentBridge } from './services/agent-bridge.service';
+import { ArtifactWatcher } from './services/artifact-watcher.service';
+import { PromptTemplates } from './core/prompt-templates';
 import { AiRiskAnalyzer } from './ai/risk-analyzer';
 import { AnalyzeWorkRequestTool } from './ai/tools/analyze-work-request.tool';
 import { GetWorkflowStatusTool } from './ai/tools/get-workflow-status.tool';
@@ -65,6 +68,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const stageExecutor = new StageExecutor(skillRegistry);
   const gateRunner = new GateRunner();
   const artifactManager = new ArtifactManager(fsService, workspaceRoot ?? '/');
+  const promptTemplates = new PromptTemplates();
+  const agentBridge = new AgentBridge(vscodeApi);
 
   // ─── AI Layer ─────────────────────────────────────────────────────
   const aiRiskAnalyzer = new AiRiskAnalyzer(riskEngine, {
@@ -150,6 +155,8 @@ export function activate(context: vscode.ExtensionContext): void {
       workspaceService,
       fileSystem: fsService,
       artifactManager,
+      promptTemplates,
+      agentBridge,
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),
@@ -165,6 +172,18 @@ export function activate(context: vscode.ExtensionContext): void {
       panelProvider.open('tasks');
     }
   });
+
+  // ─── Artifact Watcher ─────────────────────────────────────────────
+  if (workspaceRoot) {
+    const artifactWatcher = new ArtifactWatcher(vscodeApi, workspaceRoot);
+    const watcherDisposable = artifactWatcher.start();
+    context.subscriptions.push(watcherDisposable);
+
+    // When an artifact is detected, notify the webview
+    artifactWatcher.onArtifactDetected((artifact) => {
+      panelProvider.postMessage({ type: 'artifactDetected', artifact });
+    });
+  }
 
   // ─── Chat Participant ────────────────────────────────────────────
   const chatHandler = new ChatParticipantHandler(
