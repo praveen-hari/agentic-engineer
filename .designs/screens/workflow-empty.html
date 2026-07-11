@@ -1,265 +1,128 @@
 <!-- WORKFLOW VIEW — EMPTY STATE
-     Shown when: No active work request, or user clicks "+" to start new
-
-     INTERACTION FLOW (progressive disclosure):
-     1. User sees input + quick-start examples (analysis hidden)
-     2. User types objective (or clicks example to pre-fill)
-     3. "Analyze" button appears after ≥10 chars
-     4. User clicks "Analyze" (also auto-triggers after 500ms typing pause)
-     5. Analyzing spinner shows progress steps (1-3 seconds)
-     6. Results appear: type, complexity, risk, process level selector, workflow preview
-     7. User can override process level, then clicks "Start Workflow"
-
-     Prototype includes a state toggle at the bottom to demo all states.
+     DD-018: Simplified. Just the objective input + quick start.
+     No AI analysis panel shown until user clicks Analyze.
 -->
 
-<div class="view-workflow-empty" style="max-width: 600px; margin: 0 auto; padding: var(--space-xxl) 0;">
+<div class="view-workflow-empty" style="max-width: 560px; margin: 0 auto; padding: var(--space-xxl) 0;">
 
-  <!-- Welcome Header -->
+  <!-- Welcome -->
   <div style="text-align: center; margin-bottom: var(--space-xxl);">
-    <div style="width: 64px; height: 64px; margin: 0 auto var(--space-lg); border-radius: var(--radius-full); background: rgba(0, 120, 212, 0.1); display: flex; align-items: center; justify-content: center;">
-      <i class="codicon codicon-rocket" style="font-size: 28px; color: var(--color-accent);"></i>
+    <div style="width: 56px; height: 56px; margin: 0 auto var(--space-md); border-radius: var(--radius-full); background: rgba(0, 120, 212, 0.1); display: flex; align-items: center; justify-content: center;">
+      <i class="codicon codicon-rocket" style="font-size: 24px; color: var(--color-accent);"></i>
     </div>
     <h2>What do you want to build?</h2>
-    <p style="color: var(--color-secondary); margin-top: var(--space-sm); max-width: 440px; margin-left: auto; margin-right: auto;">
-      Describe your objective. The AI will analyze complexity, detect risks, and generate a tailored engineering workflow.
+    <p style="color: var(--color-secondary); margin-top: var(--space-sm);">
+      Describe your objective. I'll analyze it and propose a plan.
     </p>
   </div>
 
   <!-- Objective Input -->
   <div class="form-group">
-    <label class="label">Objective</label>
     <textarea class="textarea" id="objective-input" rows="3" placeholder="e.g., Add user authentication with OAuth2 and session management" style="font-size: var(--font-body-size);" oninput="onObjectiveChange(this)"></textarea>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-xs);">
+    <div style="display: flex; justify-content: space-between; margin-top: var(--space-xs);">
       <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Be specific — mention APIs, libraries, or constraints</span>
       <span id="char-count" style="font-size: var(--font-caption-size); color: var(--color-secondary);">0 chars</span>
     </div>
   </div>
 
-  <!-- ===== STATE: ANALYZE BUTTON (visible after ≥10 chars, before analysis) ===== -->
+  <!-- Analyze Button -->
   <div id="analyze-section" style="display: none; margin-bottom: var(--space-xl);">
-    <button class="btn btn-primary btn-full" id="analyze-btn" onclick="showState('analyzing')">
-      <i class="codicon codicon-sparkle"></i> Analyze Objective
+    <button class="btn btn-primary btn-full" onclick="showState('analyzing')">
+      <i class="codicon codicon-sparkle"></i> Analyze & Plan
     </button>
-    <div style="font-size: var(--font-caption-size); color: var(--color-secondary); text-align: center; margin-top: var(--space-xs);">
-      Also triggers automatically when you stop typing for 500ms
-    </div>
   </div>
 
-  <!-- ===== STATE: ANALYZING (spinner with progress steps) ===== -->
+  <!-- Analyzing State -->
   <div id="analyzing-state" style="display: none; margin-bottom: var(--space-xl);">
     <div class="card" style="border-left: 3px solid var(--color-accent);">
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) 0;">
         <i class="codicon codicon-loading codicon-modifier-spin" style="font-size: 18px; color: var(--color-accent);"></i>
         <div>
           <div style="font-size: var(--font-small-size); font-weight: 600;">Analyzing your objective…</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Scanning codebase, detecting risks, estimating complexity</div>
-        </div>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border);">
-        <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size);">
-          <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i>
-          <span style="color: var(--color-secondary);">Reading project context (.codestudio/context.md)</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size);">
-          <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i>
-          <span style="color: var(--color-secondary);">Classifying task type and complexity</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size);">
-          <i class="codicon codicon-loading codicon-modifier-spin" style="color: var(--color-accent); font-size: 11px;"></i>
-          <span>Scanning for risk signals…</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size); opacity: 0.4;">
-          <i class="codicon codicon-circle-outline" style="font-size: 11px;"></i>
-          <span>Generating workflow stages</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size); opacity: 0.4;">
-          <i class="codicon codicon-circle-outline" style="font-size: 11px;"></i>
-          <span>Selecting process level</span>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Detecting risks, estimating complexity, selecting skills</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== STATE: ANALYSIS RESULTS (full form appears) ===== -->
+  <!-- Results State -->
   <div id="analysis-results" style="display: none;">
 
-    <!-- AI Analysis Card -->
-    <div class="card" style="margin-bottom: var(--space-xl); border-left: 3px solid var(--color-accent);">
-      <div class="card-header" style="margin-bottom: var(--space-md);">
-        <span class="card-title" style="font-size: var(--font-small-size); display: flex; align-items: center; gap: var(--space-sm);">
-          <i class="codicon codicon-sparkle" style="color: var(--color-accent);"></i> AI Analysis
-        </span>
-        <div style="display: flex; align-items: center; gap: var(--space-md);">
-          <span style="font-size: var(--font-caption-size); color: var(--color-success);"><i class="codicon codicon-pass-filled" style="font-size: 10px;"></i> Complete</span>
-          <button class="btn-icon" title="Re-analyze with updated objective" onclick="showState('analyzing')" style="font-size: 12px;"><i class="codicon codicon-refresh"></i></button>
-        </div>
+    <!-- Compact analysis summary -->
+    <div class="card" style="margin-bottom: var(--space-lg); border-left: 3px solid var(--color-accent);">
+      <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+        <i class="codicon codicon-sparkle" style="color: var(--color-accent); font-size: 16px;"></i>
+        <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Analysis Complete</span>
+        <button class="btn-icon" onclick="showState('analyzing')"><i class="codicon codicon-refresh" style="font-size: 12px;"></i></button>
       </div>
 
-      <!-- Analysis Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md) var(--space-xl); font-size: var(--font-small-size); margin-bottom: var(--space-md);">
-        <div>
-          <div style="color: var(--color-secondary); font-size: var(--font-caption-size); margin-bottom: 2px;">Task Type</div>
-          <div style="font-weight: 600;">New Feature</div>
-        </div>
-        <div>
-          <div style="color: var(--color-secondary); font-size: var(--font-caption-size); margin-bottom: 2px;">Complexity</div>
-          <div style="font-weight: 600;">Medium</div>
-        </div>
-        <div>
-          <div style="color: var(--color-secondary); font-size: var(--font-caption-size); margin-bottom: 2px;">Risk Level</div>
-          <div style="font-weight: 600; color: var(--color-warning);">High — payment data handling</div>
-        </div>
-        <div>
-          <div style="color: var(--color-secondary); font-size: var(--font-caption-size); margin-bottom: 2px;">Estimated Tasks</div>
-          <div style="font-weight: 600;">~8 tasks, 3 phases</div>
-        </div>
+      <div style="display: flex; gap: var(--space-lg); font-size: var(--font-small-size); margin-bottom: var(--space-md);">
+        <div><span style="color: var(--color-secondary);">Type:</span> <strong>Feature</strong></div>
+        <div><span style="color: var(--color-secondary);">Risk:</span> <strong style="color: var(--color-warning);">High</strong></div>
+        <div><span style="color: var(--color-secondary);">Est:</span> <strong>~8 tasks</strong></div>
       </div>
 
-      <!-- Risk Signals -->
-      <div style="padding: var(--space-md); background: rgba(204, 167, 0, 0.06); border-radius: var(--radius-md); margin-bottom: var(--space-md);">
-        <div style="font-size: var(--font-caption-size); font-weight: 600; color: var(--color-warning); margin-bottom: var(--space-xs);">
-          <i class="codicon codicon-warning" style="font-size: 11px;"></i> Risk Signals Detected
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm);">
-          <span class="badge badge-warning" style="font-size: 10px; height: 16px;">payment data</span>
-          <span class="badge badge-warning" style="font-size: 10px; height: 16px;">external API (Stripe)</span>
-          <span class="badge badge-warning" style="font-size: 10px; height: 16px;">financial transactions</span>
-        </div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-xs);">
-          → Security gate will be added automatically between phases
-        </div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-warning); margin-bottom: var(--space-sm);">
+        <i class="codicon codicon-warning" style="font-size: 11px;"></i> Risk signals: payment data, external API, financial transactions
       </div>
 
-      <!-- Skills -->
       <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
-        <span style="font-weight: 600;">Skills:</span> spec-driven-development, planning-and-task-breakdown, incremental-implementation, security-and-hardening, test-driven-development
+        Recommended: <strong>Standard</strong> process + security gate
       </div>
     </div>
 
-    <!-- Process Level Selector -->
-    <div class="form-group">
-      <label class="label">Process Level</label>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-sm);">
-        <div class="card card-compact card-clickable" style="text-align: center; opacity: 0.5; cursor: pointer;">
-          <div style="font-size: 18px; margin-bottom: var(--space-xs);">⚡</div>
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Light</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Quick fix</div>
-          <div style="font-size: 9px; color: var(--color-secondary); margin-top: var(--space-xs);">0 approvals</div>
-        </div>
-        <div class="card card-compact" style="text-align: center; border-color: var(--color-accent); background: rgba(0, 120, 212, 0.06); cursor: pointer;">
-          <div style="font-size: 18px; margin-bottom: var(--space-xs);">🔧</div>
-          <div style="font-size: var(--font-small-size); font-weight: 600; color: var(--color-accent);">Standard</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-accent);">Recommended</div>
-          <div style="font-size: 9px; color: var(--color-secondary); margin-top: var(--space-xs);">2 approvals</div>
-        </div>
-        <div class="card card-compact card-clickable" style="text-align: center; opacity: 0.5; cursor: pointer;">
-          <div style="font-size: 18px; margin-bottom: var(--space-xs);">🏗️</div>
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Thorough</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Major feature</div>
-          <div style="font-size: 9px; color: var(--color-secondary); margin-top: var(--space-xs);">3-4 approvals</div>
-        </div>
-        <div class="card card-compact card-clickable" style="text-align: center; opacity: 0.5; cursor: pointer;">
-          <div style="font-size: 18px; margin-bottom: var(--space-xs);">🛡️</div>
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Guarded</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">High risk</div>
-          <div style="font-size: 9px; color: var(--color-secondary); margin-top: var(--space-xs);">Every decision</div>
-        </div>
-      </div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-sm);">
-        <i class="codicon codicon-info" style="font-size: 11px;"></i>
-        The AI recommends <strong>Standard</strong> based on complexity. Security gate added due to payment risk signals. You can override anytime.
-      </div>
-    </div>
-
-    <!-- Workflow Preview -->
-    <div class="card" style="margin-bottom: var(--space-xl);">
-      <div class="card-header">
-        <span class="card-title" style="font-size: var(--font-small-size);">Workflow Preview</span>
-      </div>
-      <div style="display: flex; gap: var(--space-xs); flex-wrap: wrap;">
-        <span class="badge" style="font-size: 10px; height: 18px;">1. Onboard</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge" style="font-size: 10px; height: 18px;">2. Define (spec)</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge" style="font-size: 10px; height: 18px;">3. Plan</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge" style="font-size: 10px; height: 18px;">4. Build</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge badge-warning" style="font-size: 10px; height: 18px;">🛡 Security Gate</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge" style="font-size: 10px; height: 18px;">5. Verify</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge" style="font-size: 10px; height: 18px;">6. Review</span>
-        <span style="color: var(--color-secondary);">→</span>
-        <span class="badge" style="font-size: 10px; height: 18px;">7. Ship</span>
-      </div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-sm);">
-        Estimated: ~8 tasks • 2 approval checkpoints • 1 security gate
-      </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+    <!-- Start button -->
+    <div style="display: flex; gap: var(--space-md);">
       <button class="btn btn-secondary" onclick="showState('initial')">Cancel</button>
-      <button class="btn btn-primary" onclick="loadScreen('workflow')">
-        <i class="codicon codicon-play"></i> Start Workflow
+      <button class="btn btn-primary" style="flex: 1;" onclick="loadScreen('workflow')">
+        <i class="codicon codicon-play"></i> Start Building
       </button>
     </div>
   </div>
 
-  <!-- Quick Start Examples (visible when no analysis yet) -->
+  <!-- Quick Start Examples -->
   <div id="quick-start-section" style="margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 1px solid var(--color-border);">
-    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-md);">Quick Start — click to pre-fill</div>
+    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-md);">Quick Start</div>
     <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
       <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);" onclick="prefillObjective('Fix the pagination bug in /api/users endpoint')">
         <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
           <span>⚡</span>
           <span style="flex: 1;">Fix the pagination bug in /api/users endpoint</span>
-          <span class="badge" style="font-size: 9px; height: 14px;">Light</span>
         </div>
       </div>
       <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);" onclick="prefillObjective('Add email notification service with SendGrid')">
         <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
           <span>🔧</span>
           <span style="flex: 1;">Add email notification service with SendGrid</span>
-          <span class="badge" style="font-size: 9px; height: 14px;">Standard</span>
         </div>
       </div>
       <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);" onclick="prefillObjective('Implement OAuth2 authentication with session management')">
         <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
           <span>🏗️</span>
           <span style="flex: 1;">Implement OAuth2 authentication with session management</span>
-          <span class="badge" style="font-size: 9px; height: 14px;">Thorough</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Prototype state toggle -->
+  <!-- Prototype toggle -->
   <div style="margin-top: var(--space-xxl); padding-top: var(--space-lg); border-top: 1px dashed var(--color-border);">
-    <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-sm);">
-      <i class="codicon codicon-beaker" style="font-size: 11px;"></i> Prototype: Jump to analysis state
-    </div>
-    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-      <button class="btn btn-ghost btn-sm" onclick="showState('initial')">1. Empty input</button>
-      <button class="btn btn-ghost btn-sm" onclick="showState('typed')">2. Text entered</button>
-      <button class="btn btn-ghost btn-sm" onclick="showState('analyzing')">3. Analyzing…</button>
-      <button class="btn btn-ghost btn-sm" onclick="showState('results')">4. Results ready</button>
+    <div style="display: flex; gap: var(--space-sm);">
+      <button class="btn btn-ghost btn-sm" onclick="showState('initial')">1. Empty</button>
+      <button class="btn btn-ghost btn-sm" onclick="showState('typed')">2. Typed</button>
+      <button class="btn btn-ghost btn-sm" onclick="showState('analyzing')">3. Analyzing</button>
+      <button class="btn btn-ghost btn-sm" onclick="showState('results')">4. Results</button>
     </div>
   </div>
 
 </div>
 
 <script>
-  // Debounce timer for auto-analysis
   let analyzeTimer = null;
 
   function onObjectiveChange(el) {
     const len = el.value.trim().length;
     document.getElementById('char-count').textContent = len + ' chars';
-
-    // Show/hide analyze button based on length
     const analyzeSection = document.getElementById('analyze-section');
     const analysisResults = document.getElementById('analysis-results');
 
@@ -269,10 +132,9 @@
       analyzeSection.style.display = 'none';
     }
 
-    // Auto-trigger analysis after 500ms pause (debounce)
     clearTimeout(analyzeTimer);
     if (len >= 10 && analysisResults.style.display === 'none') {
-      analyzeTimer = setTimeout(() => showState('analyzing'), 500);
+      analyzeTimer = setTimeout(() => showState('analyzing'), 800);
     }
   }
 
@@ -280,7 +142,6 @@
     const input = document.getElementById('objective-input');
     input.value = text;
     document.getElementById('char-count').textContent = text.length + ' chars';
-    // Show analyze button
     document.getElementById('analyze-section').style.display = 'block';
     input.focus();
   }
@@ -293,7 +154,6 @@
     const quickStart = document.getElementById('quick-start-section');
     const input = document.getElementById('objective-input');
 
-    // Reset all
     analyzeSection.style.display = 'none';
     analyzingState.style.display = 'none';
     analysisResults.style.display = 'none';
@@ -304,13 +164,11 @@
         input.value = '';
         document.getElementById('char-count').textContent = '0 chars';
         break;
-
       case 'typed':
         input.value = 'Integrate Stripe payment processing with idempotency support';
         document.getElementById('char-count').textContent = '61 chars';
         analyzeSection.style.display = 'block';
         break;
-
       case 'analyzing':
         if (!input.value.trim()) {
           input.value = 'Integrate Stripe payment processing with idempotency support';
@@ -318,14 +176,10 @@
         }
         analyzingState.style.display = 'block';
         quickStart.style.display = 'none';
-        // Auto-advance to results after 2s (simulates analysis time)
         setTimeout(() => {
-          if (analyzingState.style.display !== 'none') {
-            showState('results');
-          }
-        }, 2000);
+          if (analyzingState.style.display !== 'none') showState('results');
+        }, 1500);
         break;
-
       case 'results':
         if (!input.value.trim()) {
           input.value = 'Integrate Stripe payment processing with idempotency support';

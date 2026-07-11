@@ -713,6 +713,50 @@ Complete → (user clicks "Archive & Start New") → Empty
 
 ---
 
+## DD-018: Kill the Pipeline — Workflow Shows Outcomes, Not Process
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** The Workflow view showed a 7-stage pipeline (Onboard → Define → Plan → Build → Verify → Review → Ship), a quality gates checklist, a stats grid, and a live agent status card. Audit revealed two problems:
+
+1. **Content fatigue** — 7 sections per screen, most duplicating data available in other views
+2. **Process leakage** — The pipeline shows the engine's internal stages, but users don't care about steps — they care about outcomes and current activity
+
+Every stage's useful information already lived in another view:
+- Onboard/Define → spec is in Artifacts
+- Plan → tasks are in Tasks
+- Build → agent activity is in Activity
+- Verify/Review → results are in Artifacts
+- Ship → PR link is in History
+
+The pipeline was duplicating other views in a vaguer format.
+
+**Decision:** Remove the pipeline, quality gates checklist, and stats grid from the Workflow view. The Workflow screen now shows only:
+
+1. **Objective** — What are we building (one line)
+2. **Progress** — How far along (percentage bar + task count + time estimate)
+3. **NOW** — What the agent is doing this second (current task, TDD phase, file, recent actions)
+4. **Approval** — Inline approval card when the agent needs human input (pops in, disappears when resolved)
+5. **Done** — Completion summary when finished
+
+**Approvals are inline, not a separate view.** When the agent hits a gate, an approval card appears inline in the Workflow screen at the point where it's needed. The user doesn't navigate to an Approvals view — approvals come to the user. This removes the Approvals view entirely (7 views → 6 views).
+
+**Stages are internal only.** The workflow engine still tracks stages for event sourcing, skill activation, and history. But the user never sees them. The user sees outcomes (progress %) and current activity (what the agent is doing now), not process steps.
+
+**Rationale:**
+- Users care about "what's happening now" and "do you need me" — not "which internal stage is active"
+- Stages are engine internals — leaking them into the UI is like showing database queries on a dashboard
+- Inline approvals are more natural than a separate queue — approvals happen at specific points in the workflow, not in a separate inbox
+- Less content = faster scanning = less fatigue
+- 6 views instead of 7 = less navigation
+
+**Alternatives Considered:**
+- *Keep pipeline but collapse completed stages* — Rejected: still shows process the user doesn't need; collapsing adds interaction complexity
+- *Keep Approvals as separate view* — Rejected: approvals are temporal events, not a browsable category; they belong where they happen
+- *Show stages in an expandable "process details" section* — Rejected: if it needs to be collapsed by default, it's not important enough to show
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -734,3 +778,4 @@ Complete → (user clicks "Archive & Start New") → Empty
 | DD-015 | Workflow Definition Schema (typed JSON with flat arrays, risk signals, reasons) | Accepted |
 | DD-016 | Screen Consolidation: 14 → 7 Views | Accepted |
 | DD-017 | Work Request Lifecycle: Three Workflow States (Empty/Active/Complete) | Accepted |
+| DD-018 | Kill the Pipeline — Workflow Shows Outcomes, Not Process (inline approvals, 7→6 views) | Accepted |
