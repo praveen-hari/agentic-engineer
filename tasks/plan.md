@@ -128,7 +128,7 @@ Tasks are numbered 1–14. Each task has acceptance criteria and verification st
 | 7c | C | Workflow generator (uses active skills → stages/gates) | 2h |
 | 8 | C | Context analyzer + project detector | 2h |
 | 9 | C | Context signal detector (UI/API/auth/perf pattern detection) | 1.5h |
-| 9b | C | Capability recommender + Syncfusion skill catalog (DD-024) | 2.5h |
+| 9b | C | Capability recommender + Syncfusion skill pack catalog (DD-024, DD-025) | 2.5h |
 | 10 | C | AI layer (model access, risk analyzer, LM tools) | 3h |
 | 11 | D | Services (file system, git, workspace, notification) | 2h |
 | 12 | D | Preact webview shell (sidebar, nav, 5 views, bridge) | 4h |

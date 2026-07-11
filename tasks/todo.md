@@ -333,34 +333,37 @@
 
 ### Task 9b: Capability Recommender
 
-**Description:** Implement the recommendation engine for the Capabilities view (DD-024). Given a `ProjectContext` and `ContextSignal[]`, generates context-aware recommendations for what the user should add — custom instructions, Syncfusion component skills, security conventions, testing standards, etc. Each recommendation includes a human-readable "Why" explanation tied to what was detected. Also provides the Syncfusion skill catalog (60+ skills) for the browsable marketplace. Pure TypeScript, no VS Code deps.
+**Description:** Implement the recommendation engine for the Capabilities view (DD-024, DD-025). Given a `ProjectContext` and `ContextSignal[]`, generates context-aware recommendations for what the user should add — custom instructions, Syncfusion skill packs, security conventions, testing standards, etc. Each recommendation includes a human-readable "Why" explanation tied to what was detected. Also provides the Syncfusion skill pack catalog (14 packs covering 700+ skills) for the browsable marketplace. Pure TypeScript, no VS Code deps.
 
 **Acceptance criteria:**
 - [ ] `CapabilityRecommender` class with `recommend(projectContext, signals)` method
 - [ ] Returns `Recommendation[]` with `{ type, title, description, reason, action, category }`
-- [ ] React + tabular data → recommend Syncfusion DataGrid skill
+- [ ] React detected → recommend Syncfusion React UI Components skill pack (one recommendation, not 60)
+- [ ] Angular detected → recommend Angular skill pack
+- [ ] Blazor detected → recommend Blazor skill pack
+- [ ] .csproj with ASP.NET Core SDK → recommend ASP.NET Core skill pack
+- [ ] .csproj with MAUI SDK → recommend .NET MAUI skill pack
+- [ ] PDF/document processing detected → recommend relevant Document SDK pack
 - [ ] No test framework → recommend Testing Standards instruction
 - [ ] Express routes in `src/api/` → recommend API Conventions instruction
 - [ ] Payment/auth integration → recommend Security Hardening instruction
-- [ ] Dashboard screens in `.designs/` → recommend Syncfusion Charts skill
-- [ ] `.designs/` folder present → recommend syncfusion-components skill
 - [ ] Each recommendation has a "Why" explanation referencing the specific detection
-- [ ] `SyncfusionSkillCatalog` class with `getAll()`, `getByCategory(cat)`, `search(query)` methods
-- [ ] Catalog contains 60+ skills with metadata: name, category, description, npm package, GitHub skill ID
-- [ ] Categories: Data (8), Charts (12), Inputs (6), Layout (10), Navigation (8), Editors (4), File/Doc (5), Other (7+)
+- [ ] `SkillPackCatalog` class with `getAll()`, `getByCategory(cat)`, `getByPlatform(platform)` methods
+- [ ] Catalog contains 14 packs with metadata: name, platform, category (Web/.NET/Document), skill count, GitHub repo, representative components
+- [ ] Categories: Web (5), .NET (5), Document (4)
 - [ ] 12+ unit tests covering recommendation rules, catalog lookup, edge cases
 
 **Verification:**
-- [ ] `npm test -- --grep "CapabilityRecommender|SyncfusionSkillCatalog"` — all pass
+- [ ] `npm test -- --grep "CapabilityRecommender|SkillPackCatalog"` — all pass
 - [ ] Coverage ≥ 85% on capability-recommender.ts
 
 **Dependencies:** Tasks 2, 8, 9
 
 **Files created:**
 - `src/core/capability-recommender.ts`
-- `src/core/syncfusion-skill-catalog.ts`
+- `src/core/skill-pack-catalog.ts`
 - `src/test/core/capability-recommender.test.ts`
-- `src/test/core/syncfusion-skill-catalog.test.ts`
+- `src/test/core/skill-pack-catalog.test.ts`
 
 ---
 
@@ -440,7 +443,7 @@
 - [ ] Empty state: objective input with progressive disclosure (analyze button appears after ≥10 chars)
 - [ ] Active state: current stage details + stats grid + stage list (no pipeline viz — DD-018)
 - [ ] Complete state: success banner + summary + archive button
-- [ ] `capabilities-view.tsx` renders 3 zones: (1) Recommended for This Project — context-aware suggestions with Why explanations, (2) Installed — custom instructions, Syncfusion skills, agents/prompts/hooks, (3) Browse Syncfusion Skills — filterable grid of 60+ component skills with install buttons (DD-022, DD-023, DD-024)
+- [ ] `capabilities-view.tsx` renders 3 zones: (1) Recommended for This Project — context-aware suggestions with Why explanations, (2) Installed — skill packs, custom instructions, agents/prompts/hooks, (3) Skill Pack Marketplace — 14 Syncfusion packs filterable by category (Web/.NET/Document) with install buttons (DD-022, DD-023, DD-024, DD-025)
 - [ ] `knowledge-view.tsx` renders: Project Context, ADRs, Conventions, Boundaries, Capabilities link card (DD-021, DD-022)
 - [ ] `history-view.tsx` renders: three-tier history (hot/warm/cold) with pagination (DD-006, DD-007)
 - [ ] `settings-view.tsx` renders: process level override, approval policy, history retention, agent mode toggle
@@ -478,7 +481,7 @@
 - `src/webview/components/artifact-viewer.tsx`
 - `src/webview/components/approval-card.tsx`
 - `src/webview/components/capability-card.tsx`
-- `src/webview/components/skill-card.tsx`
+- `src/webview/components/skill-pack-card.tsx`
 - `src/webview/components/stats-grid.tsx`
 - `src/webview/components/progress-bar.tsx`
 - `src/webview/components/risk-badge.tsx`

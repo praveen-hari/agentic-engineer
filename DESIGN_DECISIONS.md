@@ -1008,6 +1008,79 @@ This surfaces the Syncfusion skills marketplace (https://www.syncfusion.com/expl
 
 ---
 
+## DD-025: Skill Packs, Not Individual Skills — Plugin Marketplace Model
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** DD-024 introduced a browsable Syncfusion skill marketplace with individual skill cards. But Syncfusion publishes **14 platform repos**, each with **60+ skills** — totaling **700+ individual skills**. Browsing and installing individual skills is the wrong abstraction:
+
+- 700+ skill cards is overwhelming — users can't evaluate relevance
+- Users think "I'm building a React app" — not "I need DataGrid skill + Charts skill + Scheduler skill"
+- Syncfusion distributes skills as per-framework repos: `npx skills add syncfusion/react-ui-components-skills -y` installs all 60+ at once
+- The agent already auto-loads the right skill per component name in the query — users don't need to pick individual skills
+
+The 14 Syncfusion skill pack repos:
+
+| Platform | Repo | Skills | Category |
+|----------|------|--------|----------|
+| React | `syncfusion/react-ui-components-skills` | 60+ | Web |
+| Angular | `syncfusion/angular-ui-components-skills` | 60+ | Web |
+| Blazor | `syncfusion/blazor-ui-components-skills` | 60+ | Web |
+| Vue | `syncfusion/vue-ui-components-skills` | 60+ | Web |
+| JavaScript | `syncfusion/javascript-ui-controls-skills` | 60+ | Web |
+| ASP.NET Core | `syncfusion/aspnet-core-ui-components-skills` | 60+ | .NET |
+| .NET MAUI | `syncfusion/maui-ui-components-skills` | 60+ | .NET |
+| WPF | `syncfusion/wpf-ui-controls-skills` | 60+ | .NET |
+| WinUI | `syncfusion/winui-ui-controls-skills` | 60+ | .NET |
+| WinForms | `syncfusion/winforms-ui-controls-skills` | 60+ | .NET |
+| Document Editor | `syncfusion/document-editor-skills` | 60+ | Document |
+| PDF Viewer | `syncfusion/pdf-viewer-skills` | 60+ | Document |
+| DOCX Editor | `syncfusion/docx-editor-skills` | 60+ | Document |
+| Spreadsheet Editor | `syncfusion/spreadsheet-editor-skills` | 60+ | Document |
+
+**Decision:** The unit of installation is the **Skill Pack** (one GitHub repo = one platform's complete skill set), not individual skills. The Capabilities view's Zone 3 becomes a **Skill Pack Marketplace** with 14 packs, not 700+ individual skills.
+
+### Marketplace structure:
+- **14 packs** organized into 3 categories: Web (5), .NET (5), Document (4)
+- Each pack card shows: platform name, skill count (60+), representative components, GitHub repo, install button
+- Filter tabs: All (14), Web (5), .NET (5), Document (4)
+- "Explore on syncfusion.com" link to https://www.syncfusion.com/explore/agent-skills/
+
+### Installation:
+- Install button runs `npx skills add syncfusion/<repo-name> -y`
+- After install, all 60+ skills in the pack are available to the agent
+- The agent auto-loads the right skill per component name in the query (e.g., "build a data grid" → loads DataGrid skill)
+- Users never need to pick individual skills — the pack + agent handles selection
+
+### Recommendation engine (Zone 1) updated:
+- Detect React → recommend "Syncfusion React UI Components" pack (one recommendation, not 60)
+- Detect Angular → recommend Angular pack
+- Detect Blazor → recommend Blazor pack
+- Detect .csproj → recommend ASP.NET Core or MAUI pack based on SDK type
+- Detect PDF/document processing → recommend relevant Document SDK pack
+
+### Installed section (Zone 2) updated:
+- Shows installed packs (not individual skills) with "Manage" button
+- Manage view shows the 60+ skills within the pack (read-only — for awareness, not toggling)
+
+**Rationale:**
+- **One decision, not 60** — "Install React UI Components" vs choosing 60 individual skills
+- **Matches Syncfusion's distribution model** — they publish per-framework repos, not individual skills
+- **Agent auto-selects within the pack** — after install, the agent matches by component name. This is already how Syncfusion skills work.
+- **14 packs is browsable** — 700+ skills is not. Filterable by platform category.
+- **Extensible** — third-party skill packs can be added to the marketplace in the future (community packs)
+- **Simpler recommendation engine** — "you're using React, install the React pack" is one rule, not 60
+
+**Alternatives Considered:**
+- *Browse all 700+ individual skills* — Rejected: overwhelming, wrong abstraction level
+- *Show only recommended pack, no marketplace* — Rejected: users may need a pack the detector didn't trigger on (e.g., Document SDK for a PDF feature the user hasn't built yet)
+- *Let users pick individual skills from a pack* — Rejected: the agent already auto-loads the right skill per query; manual selection adds friction without value
+- *Separate "Marketplace" nav item* — Rejected: doesn't earn its own nav slot; belongs under Capabilities
+
+**Replaces:** DD-024's Zone 3 "Browse Syncfusion Skills" grid of 60+ individual skill cards → replaced by 14 pack cards.
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -1035,4 +1108,5 @@ This surfaces the Syncfusion skills marketplace (https://www.syncfusion.com/expl
 | DD-021 | Knowledge as Separate Navigation Item (4→5 views) | Accepted |
 | DD-022 | Replace Activity with Capabilities View (actionable, not passive) | Accepted (revised by DD-023) |
 | DD-023 | Capabilities Shows User-Added Customizations, Not Built-In Plumbing | Accepted |
-| DD-024 | Capabilities View is a Recommendation Engine (context-aware + Syncfusion marketplace) | Accepted |
+| DD-024 | Capabilities View is a Recommendation Engine (context-aware + Syncfusion marketplace) | Accepted (revised by DD-025) |
+| DD-025 | Skill Packs, Not Individual Skills — Plugin Marketplace Model (14 packs, 700+ skills) | Accepted |
