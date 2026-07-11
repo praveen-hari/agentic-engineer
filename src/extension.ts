@@ -28,7 +28,6 @@ import { ChatParticipantHandler } from './chat/chat-participant';
 import { NavigationTreeProvider } from './views/navigation-tree';
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
-import { OnboardingService } from './services/onboarding.service';
 import { WorkspaceScanner } from './services/workspace-scanner.service';
 import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
 
@@ -288,28 +287,29 @@ export function activate(context: vscode.ExtensionContext): void {
   // ─── Status Bar ───────────────────────────────────────────────────
   notificationService.updateStatusBar('🏗️ Engineering Workspace', 'Engineering Workspace');
 
-  // ─── Onboarding: Initialize .codestudio/ & detect project ────────
+  // ─── Onboarding Check (NO auto-initialization) ────────────────────
+  // We do NOT auto-create .codestudio/ here. The directory and config
+  // are created only when the user goes through the onboarding flow
+  // (Setup Existing or Start New Project). This ensures the Welcome
+  // screen is shown to first-time users.
+  //
+  // If .codestudio/ already exists (returning user), we just update
+  // the status bar with the detected project type.
   if (workspaceRoot) {
-    const onboardingService = new OnboardingService(
-      fsService,
-      workspaceRoot,
-      projectDetector,
-      contextAnalyzer,
-      contextSignalDetector,
-    );
-
-    void onboardingService.initialize().then((result) => {
-      const icon = result.projectType === 'greenfield' ? '🌱' : '🏗️';
-      const label = result.isFirstRun
-        ? `${icon} ${result.projectType} — initialized`
-        : `${icon} ${result.projectType}`;
-      notificationService.updateStatusBar(label, `Project: ${result.projectType}`);
-
-      // Send context to webview if it's already open
-      panelProvider.postMessage({
-        type: 'context',
-        context: result.context,
-      });
+    void fsService.exists(`${workspaceRoot}/.codestudio/config.json`).then(async (exists) => {
+      if (exists) {
+        // Returning user — detect project type for status bar
+        try {
+          const scanner = new WorkspaceScanner(fsService, workspaceRoot);
+          const files = await scanner.scan();
+          const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
+          const icon = pType === 'greenfield' ? '🌱' : '🏗️';
+          notificationService.updateStatusBar(`${icon} ${pType}`, `Project: ${pType}`);
+        } catch {
+          notificationService.updateStatusBar('🏗️ Engineering Workspace', 'Engineering Workspace');
+        }
+      }
+      // If not exists → onboarding will show in webview. No auto-init.
     });
   }
 
