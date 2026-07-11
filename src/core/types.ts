@@ -62,6 +62,9 @@ export type GateStatus = 'pending' | 'passed' | 'failed' | 'skipped';
 
 export type GateType = 'automated' | 'review' | 'approval';
 
+/** Gate type for skills — whether they block stage progression. */
+export type SkillGateType = 'hard' | 'conditional' | 'none';
+
 export type RiskSignalType = 'keyword' | 'file-pattern' | 'dependency' | 'scope';
 
 export type AssessmentSource = 'deterministic' | 'llm';
@@ -92,7 +95,11 @@ export type SkillId =
   | 'deprecation-and-migration'
   | 'ci-cd-and-automation'
   | 'shipping-and-launch'
-  | 'using-agent-skills';
+  | 'using-agent-skills'
+  | 'code-reviewer'
+  | 'security-auditor'
+  | 'test-engineer'
+  | 'web-performance-auditor';
 
 // ─── Result Type (for expected failures, per SPEC §6) ───────────────────────
 
@@ -256,7 +263,7 @@ export interface SkillDefinition {
   readonly category: SkillCategory;
   readonly description: string;
   readonly activation: SkillActivationRules;
-  readonly gateType?: GateType;
+  readonly gateType?: SkillGateType;
 }
 
 // ─── Message Protocol (Webview ↔ Extension Host) ────────────────────────────
