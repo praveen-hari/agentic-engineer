@@ -1,10 +1,7 @@
-<!-- WORKFLOW VIEW — COMPLETE STATE
-     DD-018: Simplified. Just the result + plan-vs-actual + archive.
--->
+<!-- TASKS VIEW — COMPLETE STATE -->
 
-<div class="view-workflow-complete">
+<div class="view-tasks-complete">
 
-  <!-- Success -->
   <div class="card" style="border-left: 3px solid var(--color-success); margin-bottom: var(--space-xl); background: rgba(78, 201, 176, 0.04);">
     <div style="display: flex; align-items: center; gap: var(--space-lg);">
       <div style="width: 40px; height: 40px; border-radius: var(--radius-full); background: rgba(78, 201, 176, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -19,7 +16,6 @@
     </div>
   </div>
 
-  <!-- Key Stats (single row, minimal) -->
   <div style="display: flex; gap: var(--space-xl); margin-bottom: var(--space-xl); padding: var(--space-md) 0;">
     <div>
       <div style="font-size: var(--font-h2-size); font-weight: 600; color: var(--color-success);">8/8</div>
@@ -39,7 +35,6 @@
     </div>
   </div>
 
-  <!-- Plan vs Actual -->
   <div class="card" style="margin-bottom: var(--space-xl);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
       <span class="card-title" style="font-size: var(--font-small-size);">Plan vs Actual</span>
@@ -69,12 +64,11 @@
     </div>
   </div>
 
-  <!-- Actions -->
   <div style="display: flex; gap: var(--space-md);">
     <button class="btn btn-secondary" onclick="loadScreen('history')">
       <i class="codicon codicon-history"></i> View in History
     </button>
-    <button class="btn btn-primary" style="flex: 1;" onclick="loadScreen('workflow-empty')">
+    <button class="btn btn-primary" style="flex: 1;" onclick="loadScreen('tasks-empty')">
       <i class="codicon codicon-add"></i> Archive & Start New
     </button>
   </div>

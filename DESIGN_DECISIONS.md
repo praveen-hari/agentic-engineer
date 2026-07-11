@@ -757,6 +757,40 @@ The pipeline was duplicating other views in a vaguer format.
 
 ---
 
+## DD-019: Merge Workflow + Tasks into Single Tasks View
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** After DD-018 removed the pipeline, the Workflow view showed: objective + progress + "NOW" section (current task activity) + inline approvals. But the "NOW" section duplicated content from the Tasks view (current task name, TDD phase) and Activity view (recent actions). The separation between "workflow" and "tasks" was artificial — progress through tasks IS the workflow.
+
+**Decision:** Merge Workflow and Tasks into a single **Tasks** view. The Tasks view now shows:
+
+1. **Objective + progress bar** — What are we building and how far along
+2. **Task list by phase** — All tasks grouped by phase, with inline expansion for active task
+3. **Inline approvals** — Approval cards pop in between tasks at the point where they're needed
+4. **Three states** — Empty (new work request), Active (task list + progress), Complete (summary + plan-vs-actual)
+
+The "NOW" section is removed — current task activity lives in the Activity view, not duplicated here. The active task is simply highlighted in the task list with its expanded detail.
+
+**Navigation: 6 → 5 views:**
+1. Tasks (merged Workflow + Tasks)
+2. Activity
+3. Artifacts
+4. History
+5. Settings
+
+**Rationale:**
+- Workflow IS the task list — separating them was artificial
+- Removes the last duplication: current task info no longer appears in both Workflow and Tasks
+- 5 views is the minimum viable navigation — each answers a distinct question
+- Approvals remain inline in the task list at the point where they're needed
+
+**Alternatives Considered:**
+- *Keep Workflow as a separate "home" view with just progress + approvals* — Rejected: too little content to justify a separate view; progress bar fits at the top of the task list
+- *Move approvals back to a separate view* — Rejected: approvals are temporal events tied to specific tasks, not a browsable category
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -779,3 +813,4 @@ The pipeline was duplicating other views in a vaguer format.
 | DD-016 | Screen Consolidation: 14 → 7 Views | Accepted |
 | DD-017 | Work Request Lifecycle: Three Workflow States (Empty/Active/Complete) | Accepted |
 | DD-018 | Kill the Pipeline — Workflow Shows Outcomes, Not Process (inline approvals, 7→6 views) | Accepted |
+| DD-019 | Merge Workflow + Tasks into Single Tasks View (6→5 views) | Accepted |

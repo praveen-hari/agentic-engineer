@@ -46,15 +46,10 @@
       </div>
 
       <div class="nav-section">
-        <a class="nav-item is-active" data-screen="workflow">
-          <i class="codicon codicon-type-hierarchy-sub"></i>
-          <span class="tree-item-label">Workflow</span>
-          <span class="badge badge-warning" style="margin-left:auto; height:16px; font-size:10px;">2</span>
-        </a>
-        <a class="nav-item" data-screen="tasks">
+        <a class="nav-item is-active" data-screen="tasks">
           <i class="codicon codicon-tasklist"></i>
           <span class="tree-item-label">Tasks</span>
-          <span class="tree-item-meta" style="margin-left:auto;">3/8</span>
+          <span class="badge badge-warning" style="margin-left:auto; height:16px; font-size:10px;">2</span>
         </a>
         <a class="nav-item" data-screen="activity">
           <i class="codicon codicon-pulse"></i>
@@ -86,8 +81,8 @@
       <!-- Tab Bar -->
       <div class="tab-bar">
         <div class="tab-item is-active" id="main-tab">
-          <i class="codicon codicon-type-hierarchy-sub" style="font-size:14px;"></i>
-          <span>Workflow</span>
+          <i class="codicon codicon-tasklist" style="font-size:14px;"></i>
+          <span>Tasks</span>
         </div>
       </div>
 
@@ -103,7 +98,7 @@
       <div class="status-bar">
         <div class="status-bar-left">
           <span class="status-item"><i class="codicon codicon-tools" style="font-size:12px;"></i> Engineering Workspace</span>
-          <span class="status-item"><i class="codicon codicon-type-hierarchy-sub" style="font-size:12px;"></i> 37% • 4/8 tasks</span>
+          <span class="status-item"><i class="codicon codicon-tasklist" style="font-size:12px;"></i> 37% • 4/8 tasks</span>
           <span class="status-item"><i class="codicon codicon-tasklist" style="font-size:12px;"></i> Task 3/8 ✓</span>
         </div>
         <div class="status-bar-right">
@@ -117,10 +112,9 @@
 
   <script>
     const tabIcons = {
-      'workflow': 'codicon-type-hierarchy-sub',
-      'workflow-empty': 'codicon-type-hierarchy-sub',
-      'workflow-complete': 'codicon-type-hierarchy-sub',
       'tasks': 'codicon-tasklist',
+      'tasks-empty': 'codicon-tasklist',
+      'tasks-complete': 'codicon-tasklist',
       'activity': 'codicon-pulse',
       'artifacts': 'codicon-file-code',
       'history': 'codicon-history',
@@ -129,8 +123,8 @@
 
     // Map sub-screens to their parent nav item for sidebar highlighting
     const navParent = {
-      'workflow-empty': 'workflow',
-      'workflow-complete': 'workflow'
+      'tasks-empty': 'tasks',
+      'tasks-complete': 'tasks'
     };
 
     async function loadScreen(name) {
@@ -175,8 +169,8 @@
     });
 
     // Load initial screen
-    loadScreen(location.hash.slice(1) || 'workflow');
-    window.addEventListener('hashchange', () => loadScreen(location.hash.slice(1) || 'workflow'));
+    loadScreen(location.hash.slice(1) || 'tasks');
+    window.addEventListener('hashchange', () => loadScreen(location.hash.slice(1) || 'tasks'));
   </script>
 </body>
 </html>

@@ -1,188 +1,189 @@
-<!-- TASKS VIEW — "What's being built?"
-     Absorbs: old task-board + task-detail screens
-     Pattern: List with inline expansion (click to expand task detail in-place)
+<!-- TASKS VIEW (merged Workflow + Tasks)
+     DD-019: Workflow IS the task list. Progress through tasks = the workflow.
+     Shows: Objective + progress + task list by phase + inline approvals.
+     3 states: empty, active, complete.
 -->
 
+<!-- ===== ACTIVE STATE ===== -->
 <div class="view-tasks">
 
-  <!-- Header -->
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl);">
-    <div>
-      <h3>Tasks</h3>
-      <p style="font-size: var(--font-small-size); color: var(--color-secondary);">8 tasks across 3 phases • 3 completed</p>
+  <!-- Objective + Progress -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h3 style="margin-bottom: var(--space-md);">Integrate Stripe payment processing with idempotency support</h3>
+    <div style="margin-bottom: var(--space-sm);">
+      <div style="height: 6px; background: var(--color-surface-hover); border-radius: var(--radius-full); overflow: hidden;">
+        <div style="width: 37%; height: 100%; background: var(--color-accent); border-radius: var(--radius-full); transition: width 0.3s;"></div>
+      </div>
     </div>
-    <div style="display: flex; gap: var(--space-sm);">
-      <span class="badge badge-success">3 Done</span>
-      <span class="badge badge-accent">1 Active</span>
-      <span class="badge">4 Pending</span>
+    <div style="display: flex; justify-content: space-between; font-size: var(--font-caption-size); color: var(--color-secondary);">
+      <span>4 of 8 tasks done</span>
+      <span>~45 min remaining</span>
     </div>
   </div>
 
-  <!-- Phase 1: Foundation — All Complete -->
-  <div style="margin-bottom: var(--space-xl);">
-    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
-      <i class="codicon codicon-pass-filled" style="color: var(--color-success);"></i>
-      <h4>Phase 1: Foundation</h4>
-      <span style="font-size: var(--font-caption-size); color: var(--color-success);">3/3 complete</span>
+  <!-- Phase 1: Foundation (completed) -->
+  <div style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+      <span style="font-size: var(--font-small-size); font-weight: 600;">Phase 1: Foundation</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-success);">3/3</span>
     </div>
-
-    <!-- Task 1 — Collapsed -->
-    <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md);">
-      <div style="display: flex; align-items: center; gap: var(--space-md);">
-        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
-        <span style="flex: 1; font-size: var(--font-small-size);">Task 1: Install and configure Stripe SDK</span>
-        <span class="badge" style="font-size: 10px; height: 16px;">XS</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">2 files</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-success);">3 tests ✓</span>
-        <code style="font-size: var(--font-caption-size); color: var(--color-secondary);">a1b2c3d</code>
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+          <span style="flex: 1; font-size: var(--font-small-size);">Task 1: Install and configure Stripe SDK</span>
+          <span class="badge" style="font-size: 10px; height: 16px;">XS</span>
+        </div>
       </div>
-    </div>
-
-    <!-- Task 2 — Collapsed -->
-    <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md);">
-      <div style="display: flex; align-items: center; gap: var(--space-md);">
-        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
-        <span style="flex: 1; font-size: var(--font-small-size);">Task 2: Create Stripe service wrapper</span>
-        <span class="badge" style="font-size: 10px; height: 16px;">S</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">3 files</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-success);">5 tests ✓</span>
-        <code style="font-size: var(--font-caption-size); color: var(--color-secondary);">d4e5f6a</code>
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+          <span style="flex: 1; font-size: var(--font-small-size);">Task 2: Create Stripe service wrapper</span>
+          <span class="badge" style="font-size: 10px; height: 16px;">S</span>
+        </div>
       </div>
-    </div>
-
-    <!-- Task 3 — Collapsed -->
-    <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md);">
-      <div style="display: flex; align-items: center; gap: var(--space-md);">
-        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
-        <span style="flex: 1; font-size: var(--font-small-size);">Task 3: Create payment model and migration</span>
-        <span class="badge" style="font-size: 10px; height: 16px;">S</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">4 files</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-success);">4 tests ✓</span>
-        <code style="font-size: var(--font-caption-size); color: var(--color-secondary);">b7c8d9e</code>
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 14px;"></i>
+          <span style="flex: 1; font-size: var(--font-small-size);">Task 3: Create payment model and migration</span>
+          <span class="badge" style="font-size: 10px; height: 16px;">S</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Phase 2: Core Payment Flow -->
-  <div style="margin-bottom: var(--space-xl);">
-    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
-      <i class="codicon codicon-loading codicon-modifier-spin" style="color: var(--color-accent);"></i>
-      <h4>Phase 2: Core Payment Flow</h4>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">0/3 complete</span>
+  <!-- Phase 2: Core Payment Flow (active) -->
+  <div style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-loading codicon-modifier-spin" style="color: var(--color-accent); font-size: 14px;"></i>
+      <span style="font-size: var(--font-small-size); font-weight: 600;">Phase 2: Core Payment Flow</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">0/3</span>
     </div>
 
-    <!-- Checkpoint Gate -->
-    <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-sm); background: rgba(204, 167, 0, 0.06); border-radius: var(--radius-md); border: 1px dashed rgba(204, 167, 0, 0.3);">
-      <i class="codicon codicon-shield" style="color: var(--color-warning); font-size: 12px;"></i>
-      <span style="font-size: var(--font-caption-size); color: var(--color-warning);">Security checkpoint — payment data handling requires approval before proceeding</span>
+    <!-- Inline approval (pops in before Task 4) -->
+    <div class="card" style="border-left: 3px solid var(--color-warning); margin-bottom: var(--space-sm); background: rgba(204, 167, 0, 0.04);">
+      <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+        <i class="codicon codicon-shield" style="color: var(--color-warning); font-size: 16px;"></i>
+        <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Security gate — approval needed</span>
+        <span class="badge badge-error" style="font-size: 9px; height: 14px;">High Risk</span>
+      </div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-sm);">
+        Payment data detected. I've verified:
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+        <span style="font-size: var(--font-caption-size);"><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i> No raw cards</span>
+        <span style="font-size: var(--font-caption-size);"><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i> Webhook sig</span>
+        <span style="font-size: var(--font-caption-size);"><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i> Idempotency</span>
+        <span style="font-size: var(--font-caption-size);"><i class="codicon codicon-warning" style="color: var(--color-warning); font-size: 11px;"></i> Rate limiting (Task 8)</span>
+        <span style="font-size: var(--font-caption-size);"><i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i> Zod validation</span>
+      </div>
+      <div style="display: flex; gap: var(--space-sm);">
+        <button class="btn btn-success btn-sm"><i class="codicon codicon-pass"></i> Approve</button>
+        <button class="btn btn-danger btn-sm"><i class="codicon codicon-close"></i> Reject</button>
+      </div>
     </div>
 
-    <!-- Task 4 — EXPANDED (active task, showing inline detail) -->
+    <!-- Task 4 — Active (expanded) -->
     <div class="card" style="margin-bottom: 2px; border-radius: var(--radius-md); border-color: var(--color-accent);">
-      <!-- Collapsed header -->
       <div style="display: flex; align-items: center; gap: var(--space-md); cursor: pointer;">
         <i class="codicon codicon-loading codicon-modifier-spin" style="color: var(--color-accent); font-size: 14px;"></i>
         <span style="flex: 1; font-size: var(--font-small-size); font-weight: 600;">Task 4: POST /api/payments/intent endpoint</span>
         <span class="badge badge-accent" style="font-size: 10px; height: 16px;">M</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">2 files</span>
-        <span class="badge badge-success" style="font-size: 10px; height: 16px;">TDD: GREEN</span>
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">TDD: GREEN</span>
         <i class="codicon codicon-chevron-down" style="color: var(--color-secondary);"></i>
       </div>
-
-      <!-- Expanded detail (inline) -->
-      <div style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--color-border);">
-
-        <!-- Detail tabs -->
-        <div style="display: flex; gap: 0; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border);">
-          <button style="padding: var(--space-sm) var(--space-lg); font-size: var(--font-small-size); background: none; border: none; border-bottom: 2px solid var(--color-accent); color: var(--color-accent); cursor: pointer;">Criteria</button>
-          <button style="padding: var(--space-sm) var(--space-lg); font-size: var(--font-small-size); background: none; border: none; border-bottom: 2px solid transparent; color: var(--color-secondary); cursor: pointer;">Files</button>
-          <button style="padding: var(--space-sm) var(--space-lg); font-size: var(--font-small-size); background: none; border: none; border-bottom: 2px solid transparent; color: var(--color-secondary); cursor: pointer;">Tests</button>
-          <button style="padding: var(--space-sm) var(--space-lg); font-size: var(--font-small-size); background: none; border: none; border-bottom: 2px solid transparent; color: var(--color-secondary); cursor: pointer;">Agent Log</button>
-        </div>
-
-        <!-- Criteria tab content -->
-        <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
-          <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-            <i class="codicon codicon-pass-filled" style="color: var(--color-success);"></i>
-            <span>Returns 201 with client_secret on success</span>
+      <!-- Expanded detail -->
+      <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border);">
+        <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+          <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+            <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i>
+            <span>Returns 201 with client_secret</span>
           </div>
-          <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-            <i class="codicon codicon-pass-filled" style="color: var(--color-success);"></i>
-            <span>Validates amount > 0 and currency is supported</span>
+          <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+            <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i>
+            <span>Validates amount > 0</span>
           </div>
-          <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-            <i class="codicon codicon-loading codicon-modifier-spin" style="color: var(--color-accent);"></i>
-            <span style="color: var(--color-accent);">Handles Stripe API errors with proper status codes</span>
+          <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+            <i class="codicon codicon-loading codicon-modifier-spin" style="color: var(--color-accent); font-size: 12px;"></i>
+            <span style="color: var(--color-accent);">Handles Stripe API errors</span>
           </div>
-          <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size); opacity: 0.5;">
-            <i class="codicon codicon-circle-outline" style="color: var(--color-secondary);"></i>
-            <span>Idempotency key prevents duplicate charges</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size); opacity: 0.5;">
-            <i class="codicon codicon-circle-outline" style="color: var(--color-secondary);"></i>
-            <span>Logs payment attempt with correlation ID</span>
+          <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size); opacity: 0.5;">
+            <i class="codicon codicon-circle-outline" style="font-size: 12px;"></i>
+            <span>Idempotency key support</span>
           </div>
         </div>
-
-        <!-- Dependencies -->
-        <div style="margin-top: var(--space-lg); padding-top: var(--space-md); border-top: 1px solid var(--color-border);">
-          <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Dependencies:</span>
-          <span style="font-size: var(--font-caption-size); color: var(--color-success);">Task 2 ✓</span>
-          <span style="font-size: var(--font-caption-size); color: var(--color-success); margin-left: var(--space-sm);">Task 3 ✓</span>
+        <div style="margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--color-border);">
+          <a href="#" onclick="loadScreen('activity'); return false;" style="font-size: var(--font-caption-size); color: var(--color-text-link);">View agent activity →</a>
         </div>
       </div>
     </div>
 
-    <!-- Task 5 — Collapsed (pending) -->
+    <!-- Task 5 — Pending -->
     <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md); opacity: 0.6;">
       <div style="display: flex; align-items: center; gap: var(--space-md);">
         <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size: 14px;"></i>
         <span style="flex: 1; font-size: var(--font-small-size);">Task 5: GET /api/payments/:id endpoint</span>
         <span class="badge" style="font-size: 10px; height: 16px;">S</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">depends on Task 4</span>
-        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
       </div>
     </div>
 
-    <!-- Task 6 — Collapsed (pending) -->
+    <!-- Task 6 — Pending -->
     <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md); opacity: 0.6;">
       <div style="display: flex; align-items: center; gap: var(--space-md);">
         <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size: 14px;"></i>
         <span style="flex: 1; font-size: var(--font-small-size);">Task 6: Webhook handler for payment events</span>
         <span class="badge" style="font-size: 10px; height: 16px;">M</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">depends on Task 4</span>
-        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
       </div>
     </div>
   </div>
 
-  <!-- Phase 3: Error Handling -->
-  <div style="margin-bottom: var(--space-xl);">
-    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
-      <i class="codicon codicon-circle-outline" style="color: var(--color-secondary);"></i>
-      <h4 style="opacity: 0.5;">Phase 3: Error Handling & Edge Cases</h4>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">0/2 complete</span>
+  <!-- Phase 3: Error Handling (pending) -->
+  <div style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size: 14px;"></i>
+      <span style="font-size: var(--font-small-size); font-weight: 600; opacity: 0.5;">Phase 3: Error Handling</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">0/2</span>
     </div>
-
-    <!-- Task 7 — Collapsed (pending) -->
-    <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md); opacity: 0.4;">
+    <div class="card card-compact card-clickable" style="border-radius: var(--radius-md); opacity: 0.4; margin-bottom: 2px;">
       <div style="display: flex; align-items: center; gap: var(--space-md);">
         <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size: 14px;"></i>
         <span style="flex: 1; font-size: var(--font-small-size);">Task 7: Retry logic with exponential backoff</span>
         <span class="badge" style="font-size: 10px; height: 16px;">S</span>
-        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
       </div>
     </div>
-
-    <!-- Task 8 — Collapsed (pending) -->
-    <div class="card card-compact card-clickable" style="margin-bottom: 2px; border-radius: var(--radius-md); opacity: 0.4;">
+    <div class="card card-compact card-clickable" style="border-radius: var(--radius-md); opacity: 0.4; margin-bottom: 2px;">
       <div style="display: flex; align-items: center; gap: var(--space-md);">
         <i class="codicon codicon-circle-outline" style="color: var(--color-secondary); font-size: 14px;"></i>
         <span style="flex: 1; font-size: var(--font-small-size);">Task 8: Rate limiting and circuit breaker</span>
         <span class="badge" style="font-size: 10px; height: 16px;">M</span>
-        <i class="codicon codicon-chevron-right" style="color: var(--color-secondary);"></i>
       </div>
     </div>
   </div>
 
+  <!-- Second approval (compact) -->
+  <div class="card card-compact" style="border-left: 3px solid var(--color-warning); margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-package" style="color: var(--color-warning); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">New dependency: stripe@14.0.0</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">MIT • 0 vulnerabilities • 2.1M downloads/week</div>
+      </div>
+      <button class="btn btn-success btn-sm">Approve</button>
+      <button class="btn btn-danger btn-sm">Reject</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Prototype toggle -->
+<div style="margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px dashed var(--color-border);">
+  <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-sm);">
+    <i class="codicon codicon-beaker" style="font-size: 11px;"></i> Prototype: View other states
+  </div>
+  <div style="display: flex; gap: var(--space-sm);">
+    <button class="btn btn-ghost btn-sm" onclick="loadScreen('tasks-empty')">Empty (new request)</button>
+    <button class="btn btn-ghost btn-sm" style="border-bottom: 2px solid var(--color-accent);">Active (current)</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadScreen('tasks-complete')">Complete</button>
+  </div>
 </div>
