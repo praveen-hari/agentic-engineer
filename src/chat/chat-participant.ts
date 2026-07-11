@@ -1,27 +1,19 @@
 import * as vscode from 'vscode';
 import type { StateManager } from '../core/state-manager';
-import type { RiskEngine } from '../core/risk-engine';
-import type { WorkflowGenerator } from '../core/workflow-generator';
-import type { SkillEngine } from '../core/skill-engine';
 import type { ChatCommand } from '../core/types';
 
 /**
- * Chat participant handler for `@engineering` (SPEC §5.2).
+ * Chat participant handler for `@engineering`.
  *
- * Registers the chat participant with `/status`, `/analyze`, and
- * `/history` slash commands. Handles natural language queries about
- * workflow state and delegates to core engines for analysis.
+ * Registers the chat participant with `/status` and `/history`
+ * slash commands. Provides read-only workflow information.
  *
- * The participant runs in "ask" mode — it provides information, not
- * code edits.
+ * All intelligence (risk assessment, analysis) is handled by the
+ * agent via registered language model tools. The participant only
+ * reports current state.
  */
 export class ChatParticipantHandler {
-  constructor(
-    private readonly stateManager: StateManager,
-    private readonly riskEngine: RiskEngine,
-    private readonly workflowGenerator: WorkflowGenerator,
-    private readonly skillEngine: SkillEngine,
-  ) {}
+  constructor(private readonly stateManager: StateManager) {}
 
   /**
    * Register the chat participant and its slash commands.
@@ -66,7 +58,11 @@ export class ChatParticipantHandler {
         await this.handleStatus(stream);
         break;
       case 'analyze':
-        await this.handleAnalyze(prompt, stream);
+        stream.markdown(
+          '💡 **Analysis is now handled by the agent.**\n\n' +
+            'Enter your objective in the Tasks view or use agent mode. ' +
+            'The agent will assess complexity, risk, and create a workflow automatically.',
+        );
         break;
       case 'history':
         await this.handleHistory(stream);
@@ -117,51 +113,6 @@ export class ChatParticipantHandler {
   }
 
   /**
-   * Handle `/analyze <objective>` — analyze a work request.
-   */
-  private async handleAnalyze(prompt: string, stream: vscode.ChatResponseStream): Promise<void> {
-    const objective = prompt.trim();
-    if (!objective) {
-      stream.markdown(
-        '⚠️ **Usage:** `/analyze <objective>`\n\n' +
-          'Example: `/analyze Add OAuth login with SAML SSO`',
-      );
-      return;
-    }
-
-    const assessment = this.riskEngine.assess(objective);
-    const { activeSkills } = this.skillEngine.computeActiveSkills(assessment);
-    const workflow = this.workflowGenerator.generate('preview', objective, assessment);
-
-    const lines: string[] = [
-      `🔍 **Work Request Analysis**`,
-      '',
-      `**Objective:** ${objective}`,
-      '',
-      `| Dimension | Result |`,
-      `|-----------|--------|`,
-      `| Work Type | ${assessment.workType} |`,
-      `| Complexity | ${assessment.complexity} |`,
-      `| Risk Level | ${assessment.riskLevel} |`,
-      `| Process Level | ${assessment.processLevel} |`,
-      `| Active Skills | ${activeSkills.length} |`,
-      '',
-      `**Recommended Stages:** ${workflow.stages.map((s) => s.name).join(' → ')}`,
-      `**Quality Gates:** ${workflow.qualityGates.length}`,
-      `**Approvals Required:** ${workflow.approvals.length}`,
-    ];
-
-    if (assessment.signals.length > 0) {
-      lines.push('', '**Risk Signals:**');
-      for (const s of assessment.signals) {
-        lines.push(`  - ⚠️ ${s.signal} (${s.severity}) — ${s.impact}`);
-      }
-    }
-
-    stream.markdown(lines.join('\n'));
-  }
-
-  /**
    * Handle `/history` — show recent workflow history.
    */
   private async handleHistory(stream: vscode.ChatResponseStream): Promise<void> {
@@ -185,10 +136,6 @@ export class ChatParticipantHandler {
       await this.handleStatus(stream);
       return;
     }
-    if (lower.includes('analyze') || lower.includes('risk') || lower.includes('assess')) {
-      await this.handleAnalyze(prompt, stream);
-      return;
-    }
     if (lower.includes('history') || lower.includes('past') || lower.includes('completed')) {
       await this.handleHistory(stream);
       return;
@@ -197,8 +144,9 @@ export class ChatParticipantHandler {
     stream.markdown(
       'I can help with engineering workflow management. Try:\n' +
         '- `/status` — Show current workflow status\n' +
-        '- `/analyze <objective>` — Analyze a work request\n' +
-        '- `/history` — Show recent workflow history',
+        '- `/history` — Show recent workflow history\n\n' +
+        'To start a new workflow, enter your objective in the Tasks view ' +
+        'or use agent mode — the agent handles all analysis automatically.',
     );
   }
 }

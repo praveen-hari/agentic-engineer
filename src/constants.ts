@@ -76,51 +76,6 @@ export const CODESTUDIO_DIRECTORIES = [
   ARCHIVE_DIR,
 ] as const;
 
-// ─── Files to exclude from workspace scanning ───────────────────────────────
-
-export const SCAN_EXCLUDE_DIRS = [
-  'node_modules',
-  '.git',
-  'dist',
-  'out',
-  'build',
-  'coverage',
-  '.codestudio',
-  '.next',
-  '.nuxt',
-  '.svelte-kit',
-  '__pycache__',
-  '.venv',
-  'venv',
-  'target',
-  'bin',
-  'obj',
-] as const;
-
-// ─── Config file names to read content from during scanning ─────────────────
-
-export const SCAN_READ_FILES = [
-  'package.json',
-  'tsconfig.json',
-  'pyproject.toml',
-  'Cargo.toml',
-  'go.mod',
-  'Gemfile',
-  'composer.json',
-] as const;
-
-// ─── .NET project files to read for framework detection ─────────────────────
-
-export const DOTNET_PROJECT_EXTENSIONS = ['.csproj', '.fsproj', '.vbproj', '.sln'] as const;
-
-// ─── Scan depth limit ───────────────────────────────────────────────────────
-
-export const SCAN_MAX_DEPTH = 3;
-
-// ─── Context staleness threshold (24 hours in ms) ───────────────────────────
-
-export const CONTEXT_STALENESS_MS = 24 * 60 * 60 * 1000;
-
 export const CHAT_PARTICIPANT_ID = 'engineering-workspace.participant';
 export const CHAT_PARTICIPANT_NAME = 'engineering';
 

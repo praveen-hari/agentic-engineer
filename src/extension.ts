@@ -4,13 +4,10 @@ import { GitService } from './services/git.service';
 import { WorkspaceService } from './services/workspace.service';
 import { NotificationService } from './services/notification.service';
 import { StateManager } from './core/state-manager';
-import { RiskEngine } from './core/risk-engine';
 import { WorkflowEngine } from './core/workflow-engine';
 import { SkillRegistry } from './core/skill-registry';
 import { SkillEngine } from './core/skill-engine';
 import { WorkflowGenerator } from './core/workflow-generator';
-import { ProjectDetector } from './core/project-detector';
-import { ContextAnalyzer } from './core/context-analyzer';
 import { StageExecutor } from './core/stage-executor';
 import { ArtifactManager } from './services/artifact-manager.service';
 import { AgentBridge } from './services/agent-bridge.service';
@@ -18,10 +15,6 @@ import { HistoryManager } from './services/history-manager.service';
 import { ArtifactWatcher } from './services/artifact-watcher.service';
 import { BranchWatcher } from './services/branch-watcher.service';
 import { PromptTemplates } from './core/prompt-templates';
-import { AiRiskAnalyzer } from './ai/risk-analyzer';
-import { AnalyzeWorkRequestTool } from './ai/tools/analyze-work-request.tool';
-import { GetWorkflowStatusTool } from './ai/tools/get-workflow-status.tool';
-import { GetProjectContextTool } from './ai/tools/get-project-context.tool';
 import { SetupProjectTool } from './ai/tools/setup-project.tool';
 import { StartWorkflowTool } from './ai/tools/start-workflow.tool';
 import { SaveArtifactTool } from './ai/tools/save-artifact.tool';
@@ -55,77 +48,21 @@ export function activate(context: vscode.ExtensionContext): void {
   const workflowPath = `${workflowBase}/${WORKFLOW_FILE}`;
 
   const stateManager = new StateManager(fsService, workflowPath);
-  const riskEngine = new RiskEngine();
   const workflowEngine = new WorkflowEngine();
   const skillRegistry = new SkillRegistry();
   const skillEngine = new SkillEngine(skillRegistry);
   const workflowGenerator = new WorkflowGenerator(skillEngine);
-  const projectDetector = new ProjectDetector();
-  const contextAnalyzer = new ContextAnalyzer();
   const stageExecutor = new StageExecutor(skillRegistry);
   const artifactManager = new ArtifactManager(fsService, workspaceRoot ?? '/');
   const historyManager = new HistoryManager(fsService, workspaceRoot ?? '/');
   const promptTemplates = new PromptTemplates();
   const agentBridge = new AgentBridge(vscodeApi);
 
-  // ─── AI Layer ─────────────────────────────────────────────────────
-  const aiRiskAnalyzer = new AiRiskAnalyzer(riskEngine, {
-    async getModel() {
-      try {
-        const models = await vscode.lm.selectChatModels({ vendor: 'copilot' });
-        const model = models[0];
-        if (!model) return null;
-        return {
-          id: model.id,
-          name: model.name,
-          vendor: model.vendor,
-          family: model.family,
-          version: model.version,
-          maxInputTokens: model.maxInputTokens,
-        };
-      } catch {
-        return null;
-      }
-    },
-    async sendRequest(model, messages, token) {
-      const vscodeModel = await vscode.lm.selectChatModels({
-        vendor: 'copilot',
-        id: model.id,
-      });
-      const lm = vscodeModel[0];
-      if (!lm) throw new Error('Model not found');
-
-      const chatMessages = messages.map((m) =>
-        m.role === 'assistant'
-          ? vscode.LanguageModelChatMessage.Assistant(m.text)
-          : vscode.LanguageModelChatMessage.User(m.text),
-      );
-
-      const response = await lm.sendRequest(
-        chatMessages,
-        undefined,
-        token as vscode.CancellationToken | undefined,
-      );
-      let text = '';
-      for await (const part of response.stream) {
-        if (part instanceof vscode.LanguageModelTextPart) {
-          text += part.value;
-        }
-      }
-      return text;
-    },
-  });
-
   // ─── Language Model Tools (registered with vscode.lm) ────────────
   // These tools are invoked by the agent in agent mode automatically.
   // Each tool is registered with the name matching package.json.
-
-  // Existing tools (read-only)
-  const analyzeWorkRequestTool = new AnalyzeWorkRequestTool(aiRiskAnalyzer, workflowGenerator);
-  const getWorkflowStatusTool = new GetWorkflowStatusTool(stateManager);
-  const getProjectContextTool = new GetProjectContextTool(projectDetector, contextAnalyzer);
-
-  // New workflow tools
+  // The agent provides all intelligence (risk assessment, context
+  // detection, skill selection) — the extension only orchestrates.
   const setupProjectTool = new SetupProjectTool(fsService, workspaceRoot ?? '/', () => {
     // Notify webview that .codestudio/ was created
     panelProvider.postMessage({
@@ -172,12 +109,6 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.lm.registerTool('engineering_save_artifact', saveArtifactTool),
     vscode.lm.registerTool('engineering_advance_stage', advanceStageTool),
   );
-
-  // Keep existing tools as internal (not registered with vscode.lm
-  // since they don't implement the full LanguageModelTool interface yet)
-  void analyzeWorkRequestTool;
-  void getWorkflowStatusTool;
-  void getProjectContextTool;
 
   // ─── Sidebar TreeView ──────────────────────────────────────────────
   const navigationTree = new NavigationTreeProvider();
@@ -264,12 +195,7 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   // ─── Chat Participant ────────────────────────────────────────────
-  const chatHandler = new ChatParticipantHandler(
-    stateManager,
-    riskEngine,
-    workflowGenerator,
-    skillEngine,
-  );
+  const chatHandler = new ChatParticipantHandler(stateManager);
   chatHandler.register(context);
 
   // ─── Commands ────────────────────────────────────────────────────
@@ -304,17 +230,10 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('engineeringWorkspace.analyzeWorkRequest', async () => {
-      const objective = await vscode.window.showInputBox({
-        prompt: 'Enter the work request objective to analyze',
-        placeHolder: 'e.g., Add user authentication with OAuth',
-      });
-      if (!objective) return;
-
-      const assessment = await aiRiskAnalyzer.analyze(objective);
-      notificationService.showInfo(
-        `Analyzed: ${assessment.workType} / ${assessment.processLevel} / ${assessment.riskLevel} risk`,
-      );
+    vscode.commands.registerCommand('engineeringWorkspace.analyzeWorkRequest', () => {
+      // Analysis is handled by the agent via engineering_start_workflow tool.
+      // Open the Tasks view where the user can enter their objective.
+      panelProvider.navigateTo('tasks');
     }),
   );
 

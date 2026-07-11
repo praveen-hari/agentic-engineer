@@ -384,22 +384,6 @@ export type ProjectType = 'greenfield' | 'brownfield';
 
 export type OnboardingStatus = 'welcome' | 'setup-existing' | 'setup-new' | 'scanning' | 'ready';
 
-export type SetupMode = 'existing' | 'new';
-
-export interface OnboardingResult {
-  readonly projectType: ProjectType;
-  readonly context: ProjectContext;
-  readonly signals: readonly ContextSignal[];
-  readonly config: WorkspaceConfig;
-  readonly isFirstRun: boolean;
-  readonly contextStale: boolean;
-}
-
-export interface NewProjectInput {
-  readonly projectName: string;
-  readonly description: string;
-}
-
 // ─── Stage Execution ───────────────────────────────────────────────────────
 
 export type ArtifactType = 'spec' | 'plan' | 'adr' | 'review' | 'report';
