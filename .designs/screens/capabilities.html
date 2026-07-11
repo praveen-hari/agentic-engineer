@@ -1,5 +1,7 @@
-<!-- CAPABILITIES VIEW — "What can the agent do? What's missing?"
-     Replaces Activity view. Actionable — install, toggle, configure.
+<!-- CAPABILITIES VIEW — "What have I added? What built-in extensibility exists?"
+     Per DD-007: built-in skills/agents are invisible plumbing — never shown, never toggled.
+     Per DD-023: this view shows USER-ADDED customizations (agent-customization system)
+     + the two built-in extensibility surfaces that ARE visible (LM tools, chat participant).
 -->
 
 <div class="view-capabilities">
@@ -7,221 +9,226 @@
   <!-- Header -->
   <div style="margin-bottom: var(--space-xl);">
     <h3>Capabilities</h3>
-    <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Skills, agents, tools, and integrations available to the agent</p>
+    <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Custom instructions, agents, skills, and prompts you've added to this project</p>
   </div>
 
-  <!-- ===== SUMMARY ===== -->
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl);">
+  <!-- ===== ADD CAPABILITY (primary action) ===== -->
+  <div class="card" style="margin-bottom: var(--space-xl); border: 1px dashed var(--color-border); background: var(--color-surface);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-add" style="font-size: 20px; color: var(--color-accent);"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">Add Capability</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Create custom instructions, agents, skills, prompts, or hooks</div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-add-capability">Add…</button>
+    </div>
+  </div>
+
+  <!-- ===== SUMMARY: user-added customizations ===== -->
+  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl);">
     <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">18/24</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Skills</div>
+      <div class="stat-value">2</div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Instructions</div>
     </div>
     <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">3/4</div>
+      <div class="stat-value">1</div>
       <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Agents</div>
     </div>
     <div class="stat-card card-compact" style="text-align: center;">
       <div class="stat-value">3</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Tools</div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Skills</div>
     </div>
     <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value" style="color: var(--color-warning);">1</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Missing</div>
+      <div class="stat-value">1</div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Prompts</div>
+    </div>
+    <div class="stat-card card-compact" style="text-align: center;">
+      <div class="stat-value">0</div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Hooks</div>
     </div>
   </div>
 
-  <!-- ===== MISSING CAPABILITY ALERT ===== -->
-  <div class="card" style="border-left: 3px solid var(--color-warning); margin-bottom: var(--space-xl); background: rgba(204, 167, 0, 0.04);">
-    <div style="display: flex; align-items: center; gap: var(--space-md);">
-      <i class="codicon codicon-warning" style="color: var(--color-warning); font-size: 18px;"></i>
-      <div style="flex: 1;">
-        <div style="font-size: var(--font-small-size); font-weight: 600; color: var(--color-warning);">Missing: security-auditor agent</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">This project has auth code. Security analysis will be limited without it.</div>
-      </div>
-      <button class="btn btn-primary btn-sm">Install</button>
-    </div>
-  </div>
-
-  <!-- ===== SKILLS ===== -->
+  <!-- ===== CUSTOM INSTRUCTIONS ===== -->
   <div class="card" style="margin-bottom: var(--space-lg);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Skills</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">18 of 24 active</span>
+      <span class="card-title" style="font-size: var(--font-small-size);">Custom Instructions</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/instructions/</span>
     </div>
-
-    <!-- Always Active -->
-    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Always Active</div>
-    <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md);">
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <i class="codicon codicon-file-code" style="color: var(--color-accent); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">api-conventions.instructions.md</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Applies to: src/api/**  ·  REST naming, versioning, error format</div>
         </div>
-        <span style="flex: 1;">Context Engineering</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Manages what the agent sees</span>
+        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">applyTo</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
       </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <i class="codicon codicon-file-code" style="color: var(--color-accent); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">testing-standards.instructions.md</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Applies to: **/*.test.*  ·  AAA pattern, no shared state</div>
         </div>
-        <span style="flex: 1;">Git Workflow & Versioning</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Commit discipline</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Incremental Implementation</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Thin vertical slices</span>
-      </div>
-    </div>
-
-    <!-- Active by Task Type -->
-    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Active for Current Work Request</div>
-    <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md);">
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Spec-Driven Development</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Feature task</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Test-Driven Development</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Feature task</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Security & Hardening</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Payment data detected</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
-        <div style="width: 28px; height: 16px; background: var(--color-success); border-radius: 10px; position: relative; flex-shrink: 0;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Code Review & Quality</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Standard process</span>
-      </div>
-    </div>
-
-    <!-- Inactive -->
-    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Inactive (not needed for this task)</div>
-    <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size); opacity: 0.5;">
-        <div style="width: 28px; height: 16px; background: var(--color-secondary); border-radius: 10px; position: relative; flex-shrink: 0; opacity: 0.5;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Frontend UI Engineering</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">No UI files in scope</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size); opacity: 0.5;">
-        <div style="width: 28px; height: 16px; background: var(--color-secondary); border-radius: 10px; position: relative; flex-shrink: 0; opacity: 0.5;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Browser Testing with DevTools</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">No UI changes</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size); opacity: 0.5;">
-        <div style="width: 28px; height: 16px; background: var(--color-secondary); border-radius: 10px; position: relative; flex-shrink: 0; opacity: 0.5;">
-          <div style="width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px;"></div>
-        </div>
-        <span style="flex: 1;">Deprecation & Migration</span>
-        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">No systems being removed</span>
+        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">applyTo</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== SPECIALIST AGENTS ===== -->
+  <!-- ===== CUSTOM AGENTS ===== -->
   <div class="card" style="margin-bottom: var(--space-lg);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Specialist Agents</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">3 of 4 available</span>
+      <span class="card-title" style="font-size: var(--font-small-size);">Custom Agents</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/agents/</span>
     </div>
     <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
         <i class="codicon codicon-robot" style="color: var(--color-success); font-size: 16px;"></i>
         <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Code Reviewer</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Five-axis review: correctness, readability, architecture, security, performance</div>
+          <div style="font-size: var(--font-small-size); font-weight: 600;">db-migration-agent</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Runs migrations, validates rollback, generates change scripts</div>
         </div>
-        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Active</span>
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Available</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
+      </div>
+    </div>
+    <div style="margin-top: var(--space-sm); padding: var(--space-sm) var(--space-md); border: 1px dashed var(--color-border); border-radius: var(--radius-md); text-align: center;">
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Custom agents appear as subagents for context-isolated tasks. </span>
+      <a href="#" style="font-size: var(--font-caption-size); color: var(--color-accent);">Add agent →</a>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOM SKILLS ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Custom Skills</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/skills/</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <i class="codicon codicon-terminal" style="color: var(--color-accent); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">deploy-to-staging</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/deploy-to-staging  ·  Bundled deploy script + health check</div>
+        </div>
+        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
       </div>
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-robot" style="color: var(--color-success); font-size: 16px;"></i>
+        <i class="codicon codicon-terminal" style="color: var(--color-accent); font-size: 16px;"></i>
         <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Performance Auditor</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Core Web Vitals, loading, rendering, network optimization</div>
+          <div style="font-size: var(--font-small-size); font-weight: 600;">api-contract-test</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/api-contract-test  ·  Generate contract tests from OpenAPI spec</div>
         </div>
-        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Active</span>
+        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
       </div>
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-robot" style="color: var(--color-success); font-size: 16px;"></i>
+        <i class="codicon codicon-terminal" style="color: var(--color-accent); font-size: 16px;"></i>
         <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Test Engineer</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Test strategy, test writing, coverage analysis</div>
+          <div style="font-size: var(--font-small-size); font-weight: 600;">incident-response</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/incident-response  ·  Triage, severity, comms template, postmortem</div>
         </div>
-        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Active</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: rgba(204, 167, 0, 0.06); border-radius: var(--radius-md); border: 1px dashed rgba(204, 167, 0, 0.3);">
-        <i class="codicon codicon-robot" style="color: var(--color-warning); font-size: 16px;"></i>
-        <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">Security Auditor</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Vulnerability detection, threat modeling, secure coding</div>
-        </div>
-        <button class="btn btn-primary btn-sm">Install</button>
+        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== LM TOOLS ===== -->
+  <!-- ===== CUSTOM PROMPTS ===== -->
   <div class="card" style="margin-bottom: var(--space-lg);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Language Model Tools</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">3 registered</span>
+      <span class="card-title" style="font-size: var(--font-small-size);">Custom Prompts</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/prompts/</span>
     </div>
     <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+        <i class="codicon codicon-comment" style="color: var(--color-accent); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600;">review-pr</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/review-pr  ·  Parameterized: $baseBranch, $targetBranch</div>
+        </div>
+        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
+        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOOKS ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Hooks</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/hooks/</span>
+    </div>
+    <div style="padding: var(--space-md); border: 1px dashed var(--color-border); border-radius: var(--radius-md); text-align: center;">
+      <i class="codicon codicon-zap" style="font-size: 20px; color: var(--color-secondary); opacity: 0.5;"></i>
+      <div style="font-size: var(--font-small-size); color: var(--color-secondary); margin-top: var(--space-xs);">No hooks configured</div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-xs);">
+        Hooks enforce behavior at lifecycle events (PreToolUse, PostToolUse).<br/>
+        <a href="#" style="color: var(--color-accent);">Add hook →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BUILT-IN EXTENSIBILITY (read-only, always present) ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg); opacity: 0.85;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Built-in Extensibility</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Always available — read-only</span>
+    </div>
+
+    <!-- LM Tools -->
+    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Language Model Tools</div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md);">
       <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
         <i class="codicon codicon-beaker" style="color: var(--color-accent); font-size: 14px;"></i>
         <div style="flex: 1;">
-          <div style="font-weight: 600;">analyze_work_request</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Analyzes objective → type, risk, process level</div>
+          <span style="font-weight: 600;">analyze_work_request</span>
+          <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: var(--space-sm);">Objective → type, risk, process level</span>
         </div>
         <span class="badge badge-accent" style="font-size: 9px; height: 14px;">Agent mode</span>
       </div>
       <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
         <i class="codicon codicon-pulse" style="color: var(--color-accent); font-size: 14px;"></i>
         <div style="flex: 1;">
-          <div style="font-weight: 600;">get_workflow_status</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Returns current workflow state and progress</div>
+          <span style="font-weight: 600;">get_workflow_status</span>
+          <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: var(--space-sm);">Current workflow state + progress</span>
         </div>
         <span class="badge badge-accent" style="font-size: 9px; height: 14px;">Agent mode</span>
       </div>
       <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
         <i class="codicon codicon-folder-library" style="color: var(--color-accent); font-size: 14px;"></i>
         <div style="flex: 1;">
-          <div style="font-weight: 600;">get_project_context</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Returns project context (tech stack, conventions)</div>
+          <span style="font-weight: 600;">get_project_context</span>
+          <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: var(--space-sm);">Tech stack, conventions, boundaries</span>
         </div>
         <span class="badge badge-accent" style="font-size: 9px; height: 14px;">Agent mode</span>
       </div>
     </div>
-  </div>
 
-  <!-- ===== CHAT PARTICIPANT ===== -->
-  <div class="card" style="margin-bottom: var(--space-lg);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Chat Participant</span>
-      <span class="badge badge-success" style="font-size: 9px; height: 14px;">Registered</span>
-    </div>
+    <!-- Chat Participant -->
+    <div style="font-size: var(--font-caption-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); margin-bottom: var(--space-sm);">Chat Participant</div>
     <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--font-small-size);">
       <i class="codicon codicon-comment-discussion" style="color: var(--color-accent); font-size: 16px;"></i>
       <div style="flex: 1;">
-        <div style="font-weight: 600;">@engineering</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Commands: /status, /analyze, /history</div>
+        <span style="font-weight: 600;">@engineering</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-left: var(--space-sm);">/status, /analyze, /history</span>
+      </div>
+      <span class="badge badge-success" style="font-size: 9px; height: 14px;">Registered</span>
+    </div>
+  </div>
+
+  <!-- ===== LEARN MORE ===== -->
+  <div class="card" style="background: var(--color-surface); border-left: 3px solid var(--color-accent);">
+    <div style="display: flex; align-items: flex-start; gap: var(--space-md);">
+      <i class="codicon codicon-info" style="color: var(--color-accent); font-size: 16px; margin-top: 2px;"></i>
+      <div>
+        <div style="font-size: var(--font-small-size); font-weight: 600; margin-bottom: var(--space-xs);">About Capabilities</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); line-height: 1.5;">
+          Built-in engineering skills and agents run automatically based on your task type and project context — they're invisible plumbing.<br/>
+          This view shows <strong>customizations you've added</strong> via the agent-customization system. Add instructions to guide behavior, agents for specialized tasks, skills for reusable workflows, prompts for parameterized commands, and hooks to enforce standards.
+        </div>
       </div>
     </div>
   </div>

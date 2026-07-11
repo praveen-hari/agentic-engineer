@@ -878,14 +878,16 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 
 Meanwhile, the Agent Capabilities section was buried inside the Knowledge view. But capabilities are actionable — users need to install missing agents, see which skills are active, configure tools. That's more important than a log.
 
-**Decision:** Replace Activity view with Capabilities view. The Capabilities view shows:
+**Decision:** Replace Activity view with Capabilities view. The Capabilities view shows **user-added customizations** (not built-in plumbing) plus the two built-in extensibility surfaces that are genuinely visible to users:
 
-1. **Summary** — Skills (18/24), Agents (3/4), Tools (3), Missing (1)
-2. **Missing capability alert** — Proactive warning with install button
-3. **Skills** — Toggleable list grouped by: Always Active, Active for Current Work, Inactive
-4. **Specialist Agents** — Available agents with descriptions + install for missing ones
-5. **LM Tools** — Registered language model tools for agent mode
-6. **Chat Participant** — @engineering registration status
+1. **Add Capability** — primary action to create new instructions, agents, skills, prompts, or hooks
+2. **Summary** — counts of user-added: Instructions, Agents, Skills, Prompts, Hooks
+3. **Custom Instructions** — `.codestudio/instructions/*.instructions.md` with applyTo patterns
+4. **Custom Agents** — `.codestudio/agents/*.agent.md` (subagents for context-isolated tasks)
+5. **Custom Skills** — `.codestudio/skills/<name>/SKILL.md` (reusable workflows with /slash commands)
+6. **Custom Prompts** — `.codestudio/prompts/*.prompt.md` (parameterized single-task commands)
+7. **Hooks** — `.codestudio/hooks/*.json` (deterministic lifecycle enforcement)
+8. **Built-in Extensibility (read-only)** — LM tools + chat participant that are always available
 
 The Knowledge view's Agent Capabilities section is replaced with a link card to the Capabilities view.
 
@@ -897,16 +899,61 @@ The Knowledge view's Agent Capabilities section is replaced with a link card to 
 5. Settings
 
 **Rationale:**
-- Capabilities are actionable (install, toggle, configure) — Activity was passive (read-only log)
-- "What can the agent do?" is a question users actually ask — "What did the agent do 30s ago?" is not
-- Missing capability detection is critical for trust — users need to know what the agent CAN'T do
+- Capabilities are actionable (add, edit, configure) — Activity was passive (read-only log)
+- "What can I add to make the agent better?" is a question users ask — "What did the agent do 30s ago?" is not
 - The audit trail (events.jsonl) is the source of truth for activity — the UI doesn't need to replicate it
 - Agent activity is still visible in the Tasks view (active task badge, TDD phase, criteria progress)
+
+**Note:** This decision was revised by DD-023 — the original DD-022 design showed built-in skills/agents with toggle switches, which violated DD-007 (skills are invisible). DD-023 corrected the view to show only user-added customizations.
 
 **Alternatives Considered:**
 - *Keep Activity, add Capabilities as 6th view* — Rejected: 6 views is too many; Activity doesn't earn its slot
 - *Keep Activity, put Capabilities in Settings* — Rejected: capabilities are too important to bury in settings
 - *Merge Activity into Tasks as a collapsible drawer* — Rejected: still a log viewer, just smaller
+
+---
+
+## DD-023: Capabilities View Shows User-Added Customizations, Not Built-In Plumbing
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** DD-022 designed the Capabilities view to show all 24 built-in engineering skills with toggle switches, and built-in specialist agents (code-reviewer, security-auditor, test-engineer, web-performance-auditor) with install buttons. This directly violated DD-007, which states that built-in skills are invisible plumbing — users never see skill names, skill files, or skill configuration. The workflow engine maps tasks to skills automatically.
+
+Showing built-in skills with toggles creates several problems:
+- Users don't know what "Context Engineering" or "Incremental Implementation" means — these are implementation details
+- Toggling a built-in skill could break the workflow engine's assumptions (e.g., disabling git-workflow would leave commits unstructured)
+- "Install" buttons for built-in agents are misleading — they're already bundled with the extension
+- It turns the view into a skill management tool for power users, violating the "new developers" target audience
+
+Meanwhile, Code Studio has a rich agent-customization system (`.codestudio/instructions/`, `.codestudio/agents/`, `.codestudio/skills/`, `.codestudio/prompts/`, `.codestudio/hooks/`) that lets users ADD their own capabilities. That's what users actually need to see and manage.
+
+**Decision:** The Capabilities view shows **user-added customizations** only, organized by the agent-customization primitive types:
+
+1. **Custom Instructions** — `.instructions.md` files with `applyTo` patterns that guide agent behavior for specific files
+2. **Custom Agents** — `.agent.md` files that define subagents for context-isolated or multi-stage tasks
+3. **Custom Skills** — `SKILL.md` files that bundle reusable workflows with scripts/templates, invoked via /slash commands
+4. **Custom Prompts** — `.prompt.md` files for parameterized single-task commands
+5. **Hooks** — `.json` files that enforce deterministic behavior at agent lifecycle events
+
+The only built-in items shown are the two extensibility surfaces that ARE genuinely visible to users:
+- **Language Model Tools** (3 tools: `analyze_work_request`, `get_workflow_status`, `get_project_context`) — these appear in agent mode's tool list
+- **Chat Participant** (`@engineering`) — this appears in the chat interface
+
+These are shown in a read-only "Built-in Extensibility" section at the bottom, clearly separated from user-added content.
+
+Built-in engineering skills (the 24 from agent-skills) and built-in specialist agents are NEVER shown in the UI. They are activated automatically by the skill engine based on task type, context signals, and process level.
+
+**Rationale:**
+- Respects DD-007: built-in skills remain invisible plumbing
+- Shows users what they can actually control — their own additions
+- The agent-customization system is the right abstraction: users add project-specific knowledge, not toggle generic engineering practices
+- The "Add Capability" primary action guides users toward the customization system
+- Built-in extensibility (LM tools, chat participant) is read-only context, not actionable — users can't add or remove these
+
+**Alternatives Considered:**
+- *Show built-in skills in an "Advanced Mode" toggle* — Rejected: DD-007 already deferred this to V2 via CLI (`codestudio skill run`), not the UI
+- *Show built-in skills but make them read-only* — Rejected: seeing 24 skill names with no action is confusing, not helpful
+- *Remove the Capabilities view entirely* — Rejected: user-added customizations still need a home, and the built-in extensibility surfaces (tools, chat) are worth surfacing
 
 ---
 
@@ -935,4 +982,5 @@ The Knowledge view's Agent Capabilities section is replaced with a link card to 
 | DD-019 | Merge Workflow + Tasks into Single Tasks View (6→5 views) | Accepted |
 | DD-020 | Merge Artifacts into Tasks as Tab (5→4 views) | Accepted |
 | DD-021 | Knowledge as Separate Navigation Item (4→5 views) | Accepted |
-| DD-022 | Replace Activity with Capabilities View (actionable, not passive) | Accepted |
+| DD-022 | Replace Activity with Capabilities View (actionable, not passive) | Accepted (revised by DD-023) |
+| DD-023 | Capabilities Shows User-Added Customizations, Not Built-In Plumbing | Accepted |

@@ -407,7 +407,7 @@
 - [ ] Empty state: objective input with progressive disclosure (analyze button appears after ≥10 chars)
 - [ ] Active state: current stage details + stats grid + stage list (no pipeline viz — DD-018)
 - [ ] Complete state: success banner + summary + archive button
-- [ ] `capabilities-view.tsx` renders: summary stats, missing capability alert, skills (toggleable, grouped), specialist agents, LM tools, chat participant status (DD-022)
+- [ ] `capabilities-view.tsx` renders: Add Capability button, summary counts, custom instructions, custom agents, custom skills, custom prompts, hooks, built-in extensibility (LM tools + chat participant, read-only) (DD-022, DD-023)
 - [ ] `knowledge-view.tsx` renders: Project Context, ADRs, Conventions, Boundaries, Capabilities link card (DD-021, DD-022)
 - [ ] `history-view.tsx` renders: three-tier history (hot/warm/cold) with pagination (DD-006, DD-007)
 - [ ] `settings-view.tsx` renders: process level override, approval policy, history retention, agent mode toggle
@@ -440,6 +440,11 @@
 - `src/webview/views/history-view.tsx`
 - `src/webview/views/settings-view.tsx`
 - `src/webview/components/sidebar-nav.tsx`
+- `src/webview/components/stage-list.tsx`
+- `src/webview/components/task-card.tsx`
+- `src/webview/components/artifact-viewer.tsx`
+- `src/webview/components/approval-card.tsx`
+- `src/webview/components/capability-card.tsx`
 - `src/webview/components/stats-grid.tsx`
 - `src/webview/components/progress-bar.tsx`
 - `src/webview/components/risk-badge.tsx`

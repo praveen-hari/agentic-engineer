@@ -225,7 +225,7 @@ codestudio-engineering-workspace/
 │   │   │   ├── task-card.tsx        # Task with inline expansion
 │   │   │   ├── artifact-viewer.tsx  # Markdown artifact renderer
 │   │   │   ├── approval-card.tsx    # Approval action card
-│   │   │   ├── skill-toggle.tsx     # Skill toggle switch
+│   │   │   ├── capability-card.tsx  # User-added capability display (instructions/agents/skills/prompts/hooks)
 │   │   │   ├── stats-grid.tsx       # Statistics grid
 │   │   │   ├── progress-bar.tsx     # Progress indicator
 │   │   │   ├── risk-badge.tsx       # Risk level badge
@@ -961,7 +961,7 @@ export const progress = computed(() => {
 | 22 | Tasks view shows stages with inline expansion (DD-019) | Visual check |
 | 23 | Tasks view Artifacts tab shows generated specs/plans (DD-020) | Visual check |
 | 24 | Tasks view Approvals tab shows pending items with approve/reject (DD-020) | Visual check |
-| 25 | Capabilities view shows skills, agents, tools, chat participant status (DD-022) | Visual check |
+| 25 | Capabilities view shows user-added customizations (instructions, agents, skills, prompts, hooks) + built-in extensibility (DD-022, DD-023) | Visual check |
 | 26 | History view shows archived workflows with inline expansion | Visual check |
 | 27 | Settings view allows configuration changes (incl. skill visibility in advanced mode) | Visual check |
 | 28 | Chat participant handles natural language queries beyond slash commands | Chat test |
@@ -1017,7 +1017,7 @@ export const progress = computed(() => {
 - Tasks view: Stages tab with inline expansion (DD-019)
 - Tasks view: Artifacts tab with markdown rendering (DD-020)
 - Tasks view: Approvals tab with approve/reject actions (DD-020)
-- Capabilities view: skills, agents, tools, chat participant status (DD-022)
+- Capabilities view: user-added customizations (instructions, agents, skills, prompts, hooks) + built-in extensibility (DD-022, DD-023)
 - Knowledge view: project context, ADRs, conventions, boundaries (DD-021)
 - History view with inline expansion
 - Settings view with configuration
