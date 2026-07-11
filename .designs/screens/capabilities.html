@@ -1,7 +1,7 @@
-<!-- CAPABILITIES VIEW — "What have I added? What built-in extensibility exists?"
-     Per DD-007: built-in skills/agents are invisible plumbing — never shown, never toggled.
-     Per DD-023: this view shows USER-ADDED customizations (agent-customization system)
-     + the two built-in extensibility surfaces that ARE visible (LM tools, chat participant).
+<!-- CAPABILITIES VIEW — Intelligent capability recommendations
+     Per DD-024: Not a passive registry — a recommendation engine.
+     Analyzes project context + work request to suggest what to add.
+     Surfaces Syncfusion component skills (60+) as installable recommendations.
 -->
 
 <div class="view-capabilities">
@@ -9,46 +9,98 @@
   <!-- Header -->
   <div style="margin-bottom: var(--space-xl);">
     <h3>Capabilities</h3>
-    <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Custom instructions, agents, skills, and prompts you've added to this project</p>
+    <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Recommended for your project · 3 installed · 5 suggested</p>
   </div>
 
-  <!-- ===== ADD CAPABILITY (primary action) ===== -->
-  <div class="card" style="margin-bottom: var(--space-xl); border: 1px dashed var(--color-border); background: var(--color-surface);">
-    <div style="display: flex; align-items: center; gap: var(--space-md);">
-      <i class="codicon codicon-add" style="font-size: 20px; color: var(--color-accent);"></i>
+  <!-- ===== INTELLIGENT RECOMMENDATIONS (context-aware) ===== -->
+  <div class="card" style="margin-bottom: var(--space-xl); border-left: 3px solid var(--color-accent);">
+    <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+      <i class="codicon codicon-sparkle" style="color: var(--color-accent); font-size: 16px;"></i>
+      <span class="card-title" style="font-size: var(--font-small-size);">Recommended for This Project</span>
+    </div>
+    <p style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+      Based on detected: <strong>React 18</strong>, <strong>Express API</strong>, <strong>Stripe payments</strong>, <strong>no test framework</strong>
+    </p>
+
+    <!-- Recommendation 1: Syncfusion Grid (project uses tables/data) -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-grid" style="color: var(--color-accent); font-size: 18px; flex-shrink: 0;"></i>
       <div style="flex: 1;">
-        <div style="font-size: var(--font-small-size); font-weight: 600;">Add Capability</div>
-        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Create custom instructions, agents, skills, prompts, or hooks</div>
+        <div style="font-size: var(--font-small-size); font-weight: 600;">Syncfusion DataGrid Skill</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <span style="color: var(--color-accent);">Why:</span> Your project has tabular data in 4 components. This skill teaches the agent correct DataGrid APIs, imports, and configuration.
+        </div>
       </div>
-      <button class="btn btn-primary btn-sm" id="btn-add-capability">Add…</button>
+      <button class="btn btn-primary btn-sm">Install</button>
+    </div>
+
+    <!-- Recommendation 2: Testing standards instruction -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-beaker" style="color: var(--color-warning); font-size: 18px; flex-shrink: 0;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">Testing Standards Instruction</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <span style="color: var(--color-warning);">Why:</span> No test framework detected. Adding testing conventions ensures the agent writes tests that match your standards.
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm">Create</button>
+    </div>
+
+    <!-- Recommendation 3: Syncfusion Charts -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-graph" style="color: var(--color-accent); font-size: 18px; flex-shrink: 0;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">Syncfusion Charts Skill</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <span style="color: var(--color-accent);">Why:</span> Dashboard screens detected in prototype. Charts skill ensures correct chart types, data binding, and axis configuration.
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm">Install</button>
+    </div>
+
+    <!-- Recommendation 4: API conventions instruction -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+      <i class="codicon codicon-file-code" style="color: var(--color-accent); font-size: 18px; flex-shrink: 0;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">API Conventions Instruction</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <span style="color: var(--color-accent);">Why:</span> Express routes detected in <code>src/api/</code>. Documenting your naming, versioning, and error format prevents the agent from guessing.
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm">Create</button>
+    </div>
+
+    <!-- Recommendation 5: Security instruction -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
+      <i class="codicon codicon-shield" style="color: var(--color-warning); font-size: 18px; flex-shrink: 0;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">Security Hardening Instruction</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+          <span style="color: var(--color-warning);">Why:</span> Stripe payment integration detected. Adding security conventions ensures the agent follows PCI-aware patterns.
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm">Create</button>
     </div>
   </div>
 
-  <!-- ===== SUMMARY: user-added customizations ===== -->
-  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl);">
-    <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">2</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Instructions</div>
-    </div>
-    <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">1</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Agents</div>
-    </div>
-    <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">3</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Skills</div>
-    </div>
-    <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">1</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Prompts</div>
-    </div>
-    <div class="stat-card card-compact" style="text-align: center;">
-      <div class="stat-value">0</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Hooks</div>
-    </div>
+  <!-- ===== INSTALLED CAPABILITIES ===== -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+    <h4 style="font-size: var(--font-small-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary);">Installed</h4>
+    <button class="btn btn-ghost btn-sm" id="btn-add-capability">
+      <i class="codicon codicon-add" style="font-size: 14px; margin-right: 4px;"></i> Add
+    </button>
   </div>
 
-  <!-- ===== CUSTOM INSTRUCTIONS ===== -->
+  <!-- Summary chips -->
+  <div style="display: flex; gap: var(--space-xs); margin-bottom: var(--space-lg); flex-wrap: wrap;">
+    <span class="badge badge-accent" style="font-size: var(--font-caption-size); padding: 2px 10px;">Instructions: 2</span>
+    <span class="badge badge-accent" style="font-size: var(--font-caption-size); padding: 2px 10px;">Syncfusion Skills: 1</span>
+    <span class="badge badge-accent" style="font-size: var(--font-caption-size); padding: 2px 10px;">Agents: 0</span>
+    <span class="badge badge-accent" style="font-size: var(--font-caption-size); padding: 2px 10px;">Prompts: 0</span>
+    <span class="badge badge-accent" style="font-size: var(--font-caption-size); padding: 2px 10px;">Hooks: 0</span>
+  </div>
+
+  <!-- Installed: Custom Instructions -->
   <div class="card" style="margin-bottom: var(--space-lg);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
       <span class="card-title" style="font-size: var(--font-small-size);">Custom Instructions</span>
@@ -58,8 +110,8 @@
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
         <i class="codicon codicon-file-code" style="color: var(--color-accent); font-size: 16px;"></i>
         <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">api-conventions.instructions.md</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Applies to: src/api/**  ·  REST naming, versioning, error format</div>
+          <div style="font-size: var(--font-small-size); font-weight: 600;">code-style.instructions.md</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Applies to: **/*  ·  Prettier config, import ordering, naming conventions</div>
         </div>
         <span class="badge badge-accent" style="font-size: 9px; height: 14px;">applyTo</span>
         <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
@@ -67,8 +119,8 @@
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
         <i class="codicon codicon-file-code" style="color: var(--color-accent); font-size: 16px;"></i>
         <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">testing-standards.instructions.md</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Applies to: **/*.test.*  ·  AAA pattern, no shared state</div>
+          <div style="font-size: var(--font-small-size); font-weight: 600;">git-conventions.instructions.md</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Applies to: **/*  ·  Commit message format, branch naming</div>
         </div>
         <span class="badge badge-accent" style="font-size: 9px; height: 14px;">applyTo</span>
         <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
@@ -76,98 +128,136 @@
     </div>
   </div>
 
-  <!-- ===== CUSTOM AGENTS ===== -->
+  <!-- Installed: Syncfusion Skills -->
   <div class="card" style="margin-bottom: var(--space-lg);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Custom Agents</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/agents/</span>
+      <span class="card-title" style="font-size: var(--font-small-size);">Syncfusion Component Skills</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">
+        <a href="#" style="color: var(--color-accent);">Browse all 60+ →</a>
+      </span>
     </div>
     <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
       <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-robot" style="color: var(--color-success); font-size: 16px;"></i>
+        <i class="codicon codicon-grid" style="color: var(--color-success); font-size: 16px;"></i>
         <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">db-migration-agent</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Runs migrations, validates rollback, generates change scripts</div>
+          <div style="font-size: var(--font-small-size); font-weight: 600;">syncfusion-react-grid</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">DataGrid · sorting, filtering, paging, editing, export</div>
         </div>
-        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Available</span>
-        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
-      </div>
-    </div>
-    <div style="margin-top: var(--space-sm); padding: var(--space-sm) var(--space-md); border: 1px dashed var(--color-border); border-radius: var(--radius-md); text-align: center;">
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">Custom agents appear as subagents for context-isolated tasks. </span>
-      <a href="#" style="font-size: var(--font-caption-size); color: var(--color-accent);">Add agent →</a>
-    </div>
-  </div>
-
-  <!-- ===== CUSTOM SKILLS ===== -->
-  <div class="card" style="margin-bottom: var(--space-lg);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Custom Skills</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/skills/</span>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
-      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-terminal" style="color: var(--color-accent); font-size: 16px;"></i>
-        <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">deploy-to-staging</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/deploy-to-staging  ·  Bundled deploy script + health check</div>
-        </div>
-        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
-        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-terminal" style="color: var(--color-accent); font-size: 16px;"></i>
-        <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">api-contract-test</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/api-contract-test  ·  Generate contract tests from OpenAPI spec</div>
-        </div>
-        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
-        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-terminal" style="color: var(--color-accent); font-size: 16px;"></i>
-        <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">incident-response</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/incident-response  ·  Triage, severity, comms template, postmortem</div>
-        </div>
-        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
-        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Installed</span>
       </div>
     </div>
   </div>
 
-  <!-- ===== CUSTOM PROMPTS ===== -->
+  <!-- ===== BROWSE SYNCFUSION SKILLS (marketplace) ===== -->
   <div class="card" style="margin-bottom: var(--space-lg);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Custom Prompts</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/prompts/</span>
+    <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+      <i class="codicon codicon-package" style="color: var(--color-accent); font-size: 16px;"></i>
+      <span class="card-title" style="font-size: var(--font-small-size);">Syncfusion Agent Skills</span>
     </div>
-    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
-      <div style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md);">
-        <i class="codicon codicon-comment" style="color: var(--color-accent); font-size: 16px;"></i>
-        <div style="flex: 1;">
-          <div style="font-size: var(--font-small-size); font-weight: 600;">review-pr</div>
-          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">/review-pr  ·  Parameterized: $baseBranch, $targetBranch</div>
+    <p style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+      Officially authored skills that teach the agent correct Syncfusion component APIs — imports, configuration, and best practices. Updated with every release.
+    </p>
+
+    <!-- Filter tabs -->
+    <div style="display: flex; gap: var(--space-xs); margin-bottom: var(--space-md); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-xs);">
+      <button class="btn btn-sm" style="background: var(--color-accent); color: white; border: none;">All</button>
+      <button class="btn btn-ghost btn-sm">Data (8)</button>
+      <button class="btn btn-ghost btn-sm">Charts (12)</button>
+      <button class="btn btn-ghost btn-sm">Inputs (6)</button>
+      <button class="btn btn-ghost btn-sm">Layout (10)</button>
+      <button class="btn btn-ghost btn-sm">Navigation (8)</button>
+      <button class="btn btn-ghost btn-sm">Editors (4)</button>
+      <button class="btn btn-ghost btn-sm">File/Doc (5)</button>
+    </div>
+
+    <!-- Skill grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+      <!-- Grid skill -->
+      <div style="padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <i class="codicon codicon-grid" style="color: var(--color-accent); font-size: 14px;"></i>
+          <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">DataGrid</span>
+          <span class="badge badge-success" style="font-size: 9px; height: 14px;">Installed</span>
         </div>
-        <span class="badge badge-accent" style="font-size: 9px; height: 14px;">/slash</span>
-        <button class="btn btn-ghost btn-sm" style="font-size: var(--font-caption-size); padding: 2px 8px;">Edit</button>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">Sorting, filtering, paging, editing, export, virtualization</div>
+        <div style="font-size: 10px; color: var(--color-secondary);">@syncfusion/ej2-react-grids</div>
       </div>
+
+      <!-- Charts skill -->
+      <div style="padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <i class="codicon codicon-graph" style="color: var(--color-accent); font-size: 14px;"></i>
+          <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Charts</span>
+          <button class="btn btn-primary btn-sm" style="font-size: 10px; padding: 1px 8px; height: 18px;">Install</button>
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">Line, bar, pie, area, scatter, polar, radar — 30+ chart types</div>
+        <div style="font-size: 10px; color: var(--color-secondary);">@syncfusion/ej2-react-charts</div>
+      </div>
+
+      <!-- Scheduler skill -->
+      <div style="padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <i class="codicon codicon-calendar" style="color: var(--color-accent); font-size: 14px;"></i>
+          <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Scheduler</span>
+          <button class="btn btn-primary btn-sm" style="font-size: 10px; padding: 1px 8px; height: 18px;">Install</button>
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">Day/week/month views, appointments, resources, recurrence</div>
+        <div style="font-size: 10px; color: var(--color-secondary);">@syncfusion/ej2-react-schedule</div>
+      </div>
+
+      <!-- RichTextEditor skill -->
+      <div style="padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <i class="codicon codicon-edit" style="color: var(--color-accent); font-size: 14px;"></i>
+          <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">RichTextEditor</span>
+          <button class="btn btn-primary btn-sm" style="font-size: 10px; padding: 1px 8px; height: 18px;">Install</button>
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">WYSIWYG editor, toolbar, image, link, HTML/markdown</div>
+        <div style="font-size: 10px; color: var(--color-secondary);">@syncfusion/ej2-react-richtexteditor</div>
+      </div>
+
+      <!-- Kanban skill -->
+      <div style="padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <i class="codicon codicon-columns" style="color: var(--color-accent); font-size: 14px;"></i>
+          <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Kanban</span>
+          <button class="btn btn-primary btn-sm" style="font-size: 10px; padding: 1px 8px; height: 18px;">Install</button>
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">Board, columns, cards, drag-and-drop, swimlane</div>
+        <div style="font-size: 10px; color: var(--color-secondary);">@syncfusion/ej2-react-kanban</div>
+      </div>
+
+      <!-- Diagram skill -->
+      <div style="padding: var(--space-sm) var(--space-md); background: var(--color-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <i class="codicon codicon-circuit-board" style="color: var(--color-accent); font-size: 14px;"></i>
+          <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Diagram</span>
+          <button class="btn btn-primary btn-sm" style="font-size: 10px; padding: 1px 8px; height: 18px;">Install</button>
+        </div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">Flowchart, org chart, nodes, connectors, symbols</div>
+        <div style="font-size: 10px; color: var(--color-secondary);">@syncfusion/ej2-react-diagrams</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: var(--space-md);">
+      <a href="#" style="font-size: var(--font-caption-size); color: var(--color-accent);">Show all 60+ skills →</a>
     </div>
   </div>
 
-  <!-- ===== HOOKS ===== -->
+  <!-- ===== CUSTOM AGENTS / PROMPTS / HOOKS (collapsible) ===== -->
   <div class="card" style="margin-bottom: var(--space-lg);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
-      <span class="card-title" style="font-size: var(--font-small-size);">Hooks</span>
-      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">.codestudio/hooks/</span>
+      <span class="card-title" style="font-size: var(--font-small-size);">Custom Agents, Prompts & Hooks</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">0 added</span>
     </div>
     <div style="padding: var(--space-md); border: 1px dashed var(--color-border); border-radius: var(--radius-md); text-align: center;">
-      <i class="codicon codicon-zap" style="font-size: 20px; color: var(--color-secondary); opacity: 0.5;"></i>
-      <div style="font-size: var(--font-small-size); color: var(--color-secondary); margin-top: var(--space-xs);">No hooks configured</div>
-      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-top: var(--space-xs);">
-        Hooks enforce behavior at lifecycle events (PreToolUse, PostToolUse).<br/>
-        <a href="#" style="color: var(--color-accent);">Add hook →</a>
+      <div style="font-size: var(--font-small-size); color: var(--color-secondary); margin-bottom: var(--space-xs);">Nothing added yet</div>
+      <div style="font-size: var(--font-caption-size); color: var(--color-secondary); line-height: 1.5;">
+        <strong>Agents</strong> — subagents for context-isolated tasks<br/>
+        <strong>Prompts</strong> — parameterized single-task commands<br/>
+        <strong>Hooks</strong> — deterministic lifecycle enforcement
       </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top: var(--space-sm);">Add →</button>
     </div>
   </div>
 
