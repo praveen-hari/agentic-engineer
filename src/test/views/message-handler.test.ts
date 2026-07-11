@@ -81,6 +81,36 @@ function createMockDeps(): MessageHandlerDeps {
       mkdir: vi.fn().mockResolvedValue(undefined),
       readDir: vi.fn().mockResolvedValue([]),
     } as unknown as MessageHandlerDeps['fileSystem'],
+
+    stageExecutor: {
+      getStageAction: vi.fn().mockReturnValue(null),
+      evaluateStageCompletion: vi.fn().mockReturnValue({
+        stage: 'build',
+        status: 'completed',
+        artifacts: [],
+        pendingGates: [],
+        pendingApprovals: [],
+        message: 'Ready',
+      }),
+      getStageInstructions: vi.fn().mockReturnValue('No active stage'),
+    } as unknown as MessageHandlerDeps['stageExecutor'],
+
+    gateRunner: {
+      evaluateStageGates: vi.fn().mockReturnValue([]),
+      areBlockingGatesPassing: vi.fn().mockReturnValue(true),
+      getPendingGates: vi.fn().mockReturnValue([]),
+      passGate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
+      failGate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
+      getSummary: vi.fn().mockReturnValue({ total: 0, passed: 0, failed: 0, pending: 0, skipped: 0 }),
+    } as unknown as MessageHandlerDeps['gateRunner'],
+
+    artifactManager: {
+      listAll: vi.fn().mockResolvedValue([]),
+      listByStage: vi.fn().mockResolvedValue([]),
+      save: vi.fn().mockResolvedValue({ id: 'test', type: 'spec', title: 'Test', path: 'specs/test.md', stage: 'define', createdAt: '', updatedAt: '', status: 'draft' }),
+      read: vi.fn().mockResolvedValue(null),
+      saveObjective: vi.fn().mockResolvedValue(undefined),
+    } as unknown as MessageHandlerDeps['artifactManager'],
   };
 }
 

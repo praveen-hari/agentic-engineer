@@ -14,6 +14,9 @@ import { ProjectDetector } from './core/project-detector';
 import { ContextAnalyzer } from './core/context-analyzer';
 import { ContextSignalDetector } from './core/context-signal-detector';
 import { CapabilityRecommender } from './core/capability-recommender';
+import { StageExecutor } from './core/stage-executor';
+import { GateRunner } from './core/gate-runner';
+import { ArtifactManager } from './services/artifact-manager.service';
 import { AiRiskAnalyzer } from './ai/risk-analyzer';
 import { AnalyzeWorkRequestTool } from './ai/tools/analyze-work-request.tool';
 import { GetWorkflowStatusTool } from './ai/tools/get-workflow-status.tool';
@@ -59,6 +62,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const contextAnalyzer = new ContextAnalyzer();
   const contextSignalDetector = new ContextSignalDetector();
   const capabilityRecommender = new CapabilityRecommender();
+  const stageExecutor = new StageExecutor(skillRegistry);
+  const gateRunner = new GateRunner();
+  const artifactManager = new ArtifactManager(
+    fsService,
+    workspaceRoot ?? '/',
+  );
 
   // ─── AI Layer ─────────────────────────────────────────────────────
   const aiRiskAnalyzer = new AiRiskAnalyzer(riskEngine, {
@@ -134,6 +143,8 @@ export function activate(context: vscode.ExtensionContext): void {
       riskEngine,
       workflowGenerator,
       skillEngine,
+      stageExecutor,
+      gateRunner,
       projectDetector,
       contextAnalyzer,
       contextSignalDetector,
@@ -141,6 +152,7 @@ export function activate(context: vscode.ExtensionContext): void {
       notificationService,
       workspaceService,
       fileSystem: fsService,
+      artifactManager,
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),

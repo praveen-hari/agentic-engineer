@@ -3,12 +3,15 @@ import type { WorkflowEngine } from '../core/workflow-engine';
 import type { RiskEngine } from '../core/risk-engine';
 import type { WorkflowGenerator } from '../core/workflow-generator';
 import type { SkillEngine } from '../core/skill-engine';
+import type { StageExecutor } from '../core/stage-executor';
+import type { GateRunner } from '../core/gate-runner';
 import type { ProjectDetector } from '../core/project-detector';
 import type { ContextAnalyzer } from '../core/context-analyzer';
 import type { ContextSignalDetector } from '../core/context-signal-detector';
 import type { CapabilityRecommender } from '../core/capability-recommender';
 import type { NotificationService } from '../services/notification.service';
 import type { WorkspaceService } from '../services/workspace.service';
+import type { ArtifactManager } from '../services/artifact-manager.service';
 import { WorkspaceScanner } from '../services/workspace-scanner.service';
 import type {
   FileIO,
@@ -34,6 +37,8 @@ export interface MessageHandlerDeps {
   readonly riskEngine: RiskEngine;
   readonly workflowGenerator: WorkflowGenerator;
   readonly skillEngine: SkillEngine;
+  readonly stageExecutor: StageExecutor;
+  readonly gateRunner: GateRunner;
   readonly projectDetector: ProjectDetector;
   readonly contextAnalyzer: ContextAnalyzer;
   readonly contextSignalDetector: ContextSignalDetector;
@@ -41,6 +46,7 @@ export interface MessageHandlerDeps {
   readonly notificationService: NotificationService;
   readonly workspaceService: WorkspaceService;
   readonly fileSystem: FileIO;
+  readonly artifactManager: ArtifactManager;
 }
 
 /**
@@ -95,6 +101,18 @@ export function handleWebviewMessage(
           break;
         case 'requestHistory':
           await handleRequestHistory(deps, reply, msg.page);
+          break;
+        case 'requestStageActions':
+          await handleRequestStageActions(deps, reply);
+          break;
+        case 'executeStage':
+          await handleExecuteStage(deps, reply);
+          break;
+        case 'requestArtifacts':
+          await handleRequestArtifacts(deps, reply);
+          break;
+        case 'requestGateStatus':
+          await handleRequestGateStatus(deps, reply);
           break;
       }
     } catch (err) {
@@ -257,7 +275,69 @@ async function handleRequestHistory(
   reply: ReplyFn,
   _page?: number,
 ): Promise<void> {
-  // TODO: load history from state manager
+  // TODO: load history from archive index
   void deps;
   reply({ type: 'history', entries: [], hasMore: false });
+}
+
+// ─── Stage Execution Handlers ───────────────────────────────────────────────
+
+async function handleRequestStageActions(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const wf = await deps.stateManager.load();
+  if (!wf) {
+    reply({ type: 'stageActions', actions: null });
+    return;
+  }
+  const action = deps.stageExecutor.getStageAction(wf);
+  reply({ type: 'stageActions', actions: action });
+}
+
+async function handleExecuteStage(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const wf = await deps.stateManager.load();
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow' });
+    return;
+  }
+
+  // Get artifacts for the current stage
+  const artifacts = await deps.artifactManager.listAll();
+
+  // Evaluate stage completion
+  const result = deps.stageExecutor.evaluateStageCompletion(wf, artifacts);
+
+  if (result.status === 'completed') {
+    // Auto-advance to next stage
+    const updated = await deps.workflowEngine.advanceStage(wf);
+    await deps.stateManager.save(updated);
+    reply({ type: 'state', workflow: updated });
+  } else {
+    // Stage is blocked — tell the webview what's needed
+    reply({ type: 'stageResult', result });
+  }
+}
+
+async function handleRequestArtifacts(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const artifacts = await deps.artifactManager.listAll();
+  reply({ type: 'artifacts', artifacts });
+}
+
+async function handleRequestGateStatus(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const wf = await deps.stateManager.load();
+  if (!wf) {
+    reply({ type: 'gateStatus', gates: [] });
+    return;
+  }
+  reply({ type: 'gateStatus', gates: wf.qualityGates });
 }

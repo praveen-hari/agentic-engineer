@@ -264,7 +264,11 @@ export type MessageToHost =
   | { readonly type: 'approve'; readonly approvalId: string; readonly comment?: string }
   | { readonly type: 'reject'; readonly approvalId: string; readonly comment?: string }
   | { readonly type: 'navigate'; readonly view: string }
-  | { readonly type: 'requestHistory'; readonly page?: number };
+  | { readonly type: 'requestHistory'; readonly page?: number }
+  | { readonly type: 'requestStageActions' }
+  | { readonly type: 'executeStage' }
+  | { readonly type: 'requestArtifacts' }
+  | { readonly type: 'requestGateStatus' };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -276,7 +280,11 @@ export type MessageToWebview =
       readonly hasMore: boolean;
     }
   | { readonly type: 'error'; readonly message: string }
-  | { readonly type: 'navigateTo'; readonly view: string };
+  | { readonly type: 'navigateTo'; readonly view: string }
+  | { readonly type: 'stageActions'; readonly actions: StageAction | null }
+  | { readonly type: 'artifacts'; readonly artifacts: readonly Artifact[] }
+  | { readonly type: 'gateStatus'; readonly gates: readonly QualityGate[] }
+  | { readonly type: 'stageResult'; readonly result: StageExecutionResult };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
 
@@ -363,6 +371,46 @@ export interface OnboardingResult {
   readonly isFirstRun: boolean;
   readonly contextStale: boolean;
 }
+
+// ─── Stage Execution ───────────────────────────────────────────────────────
+
+export type ArtifactType = 'spec' | 'plan' | 'adr' | 'review' | 'report';
+
+export interface Artifact {
+  readonly id: string;
+  readonly type: ArtifactType;
+  readonly title: string;
+  readonly path: string;
+  readonly stage: LifecycleStage;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly status: 'draft' | 'pending-review' | 'approved' | 'rejected';
+  readonly content?: string;
+}
+
+export interface StageAction {
+  readonly stage: LifecycleStage;
+  readonly description: string;
+  readonly skills: readonly SkillId[];
+  readonly requiredArtifacts: readonly ArtifactType[];
+  readonly requiredGates: readonly string[];
+  readonly autoAdvance: boolean;
+}
+
+export interface StageExecutionResult {
+  readonly stage: LifecycleStage;
+  readonly status: 'completed' | 'blocked' | 'needs-input';
+  readonly artifacts: readonly Artifact[];
+  readonly pendingGates: readonly string[];
+  readonly pendingApprovals: readonly string[];
+  readonly message: string;
+}
+
+export type GateEvaluationResult = {
+  readonly gateId: string;
+  readonly passed: boolean;
+  readonly details: string;
+};
 
 // ─── File I/O Interface (for testability — DD-008) ─────────────────────────
 
