@@ -145,22 +145,7 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
             nextSteps:
               updated.state.status === 'completed'
                 ? ['The workflow is complete. Summarize what was accomplished.']
-                : [
-                    `Follow the skill instructions for the ${updated.state.currentStage} stage.`,
-                    updated.state.currentStage === 'define'
-                      ? 'Follow the spec-driven-development skill. Then call engineering_save_artifact with type "spec".'
-                      : updated.state.currentStage === 'plan'
-                        ? 'Follow the planning-and-task-breakdown skill. Then call engineering_save_artifact with type "plan".'
-                        : updated.state.currentStage === 'build'
-                          ? 'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time.'
-                          : updated.state.currentStage === 'verify'
-                            ? 'Run tests, build, and lint. Then call engineering_save_artifact with type "report".'
-                            : updated.state.currentStage === 'review'
-                              ? 'Follow the code-review-and-quality skill. Then call engineering_save_artifact with type "review".'
-                              : updated.state.currentStage === 'ship'
-                                ? 'Follow the shipping-and-launch skill. Then call engineering_save_artifact with type "report".'
-                                : 'Follow the stage instructions.',
-                  ],
+                : [getNextStepForStage(updated.state.currentStage)],
           },
           null,
           2,
@@ -168,4 +153,24 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
       ),
     ]);
   }
+}
+
+// ─── Shared stage → next-step mapping ───────────────────────────────────────
+
+const STAGE_NEXT_STEPS: Readonly<Record<string, string>> = {
+  onboard: 'Call engineering_advance_stage — this stage auto-advances.',
+  define:
+    'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
+  plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
+  build:
+    'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD. When all tasks are done, call engineering_advance_stage.',
+  verify: 'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
+  review:
+    'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
+  ship: 'Follow the shipping-and-launch skill. Complete the pre-launch checklist. Then call engineering_save_artifact with type="report".',
+};
+
+function getNextStepForStage(stage: string | null): string {
+  if (!stage) return 'Workflow has no active stage.';
+  return STAGE_NEXT_STEPS[stage] ?? `Complete the ${stage} stage.`;
 }

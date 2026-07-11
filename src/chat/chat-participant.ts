@@ -81,7 +81,7 @@ export class ChatParticipantHandler {
     if (!workflow) {
       stream.markdown(
         '📋 **No active workflow**\n\nNo engineering workflow is currently running. ' +
-          'Use `/analyze <objective>` to analyze a work request and start a workflow.',
+          'Enter your objective in the Tasks view or use agent mode to start a workflow.',
       );
       return;
     }

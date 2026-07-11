@@ -66,9 +66,6 @@ export class SetupProjectTool implements vscode.LanguageModelTool<SetupProjectIn
         processLevelDefault: 'auto',
         autoApproveLowRisk: false,
         reviewTimeoutMinutes: 5,
-        historyHotThreshold: 5,
-        historyWarmThreshold: 20,
-        historyColdAgeDays: 180,
         autoRefreshContext: true,
       };
       await this.fs.write(`${base}/config.json`, JSON.stringify(config, null, 2));
