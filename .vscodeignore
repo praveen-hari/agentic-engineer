@@ -8,6 +8,7 @@ coverage/**
 tasks/**
 *.md
 !README.md
+!skills/**/*.md
 .gitignore
 .eslintrc.json
 .prettierrc

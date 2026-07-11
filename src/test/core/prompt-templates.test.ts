@@ -82,11 +82,10 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('.md');
     });
 
-    it('includes task format template', () => {
+    it('references planning-and-task-breakdown skill', () => {
       const prompt = templates.getPlanPrompt('Add auth', 'specs/auth.md', 'standard');
-      expect(prompt).toContain('Task');
-      expect(prompt).toContain('Acceptance');
-      expect(prompt).toContain('Verify');
+      expect(prompt).toContain('planning-and-task-breakdown');
+      expect(prompt).toContain('tasks');
     });
 
     it('adjusts detail level for light process', () => {
@@ -141,29 +140,30 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('Add auth');
     });
 
-    it('includes five review dimensions', () => {
+    it('references code-review-and-quality skill', () => {
       const prompt = templates.getReviewPrompt('Add auth');
-      expect(prompt).toContain('Correctness');
-      expect(prompt).toContain('Readability');
-      expect(prompt).toContain('Architecture');
-      expect(prompt).toContain('Security');
-      expect(prompt).toContain('Performance');
+      expect(prompt).toContain('code-review-and-quality');
+      expect(prompt).toContain('five axes');
     });
 
     it('includes severity categories', () => {
       const prompt = templates.getReviewPrompt('Add auth');
       expect(prompt).toContain('Critical');
-      expect(prompt).toContain('Required');
-      expect(prompt).toContain('Optional');
+      expect(prompt).toContain('FYI');
     });
   });
 
   describe('getShipPrompt()', () => {
-    it('includes pre-launch checklist', () => {
+    it('references shipping-and-launch skill', () => {
       const prompt = templates.getShipPrompt('Add auth');
-      expect(prompt).toContain('All tests pass');
-      expect(prompt).toContain('Build succeeds');
-      expect(prompt).toContain('No secrets');
+      expect(prompt).toContain('shipping-and-launch');
+      expect(prompt).toContain('checklist');
+    });
+
+    it('includes save path', () => {
+      const prompt = templates.getShipPrompt('Add auth');
+      expect(prompt).toContain('reports/');
+      expect(prompt).toContain('.md');
     });
   });
 

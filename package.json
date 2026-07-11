@@ -120,6 +120,20 @@
         ]
       }
     ],
+    "chatSkills": [
+      { "path": "./skills/spec-driven-development/SKILL.md" },
+      { "path": "./skills/planning-and-task-breakdown/SKILL.md" },
+      { "path": "./skills/incremental-implementation/SKILL.md" },
+      { "path": "./skills/test-driven-development/SKILL.md" },
+      { "path": "./skills/code-review-and-quality/SKILL.md" },
+      { "path": "./skills/shipping-and-launch/SKILL.md" },
+      { "path": "./skills/context-engineering/SKILL.md" },
+      { "path": "./skills/interview-me/SKILL.md" },
+      { "path": "./skills/security-and-hardening/SKILL.md" },
+      { "path": "./skills/debugging-and-error-recovery/SKILL.md" },
+      { "path": "./skills/git-workflow-and-versioning/SKILL.md" },
+      { "path": "./skills/documentation-and-adrs/SKILL.md" }
+    ],
     "languageModelTools": [
       {
         "name": "analyze_work_request",
