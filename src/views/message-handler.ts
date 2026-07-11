@@ -500,7 +500,7 @@ Base everything on the ACTUAL codebase — not generic templates.`;
 
 async function handleSetupNewProject(
   deps: MessageHandlerDeps,
-  reply: ReplyFn,
+  _reply: ReplyFn,
   projectName: string,
   description: string,
 ): Promise<void> {
@@ -531,14 +531,10 @@ Start by asking me clarifying questions about what I want to build.`;
 
   await deps.agentBridge.sendToChat(prompt);
 
-  // Tell webview we're in setup mode
-  reply({
-    type: 'onboardingStatus',
-    status: 'setup-new',
-    projectType: 'greenfield',
-    context: null,
-    hasExistingFiles: false,
-  });
+  // Keep webview in 'scanning' state (the button already set this).
+  // The ArtifactWatcher will transition to 'ready' when the agent
+  // creates .codestudio/config.json.
+  // We don't send 'setup-new' back — that would show the form again.
 }
 
 async function handleRequestOnboardingStatus(

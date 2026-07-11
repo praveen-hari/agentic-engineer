@@ -121,27 +121,33 @@ const ScanningScreen: FunctionalComponent = () => {
         <div class="onboarding__icon">
           <Icon name="loading" size={32} spin />
         </div>
-        <h2 class="onboarding__title">Scanning Your Project...</h2>
+        <h2 class="onboarding__title">Setting Up Your Project...</h2>
         <p class="onboarding__subtitle">
-          Detecting tech stack, folder structure, conventions, and dependencies.
+          The agent is working in the chat panel.
           <br />
-          This will take a few seconds.
+          This screen will update automatically when setup is complete.
         </p>
       </div>
 
       <div class="onboarding__progress">
         <div class="onboarding__progress-item">
-          <Icon name="check" size={14} /> Scanning workspace files
+          <Icon name="check" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
-          <Icon name="loading" size={14} spin /> Detecting languages &amp; frameworks
+          <Icon name="loading" size={14} spin /> Agent is setting up project context
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Analyzing conventions
+          <Icon name="circle-outline" size={14} /> Creating project instructions
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Generating project context
+          <Icon name="circle-outline" size={14} /> Ready to start working
         </div>
+      </div>
+
+      <div class="onboarding__footer">
+        <strong>Check the Chat panel</strong> — the agent may ask you questions.
+        <br />
+        This screen will auto-transition when <code>.codestudio/</code> is created.
       </div>
     </div>
   );
