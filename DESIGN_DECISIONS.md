@@ -821,6 +821,55 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 
 ---
 
+## DD-021: Knowledge as Separate Navigation Item
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** After merging Artifacts into Tasks as a tab (DD-020), the question arose: where do project-level persistent documents live? Initially proposed as a third tab inside Tasks, but knowledge is fundamentally different from work request data — it persists across all work requests, grows over time, and serves a different purpose (institutional memory vs. current work outputs).
+
+**Decision:** Knowledge gets its own navigation item, separate from Tasks. The Knowledge view contains:
+
+1. **Project Context** — Auto-generated tech stack, file structure, detected patterns (from `context.md`)
+2. **Architecture Decisions (ADRs)** — Accumulated across all work requests, never archived
+3. **Conventions** — Coding rules the agent follows (auto-detected + developer overrides)
+4. **Boundaries** — Always / Ask first / Never rules
+5. **Agent Capabilities** — Skills available, agents available, what's missing, with install prompts
+
+**Navigation: 4 → 5 views:**
+1. Tasks (with Tasks/Artifacts tabs — current work request only)
+2. Activity (real-time agent timeline)
+3. Knowledge (project-level, persistent)
+4. History (past work requests)
+5. Settings (configuration)
+
+**File system mapping:**
+```
+.codestudio/
+├── context.md              ← Project Context section
+├── knowledge/
+│   ├── adrs/               ← ADRs (accumulate, never archived)
+│   ├── conventions.md      ← Conventions
+│   ├── boundaries.md       ← Boundaries
+│   └── capabilities.json   ← Agent Capabilities
+├── workflows/current/
+│   └── artifacts/          ← Artifacts tab (current work request only)
+└── history/archive/        ← Past work request artifacts
+```
+
+**Rationale:**
+- Knowledge is project-level, not work-request-level — different lifecycle, different scope
+- Burying it in a tab would make it hard to find when no work request is active
+- ADRs accumulate across work requests — they need a persistent home
+- Agent capabilities (skills, agents, tools) are project-level configuration, not work request data
+- The missing-capability alert (e.g., "security-auditor not installed") needs visibility
+
+**Alternatives Considered:**
+- *Third tab inside Tasks* — Rejected: knowledge persists when no work request is active; Tasks view would be empty but Knowledge would still have content
+- *Part of Settings* — Rejected: knowledge is reference data the agent uses, not configuration the user sets
+- *Part of History* — Rejected: history is past work requests; knowledge is current project state
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -845,3 +894,4 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 | DD-018 | Kill the Pipeline — Workflow Shows Outcomes, Not Process (inline approvals, 7→6 views) | Accepted |
 | DD-019 | Merge Workflow + Tasks into Single Tasks View (6→5 views) | Accepted |
 | DD-020 | Merge Artifacts into Tasks as Tab (5→4 views) | Accepted |
+| DD-021 | Knowledge as Separate Navigation Item (4→5 views) | Accepted |

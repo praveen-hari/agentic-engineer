@@ -1,0 +1,224 @@
+<!-- KNOWLEDGE VIEW — "What does the agent know about this project?"
+     Project-level, persistent across all work requests.
+     NOT tied to a single work request — grows over time.
+-->
+
+<div class="view-knowledge">
+
+  <!-- Header -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h3>Knowledge</h3>
+    <p style="font-size: var(--font-small-size); color: var(--color-secondary);">Project context, architecture decisions, conventions, and agent capabilities</p>
+  </div>
+
+  <!-- ===== PROJECT CONTEXT ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Project Context</span>
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span class="badge badge-success" style="font-size: 9px; height: 14px;">Fresh</span>
+        <button class="btn-icon" title="Refresh context"><i class="codicon codicon-refresh" style="font-size: 12px;"></i></button>
+      </div>
+    </div>
+    <div style="font-size: var(--font-small-size); line-height: 1.6;">
+      <div style="margin-bottom: var(--space-sm);">
+        <strong>TypeScript + React 19 + Express 5 + Prisma 6 + PostgreSQL 16</strong>
+      </div>
+      <div style="color: var(--color-secondary); font-size: var(--font-caption-size);">
+        12 conventions detected • 47 files analyzed • Last updated 2h ago
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ARCHITECTURE DECISIONS ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Architecture Decisions</span>
+      <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">5 ADRs</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <!-- ADR-005 -->
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-file-text" style="color: var(--color-info); font-size: 14px;"></i>
+          <div style="flex: 1;">
+            <div style="font-size: var(--font-small-size); font-weight: 600;">ADR-005: Service layer for payment logic</div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Accepted • 1h ago • by agent</div>
+          </div>
+          <span class="badge badge-success" style="font-size: 9px; height: 14px;">Accepted</span>
+        </div>
+      </div>
+      <!-- ADR-004 -->
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-file-text" style="color: var(--color-info); font-size: 14px;"></i>
+          <div style="flex: 1;">
+            <div style="font-size: var(--font-small-size); font-weight: 600;">ADR-004: Use Prisma for database access</div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Accepted • 3 days ago • by developer</div>
+          </div>
+          <span class="badge badge-success" style="font-size: 9px; height: 14px;">Accepted</span>
+        </div>
+      </div>
+      <!-- ADR-003 -->
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-file-text" style="color: var(--color-info); font-size: 14px;"></i>
+          <div style="flex: 1;">
+            <div style="font-size: var(--font-small-size); font-weight: 600;">ADR-003: Express over Fastify</div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Accepted • 1 week ago • by team</div>
+          </div>
+          <span class="badge badge-success" style="font-size: 9px; height: 14px;">Accepted</span>
+        </div>
+      </div>
+      <!-- ADR-002 -->
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-file-text" style="color: var(--color-info); font-size: 14px;"></i>
+          <div style="flex: 1;">
+            <div style="font-size: var(--font-small-size); font-weight: 600;">ADR-002: Vitest over Jest</div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Accepted • 2 weeks ago • by developer</div>
+          </div>
+          <span class="badge badge-success" style="font-size: 9px; height: 14px;">Accepted</span>
+        </div>
+      </div>
+      <!-- ADR-001 -->
+      <div class="card card-compact card-clickable" style="border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <i class="codicon codicon-file-text" style="color: var(--color-info); font-size: 14px;"></i>
+          <div style="flex: 1;">
+            <div style="font-size: var(--font-small-size); font-weight: 600;">ADR-001: Monorepo with Turborepo</div>
+            <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">Accepted • 1 month ago • by team</div>
+          </div>
+          <span class="badge badge-success" style="font-size: 9px; height: 14px;">Accepted</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: var(--space-md);">
+      <button class="btn btn-ghost btn-sm"><i class="codicon codicon-add"></i> New ADR</button>
+    </div>
+  </div>
+
+  <!-- ===== CONVENTIONS ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Conventions</span>
+      <button class="btn-icon" title="Edit conventions"><i class="codicon codicon-edit" style="font-size: 12px;"></i></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--font-small-size);">
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px; margin-top: 2px;"></i>
+        <span>Use service layer for all business logic</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px; margin-top: 2px;"></i>
+        <span>Write tests first (TDD — RED → GREEN → REFACTOR)</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px; margin-top: 2px;"></i>
+        <span>Validate all inputs with Zod schemas</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px; margin-top: 2px;"></i>
+        <span>Atomic commits with descriptive messages</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px; margin-top: 2px;"></i>
+        <span>No raw SQL — use Prisma only</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px; margin-top: 2px;"></i>
+        <span>Error responses use typed error mapping</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BOUNDARIES ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Boundaries</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); background: rgba(78, 201, 176, 0.06); border-radius: var(--radius-md);">
+        <span class="badge badge-success" style="font-size: 9px; height: 14px; flex-shrink: 0;">ALWAYS</span>
+        <span style="font-size: var(--font-small-size);">TDD, validate inputs, service layer, atomic commits</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); background: rgba(204, 167, 0, 0.06); border-radius: var(--radius-md);">
+        <span class="badge badge-warning" style="font-size: 9px; height: 14px; flex-shrink: 0;">ASK FIRST</span>
+        <span style="font-size: var(--font-small-size);">New dependencies, DB schema changes, auth middleware changes</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); background: rgba(241, 76, 76, 0.06); border-radius: var(--radius-md);">
+        <span class="badge badge-error" style="font-size: 9px; height: 14px; flex-shrink: 0;">NEVER</span>
+        <span style="font-size: var(--font-small-size);">Store raw card data, skip error handling, use test keys in production</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AGENT CAPABILITIES ===== -->
+  <div class="card" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md);">
+      <span class="card-title" style="font-size: var(--font-small-size);">Agent Capabilities</span>
+      <button class="btn btn-ghost btn-sm" onclick="loadScreen('settings')">Configure</button>
+    </div>
+
+    <!-- Skills -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-tools" style="font-size: 14px; color: var(--color-secondary);"></i>
+        <span style="font-size: var(--font-small-size);">Skills</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span style="font-size: var(--font-small-size); font-weight: 600;">18/24</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">active</span>
+      </div>
+    </div>
+
+    <!-- Agents -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-robot" style="font-size: 14px; color: var(--color-secondary);"></i>
+        <span style="font-size: var(--font-small-size);">Specialist Agents</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span style="font-size: var(--font-small-size); font-weight: 600;">3/4</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">available</span>
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-settings-gear" style="font-size: 14px; color: var(--color-secondary);"></i>
+        <span style="font-size: var(--font-small-size);">LM Tools</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span style="font-size: var(--font-small-size); font-weight: 600;">3</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">registered</span>
+      </div>
+    </div>
+
+    <!-- Context freshness -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-sm) 0;">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-database" style="font-size: 14px; color: var(--color-secondary);"></i>
+        <span style="font-size: var(--font-small-size);">Project Context</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span style="font-size: var(--font-small-size); font-weight: 600; color: var(--color-success);">Fresh</span>
+        <span style="font-size: var(--font-caption-size); color: var(--color-secondary);">2h ago</span>
+      </div>
+    </div>
+
+    <!-- Missing capability alert -->
+    <div style="margin-top: var(--space-md); padding: var(--space-md); background: rgba(204, 167, 0, 0.06); border-radius: var(--radius-md); border: 1px dashed rgba(204, 167, 0, 0.3);">
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <i class="codicon codicon-warning" style="color: var(--color-warning); font-size: 16px;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-small-size); font-weight: 600; color: var(--color-warning);">Missing: security-auditor agent</div>
+          <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">This project has auth code. Security analysis will be limited without it.</div>
+        </div>
+        <button class="btn btn-primary btn-sm">Install</button>
+      </div>
+    </div>
+  </div>
+
+</div>
