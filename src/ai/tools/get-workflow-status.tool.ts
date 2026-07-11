@@ -71,9 +71,15 @@ export class GetWorkflowStatusTool {
   }
 
   private buildResult(wf: WorkflowDefinition): GetWorkflowStatusResult {
-    const stagesCompleted = wf.stages.filter((s: { status: string }) => s.status === 'completed').length;
-    const pendingApprovals = wf.approvals.filter((a: { status: string }) => a.status === 'pending').length;
-    const pendingGates = wf.qualityGates.filter((g: { status: string }) => g.status === 'pending').length;
+    const stagesCompleted = wf.stages.filter(
+      (s: { status: string }) => s.status === 'completed',
+    ).length;
+    const pendingApprovals = wf.approvals.filter(
+      (a: { status: string }) => a.status === 'pending',
+    ).length;
+    const pendingGates = wf.qualityGates.filter(
+      (g: { status: string }) => g.status === 'pending',
+    ).length;
 
     return {
       hasActiveWorkflow: wf.state.status === 'active',

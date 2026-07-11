@@ -12,6 +12,9 @@ describe('AiRiskAnalyzer', () => {
         async getModel() {
           return null;
         },
+        async sendRequest() {
+          return '';
+        },
       });
 
       const result = await analyzer.analyze('Fix typo in README');
@@ -25,6 +28,9 @@ describe('AiRiskAnalyzer', () => {
       const analyzer = new AiRiskAnalyzer(deterministicEngine, {
         async getModel() {
           throw new Error('Model access failed');
+        },
+        async sendRequest() {
+          return '';
         },
       });
 
@@ -41,9 +47,7 @@ describe('AiRiskAnalyzer', () => {
         complexity: 'complex',
         riskLevel: 'high',
         processLevel: 'thorough',
-        signals: [
-          { type: 'keyword', signal: 'auth', severity: 'high', impact: 'security gate' },
-        ],
+        signals: [{ type: 'keyword', signal: 'auth', severity: 'high', impact: 'security gate' }],
         contextSignals: ['touches_auth_or_input'],
         source: 'llm',
       };
@@ -106,6 +110,9 @@ describe('AiRiskAnalyzer', () => {
         async getModel() {
           getModelCalls++;
           return null;
+        },
+        async sendRequest() {
+          return '';
         },
       });
 
