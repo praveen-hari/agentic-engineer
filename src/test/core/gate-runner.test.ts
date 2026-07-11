@@ -17,7 +17,10 @@ function makeGate(overrides: Partial<QualityGate> = {}): QualityGate {
   };
 }
 
-function makeWorkflow(gates: QualityGate[] = [], approvals: WorkflowDefinition['approvals'] = []): WorkflowDefinition {
+function makeWorkflow(
+  gates: QualityGate[] = [],
+  approvals: WorkflowDefinition['approvals'] = [],
+): WorkflowDefinition {
   return {
     id: 'test-wf',
     version: 1,
@@ -25,8 +28,24 @@ function makeWorkflow(gates: QualityGate[] = [], approvals: WorkflowDefinition['
     processLevel: 'standard',
     detectedRisks: [],
     stages: [
-      { id: 'verify' as Stage['id'], name: 'Verify', status: 'active' as StageStatus, skippable: false, entryConditions: [], exitConditions: [], artifacts: [] },
-      { id: 'review' as Stage['id'], name: 'Review', status: 'pending' as StageStatus, skippable: false, entryConditions: [], exitConditions: [], artifacts: [] },
+      {
+        id: 'verify' as Stage['id'],
+        name: 'Verify',
+        status: 'active' as StageStatus,
+        skippable: false,
+        entryConditions: [],
+        exitConditions: [],
+        artifacts: [],
+      },
+      {
+        id: 'review' as Stage['id'],
+        name: 'Review',
+        status: 'pending' as StageStatus,
+        skippable: false,
+        entryConditions: [],
+        exitConditions: [],
+        artifacts: [],
+      },
     ],
     qualityGates: gates,
     approvals,
@@ -66,7 +85,9 @@ describe('GateRunner', () => {
     });
 
     it('evaluates passed gate as passed', () => {
-      const wf = makeWorkflow([makeGate({ status: 'passed', result: { passedAt: new Date().toISOString() } })]);
+      const wf = makeWorkflow([
+        makeGate({ status: 'passed', result: { passedAt: new Date().toISOString() } }),
+      ]);
       const results = runner.evaluateStageGates(wf, 'verify');
 
       expect(results[0].passed).toBe(true);
@@ -81,8 +102,22 @@ describe('GateRunner', () => {
 
     it('evaluates approval gate against approvals list', () => {
       const wf = makeWorkflow(
-        [makeGate({ id: 'spec-approved', type: 'approval', stage: 'define' as QualityGate['stage'] })],
-        [{ id: 'a1', level: 'explicit', artifact: 'spec', status: 'approved', approvedAt: new Date().toISOString() }],
+        [
+          makeGate({
+            id: 'spec-approved',
+            type: 'approval',
+            stage: 'define' as QualityGate['stage'],
+          }),
+        ],
+        [
+          {
+            id: 'a1',
+            level: 'explicit',
+            artifact: 'spec',
+            status: 'approved',
+            approvedAt: new Date().toISOString(),
+          },
+        ],
       );
       const results = runner.evaluateStageGates(wf, 'define');
 
@@ -91,7 +126,13 @@ describe('GateRunner', () => {
 
     it('approval gate fails when approval is pending', () => {
       const wf = makeWorkflow(
-        [makeGate({ id: 'spec-approved', type: 'approval', stage: 'define' as QualityGate['stage'] })],
+        [
+          makeGate({
+            id: 'spec-approved',
+            type: 'approval',
+            stage: 'define' as QualityGate['stage'],
+          }),
+        ],
         [{ id: 'a1', level: 'explicit', artifact: 'spec', status: 'pending' }],
       );
       const results = runner.evaluateStageGates(wf, 'define');

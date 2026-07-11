@@ -39,11 +39,7 @@ export class StageExecutor {
     const activeStage = workflow.stages.find((s) => s.status === 'active');
     if (!activeStage) return null;
 
-    return this.buildStageAction(
-      activeStage.id,
-      workflow.processLevel,
-      workflow.activeSkills,
-    );
+    return this.buildStageAction(activeStage.id, workflow.processLevel, workflow.activeSkills);
   }
 
   /**
@@ -86,18 +82,12 @@ export class StageExecutor {
 
     // Check required approvals
     const pendingApprovals = workflow.approvals
-      .filter(
-        (a) =>
-          a.status === 'pending' &&
-          this.isApprovalForStage(a.artifact, activeStage.id),
-      )
+      .filter((a) => a.status === 'pending' && this.isApprovalForStage(a.artifact, activeStage.id))
       .map((a) => a.id);
 
     // Determine status
     const hasBlockers =
-      missingArtifacts.length > 0 ||
-      pendingGates.length > 0 ||
-      pendingApprovals.length > 0;
+      missingArtifacts.length > 0 || pendingGates.length > 0 || pendingApprovals.length > 0;
 
     if (hasBlockers) {
       const parts: string[] = [];
@@ -208,10 +198,7 @@ export class StageExecutor {
     };
   }
 
-  private artifactRequiredAtLevel(
-    artifact: ArtifactType,
-    level: ProcessLevel,
-  ): boolean {
+  private artifactRequiredAtLevel(artifact: ArtifactType, level: ProcessLevel): boolean {
     // Specs and plans are required at standard+
     if (artifact === 'spec' || artifact === 'plan') {
       return level !== 'light';
@@ -326,10 +313,10 @@ const STAGE_INSTRUCTIONS: Readonly<Record<LifecycleStage, StageInstructionDef>> 
   },
   define: {
     description:
-      'Capture the user\'s objective and produce a structured specification. The spec is the shared source of truth — it defines what we\'re building, why, and how we\'ll know it\'s done.',
+      "Capture the user's objective and produce a structured specification. The spec is the shared source of truth — it defines what we're building, why, and how we'll know it's done.",
     steps: [
       'Clarify requirements with the user (interview-me skill)',
-      'Surface assumptions immediately — list what you\'re assuming',
+      "Surface assumptions immediately — list what you're assuming",
       'Write a spec covering: Objective, Commands, Structure, Style, Testing, Boundaries',
       'Define success criteria — specific, testable conditions',
       'Present spec for user review and approval',
@@ -361,8 +348,7 @@ const STAGE_INSTRUCTIONS: Readonly<Record<LifecycleStage, StageInstructionDef>> 
     ],
   },
   verify: {
-    description:
-      'Prove the implementation works end-to-end. Run all verification checks.',
+    description: 'Prove the implementation works end-to-end. Run all verification checks.',
     steps: [
       'Run full test suite (unit + integration)',
       'Run build and type checker',
@@ -381,8 +367,7 @@ const STAGE_INSTRUCTIONS: Readonly<Record<LifecycleStage, StageInstructionDef>> 
     ],
   },
   ship: {
-    description:
-      'Prepare for deployment with pre-launch checklist and monitoring setup.',
+    description: 'Prepare for deployment with pre-launch checklist and monitoring setup.',
     steps: [
       'Complete pre-launch checklist',
       'Verify all quality gates passed',

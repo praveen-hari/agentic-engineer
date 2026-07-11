@@ -33,12 +33,10 @@ function createMockDeps(): MessageHandlerDeps {
         ...SAMPLE_WORKFLOW,
         state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
       }),
-      advanceStage: vi
-        .fn()
-        .mockResolvedValue({
-          ...SAMPLE_WORKFLOW,
-          state: { ...SAMPLE_WORKFLOW.state, status: 'active' },
-        }),
+      advanceStage: vi.fn().mockResolvedValue({
+        ...SAMPLE_WORKFLOW,
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active' },
+      }),
       skipStage: vi.fn().mockResolvedValue({ ...SAMPLE_WORKFLOW }),
     } as unknown as MessageHandlerDeps['workflowEngine'],
 
@@ -53,13 +51,22 @@ function createMockDeps(): MessageHandlerDeps {
     skillEngine: {} as unknown as MessageHandlerDeps['skillEngine'],
     projectDetector: {
       detect: vi.fn().mockReturnValue({
-        languages: [], frameworks: [], testFramework: null,
-        packageManager: null, detectedStack: [], conventions: [],
+        languages: [],
+        frameworks: [],
+        testFramework: null,
+        packageManager: null,
+        detectedStack: [],
+        conventions: [],
       }),
       toContext: vi.fn().mockReturnValue({
-        rootPath: '/project', languages: [], frameworks: [],
-        testFramework: null, packageManager: null, detectedStack: [],
-        conventions: [], generatedAt: new Date().toISOString(),
+        rootPath: '/project',
+        languages: [],
+        frameworks: [],
+        testFramework: null,
+        packageManager: null,
+        detectedStack: [],
+        conventions: [],
+        generatedAt: new Date().toISOString(),
       }),
     } as unknown as MessageHandlerDeps['projectDetector'],
     contextAnalyzer: {} as unknown as MessageHandlerDeps['contextAnalyzer'],
@@ -105,13 +112,26 @@ function createMockDeps(): MessageHandlerDeps {
       getPendingGates: vi.fn().mockReturnValue([]),
       passGate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
       failGate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
-      getSummary: vi.fn().mockReturnValue({ total: 0, passed: 0, failed: 0, pending: 0, skipped: 0 }),
+      getSummary: vi
+        .fn()
+        .mockReturnValue({ total: 0, passed: 0, failed: 0, pending: 0, skipped: 0 }),
     } as unknown as MessageHandlerDeps['gateRunner'],
 
     artifactManager: {
       listAll: vi.fn().mockResolvedValue([]),
       listByStage: vi.fn().mockResolvedValue([]),
-      save: vi.fn().mockResolvedValue({ id: 'test', type: 'spec', title: 'Test', path: 'specs/test.md', stage: 'define', createdAt: '', updatedAt: '', status: 'draft' }),
+      save: vi
+        .fn()
+        .mockResolvedValue({
+          id: 'test',
+          type: 'spec',
+          title: 'Test',
+          path: 'specs/test.md',
+          stage: 'define',
+          createdAt: '',
+          updatedAt: '',
+          status: 'draft',
+        }),
       read: vi.fn().mockResolvedValue(null),
       saveObjective: vi.fn().mockResolvedValue(undefined),
     } as unknown as MessageHandlerDeps['artifactManager'],

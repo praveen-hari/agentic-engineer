@@ -1,9 +1,4 @@
-import type {
-  GateEvaluationResult,
-  GateStatus,
-  QualityGate,
-  WorkflowDefinition,
-} from './types';
+import type { GateEvaluationResult, GateStatus, QualityGate, WorkflowDefinition } from './types';
 
 /**
  * Evaluates quality gates to determine if a stage can advance.
@@ -29,9 +24,7 @@ export class GateRunner {
     workflow: WorkflowDefinition,
     stageId: string,
   ): readonly GateEvaluationResult[] {
-    const stageGates = workflow.qualityGates.filter(
-      (g) => g.stage === stageId,
-    );
+    const stageGates = workflow.qualityGates.filter((g) => g.stage === stageId);
 
     return stageGates.map((gate) => this.evaluateGate(gate, workflow));
   }
@@ -39,10 +32,7 @@ export class GateRunner {
   /**
    * Check if all blocking gates for a stage are passing.
    */
-  areBlockingGatesPassing(
-    workflow: WorkflowDefinition,
-    stageId: string,
-  ): boolean {
+  areBlockingGatesPassing(workflow: WorkflowDefinition, stageId: string): boolean {
     const results = this.evaluateStageGates(workflow, stageId);
     return results
       .filter((r) => {
@@ -55,13 +45,8 @@ export class GateRunner {
   /**
    * Get all pending (not yet evaluated) gates for a stage.
    */
-  getPendingGates(
-    workflow: WorkflowDefinition,
-    stageId: string,
-  ): readonly QualityGate[] {
-    return workflow.qualityGates.filter(
-      (g) => g.stage === stageId && g.status === 'pending',
-    );
+  getPendingGates(workflow: WorkflowDefinition, stageId: string): readonly QualityGate[] {
+    return workflow.qualityGates.filter((g) => g.stage === stageId && g.status === 'pending');
   }
 
   /**
@@ -97,33 +82,21 @@ export class GateRunner {
   /**
    * Pass a gate — marks it as passed with optional details.
    */
-  passGate(
-    workflow: WorkflowDefinition,
-    gateId: string,
-    details?: string,
-  ): WorkflowDefinition {
+  passGate(workflow: WorkflowDefinition, gateId: string, details?: string): WorkflowDefinition {
     return this.updateGateStatus(workflow, gateId, 'passed', details);
   }
 
   /**
    * Fail a gate — marks it as failed with details.
    */
-  failGate(
-    workflow: WorkflowDefinition,
-    gateId: string,
-    details: string,
-  ): WorkflowDefinition {
+  failGate(workflow: WorkflowDefinition, gateId: string, details: string): WorkflowDefinition {
     return this.updateGateStatus(workflow, gateId, 'failed', details);
   }
 
   /**
    * Skip a gate — marks it as skipped (for non-blocking conditional gates).
    */
-  skipGate(
-    workflow: WorkflowDefinition,
-    gateId: string,
-    reason: string,
-  ): WorkflowDefinition {
+  skipGate(workflow: WorkflowDefinition, gateId: string, reason: string): WorkflowDefinition {
     return this.updateGateStatus(workflow, gateId, 'skipped', reason);
   }
 
@@ -149,10 +122,7 @@ export class GateRunner {
 
   // ─── Private Helpers ──────────────────────────────────────────────────
 
-  private evaluateGate(
-    gate: QualityGate,
-    workflow: WorkflowDefinition,
-  ): GateEvaluationResult {
+  private evaluateGate(gate: QualityGate, workflow: WorkflowDefinition): GateEvaluationResult {
     // Already evaluated — return current status
     if (gate.status === 'passed') {
       return {
@@ -228,9 +198,7 @@ export class GateRunner {
     return {
       gateId: gate.id,
       passed: !!approval,
-      details: approval
-        ? `Review completed and approved`
-        : `Waiting for review: ${gate.name}`,
+      details: approval ? `Review completed and approved` : `Waiting for review: ${gate.name}`,
     };
   }
 

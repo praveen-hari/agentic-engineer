@@ -27,7 +27,12 @@ describe('ArtifactManager', () => {
       const fs = createMockFS();
       const manager = new ArtifactManager(fs, '/workspace');
 
-      const artifact = await manager.save('spec', 'User Authentication', '# Spec\n\nContent', 'define');
+      const artifact = await manager.save(
+        'spec',
+        'User Authentication',
+        '# Spec\n\nContent',
+        'define',
+      );
 
       expect(artifact.type).toBe('spec');
       expect(artifact.title).toBe('User Authentication');
@@ -61,7 +66,12 @@ describe('ArtifactManager', () => {
       const fs = createMockFS();
       const manager = new ArtifactManager(fs, '/workspace');
 
-      const artifact = await manager.save('spec', 'Add OAuth2 & Session Management!', '# Spec', 'define');
+      const artifact = await manager.save(
+        'spec',
+        'Add OAuth2 & Session Management!',
+        '# Spec',
+        'define',
+      );
 
       expect(artifact.path).toContain('add-oauth2-session-management');
     });

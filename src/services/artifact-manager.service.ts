@@ -1,9 +1,4 @@
-import type {
-  Artifact,
-  ArtifactType,
-  FileIO,
-  LifecycleStage,
-} from '../core/types';
+import type { Artifact, ArtifactType, FileIO, LifecycleStage } from '../core/types';
 import {
   WORKFLOW_DIR,
   ARTIFACTS_SPECS_DIR,

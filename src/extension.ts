@@ -64,10 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const capabilityRecommender = new CapabilityRecommender();
   const stageExecutor = new StageExecutor(skillRegistry);
   const gateRunner = new GateRunner();
-  const artifactManager = new ArtifactManager(
-    fsService,
-    workspaceRoot ?? '/',
-  );
+  const artifactManager = new ArtifactManager(fsService, workspaceRoot ?? '/');
 
   // ─── AI Layer ─────────────────────────────────────────────────────
   const aiRiskAnalyzer = new AiRiskAnalyzer(riskEngine, {

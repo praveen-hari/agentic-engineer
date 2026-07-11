@@ -292,10 +292,7 @@ async function handleRequestHistory(
 
 // ─── Stage Execution Handlers ───────────────────────────────────────────────
 
-async function handleRequestStageActions(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleRequestStageActions(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const wf = await deps.stateManager.load();
   if (!wf) {
     reply({ type: 'stageActions', actions: null });
@@ -305,10 +302,7 @@ async function handleRequestStageActions(
   reply({ type: 'stageActions', actions: action });
 }
 
-async function handleExecuteStage(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const wf = await deps.stateManager.load();
   if (!wf) {
     reply({ type: 'error', message: 'No active workflow' });
@@ -332,18 +326,12 @@ async function handleExecuteStage(
   }
 }
 
-async function handleRequestArtifacts(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleRequestArtifacts(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const artifacts = await deps.artifactManager.listAll();
   reply({ type: 'artifacts', artifacts });
 }
 
-async function handleRequestGateStatus(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleRequestGateStatus(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const wf = await deps.stateManager.load();
   if (!wf) {
     reply({ type: 'gateStatus', gates: [] });
