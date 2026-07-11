@@ -133,20 +133,16 @@ export function activate(context: vscode.ExtensionContext): void {
   const getProjectContextTool = new GetProjectContextTool(projectDetector, contextAnalyzer);
 
   // New workflow tools
-  const setupProjectTool = new SetupProjectTool(
-    fsService,
-    workspaceRoot ?? '/',
-    () => {
-      // Notify webview that .codestudio/ was created
-      panelProvider.postMessage({
-        type: 'onboardingStatus',
-        status: 'ready',
-        projectType: 'brownfield',
-        context: null,
-        hasExistingFiles: true,
-      });
-    },
-  );
+  const setupProjectTool = new SetupProjectTool(fsService, workspaceRoot ?? '/', () => {
+    // Notify webview that .codestudio/ was created
+    panelProvider.postMessage({
+      type: 'onboardingStatus',
+      status: 'ready',
+      projectType: 'brownfield',
+      context: null,
+      hasExistingFiles: true,
+    });
+  });
 
   const startWorkflowTool = new StartWorkflowTool(
     workflowGenerator,
@@ -159,12 +155,9 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   );
 
-  const saveArtifactTool = new SaveArtifactTool(
-    artifactManager,
-    (artifact) => {
-      panelProvider.postMessage({ type: 'artifactDetected', artifact });
-    },
-  );
+  const saveArtifactTool = new SaveArtifactTool(artifactManager, (artifact) => {
+    panelProvider.postMessage({ type: 'artifactDetected', artifact });
+  });
 
   const advanceStageTool = new AdvanceStageTool(
     workflowEngine,

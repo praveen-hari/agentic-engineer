@@ -51,7 +51,9 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
 
     const wf = await this.stateManager.load();
     if (!wf) {
-      throw new Error('No active workflow. Start a workflow first using engineering_start_workflow.');
+      throw new Error(
+        'No active workflow. Start a workflow first using engineering_start_workflow.',
+      );
     }
 
     if (wf.state.status !== 'active') {
@@ -64,14 +66,20 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
 
     if (result.status === 'blocked') {
       return new vscodeModule.LanguageModelToolResult([
-        new vscodeModule.LanguageModelTextPart(JSON.stringify({
-          advanced: false,
-          currentStage: result.stage,
-          reason: result.message,
-          pendingGates: result.pendingGates,
-          pendingApprovals: result.pendingApprovals,
-          message: `Cannot advance: ${result.message}. Complete the requirements first.`,
-        }, null, 2)),
+        new vscodeModule.LanguageModelTextPart(
+          JSON.stringify(
+            {
+              advanced: false,
+              currentStage: result.stage,
+              reason: result.message,
+              pendingGates: result.pendingGates,
+              pendingApprovals: result.pendingApprovals,
+              message: `Cannot advance: ${result.message}. Complete the requirements first.`,
+            },
+            null,
+            2,
+          ),
+        ),
       ]);
     }
 
@@ -87,40 +95,50 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
     this.onWorkflowUpdated(updated);
 
     return new vscodeModule.LanguageModelToolResult([
-      new vscodeModule.LanguageModelTextPart(JSON.stringify({
-        advanced: true,
-        previousStage: result.stage,
-        currentStage: updated.state.currentStage,
-        workflowStatus: updated.state.status,
-        stageAction: nextAction ? {
-          stage: nextAction.stage,
-          description: nextAction.description,
-          requiredArtifacts: nextAction.requiredArtifacts,
-          requiredGates: nextAction.requiredGates,
-        } : null,
-        instructions,
-        message: updated.state.status === 'completed'
-          ? 'Workflow completed! All stages done.'
-          : `Advanced to ${updated.state.currentStage}.`,
-        nextSteps: updated.state.status === 'completed'
-          ? ['The workflow is complete. Summarize what was accomplished.']
-          : [
-              `Follow the skill instructions for the ${updated.state.currentStage} stage.`,
-              updated.state.currentStage === 'define'
-                ? 'Follow the spec-driven-development skill. Then call engineering_save_artifact with type "spec".'
-                : updated.state.currentStage === 'plan'
-                  ? 'Follow the planning-and-task-breakdown skill. Then call engineering_save_artifact with type "plan".'
-                  : updated.state.currentStage === 'build'
-                    ? 'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time.'
-                    : updated.state.currentStage === 'verify'
-                      ? 'Run tests, build, and lint. Then call engineering_save_artifact with type "report".'
-                      : updated.state.currentStage === 'review'
-                        ? 'Follow the code-review-and-quality skill. Then call engineering_save_artifact with type "review".'
-                        : updated.state.currentStage === 'ship'
-                          ? 'Follow the shipping-and-launch skill. Then call engineering_save_artifact with type "report".'
-                          : 'Follow the stage instructions.',
-            ],
-      }, null, 2)),
+      new vscodeModule.LanguageModelTextPart(
+        JSON.stringify(
+          {
+            advanced: true,
+            previousStage: result.stage,
+            currentStage: updated.state.currentStage,
+            workflowStatus: updated.state.status,
+            stageAction: nextAction
+              ? {
+                  stage: nextAction.stage,
+                  description: nextAction.description,
+                  requiredArtifacts: nextAction.requiredArtifacts,
+                  requiredGates: nextAction.requiredGates,
+                }
+              : null,
+            instructions,
+            message:
+              updated.state.status === 'completed'
+                ? 'Workflow completed! All stages done.'
+                : `Advanced to ${updated.state.currentStage}.`,
+            nextSteps:
+              updated.state.status === 'completed'
+                ? ['The workflow is complete. Summarize what was accomplished.']
+                : [
+                    `Follow the skill instructions for the ${updated.state.currentStage} stage.`,
+                    updated.state.currentStage === 'define'
+                      ? 'Follow the spec-driven-development skill. Then call engineering_save_artifact with type "spec".'
+                      : updated.state.currentStage === 'plan'
+                        ? 'Follow the planning-and-task-breakdown skill. Then call engineering_save_artifact with type "plan".'
+                        : updated.state.currentStage === 'build'
+                          ? 'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time.'
+                          : updated.state.currentStage === 'verify'
+                            ? 'Run tests, build, and lint. Then call engineering_save_artifact with type "report".'
+                            : updated.state.currentStage === 'review'
+                              ? 'Follow the code-review-and-quality skill. Then call engineering_save_artifact with type "review".'
+                              : updated.state.currentStage === 'ship'
+                                ? 'Follow the shipping-and-launch skill. Then call engineering_save_artifact with type "report".'
+                                : 'Follow the stage instructions.',
+                  ],
+          },
+          null,
+          2,
+        ),
+      ),
     ]);
   }
 }

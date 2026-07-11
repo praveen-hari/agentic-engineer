@@ -134,10 +134,12 @@ const ScanningScreen: FunctionalComponent = () => {
           <Icon name="check" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
-          <Icon name="loading" size={14} spin /> Agent calling <code>engineering_setup_project</code> tool
+          <Icon name="loading" size={14} spin /> Agent calling{' '}
+          <code>engineering_setup_project</code> tool
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
-          <Icon name="circle-outline" size={14} /> Agent calling <code>engineering_start_workflow</code> tool
+          <Icon name="circle-outline" size={14} /> Agent calling{' '}
+          <code>engineering_start_workflow</code> tool
         </div>
         <div class="onboarding__progress-item onboarding__progress-item--pending">
           <Icon name="circle-outline" size={14} /> DEFINE stage — generating specification

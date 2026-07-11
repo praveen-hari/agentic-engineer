@@ -198,31 +198,60 @@
             },
             "workType": {
               "type": "string",
-              "enum": ["feature", "bugfix", "refactor", "infrastructure", "documentation", "security"],
+              "enum": [
+                "feature",
+                "bugfix",
+                "refactor",
+                "infrastructure",
+                "documentation",
+                "security"
+              ],
               "description": "Type of work — you determine this based on the objective"
             },
             "complexity": {
               "type": "string",
-              "enum": ["trivial", "simple", "moderate", "complex", "critical"],
+              "enum": [
+                "trivial",
+                "simple",
+                "moderate",
+                "complex",
+                "critical"
+              ],
               "description": "Estimated complexity — you determine this based on scope and risk"
             },
             "riskLevel": {
               "type": "string",
-              "enum": ["low", "medium", "high"],
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
               "description": "Risk level — you determine this based on what the task touches (auth, payments, data, etc.)"
             },
             "processLevel": {
               "type": "string",
-              "enum": ["light", "standard", "thorough", "guarded"],
+              "enum": [
+                "light",
+                "standard",
+                "thorough",
+                "guarded"
+              ],
               "description": "Optional. Process level override. If not provided, inferred from riskLevel + complexity. light=trivial fixes, standard=normal features, thorough=architecture/security, guarded=migrations/auth changes"
             },
             "contextSignals": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Optional. Context signals you detected: touches_ui, touches_api, touches_auth_or_input, touches_external_services, performance_sensitive, high_risk_decision"
             }
           },
-          "required": ["objective", "workType", "complexity", "riskLevel"]
+          "required": [
+            "objective",
+            "workType",
+            "complexity",
+            "riskLevel"
+          ]
         }
       },
       {
@@ -238,7 +267,12 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["spec", "plan", "review", "report"],
+              "enum": [
+                "spec",
+                "plan",
+                "review",
+                "report"
+              ],
               "description": "Artifact type: spec (specification), plan (task breakdown), review (code review), report (verification report)"
             },
             "title": {
@@ -251,11 +285,23 @@
             },
             "stage": {
               "type": "string",
-              "enum": ["define", "plan", "build", "verify", "review", "ship"],
+              "enum": [
+                "define",
+                "plan",
+                "build",
+                "verify",
+                "review",
+                "ship"
+              ],
               "description": "Which workflow stage produced this artifact"
             }
           },
-          "required": ["type", "title", "content", "stage"]
+          "required": [
+            "type",
+            "title",
+            "content",
+            "stage"
+          ]
         }
       },
       {

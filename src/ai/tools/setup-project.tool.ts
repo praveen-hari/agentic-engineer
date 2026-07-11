@@ -77,27 +77,35 @@ export class SetupProjectTool implements vscode.LanguageModelTool<SetupProjectIn
       this.onComplete();
 
       return new vscodeModule.LanguageModelToolResult([
-        new vscodeModule.LanguageModelTextPart(JSON.stringify({
-          success: true,
-          created: [
-            '.codestudio/',
-            '.codestudio/config.json',
-            ...CODESTUDIO_DIRECTORIES.map((d) => `.codestudio/${d}/`),
-          ],
-          nextSteps: [
-            'Scan the workspace and create these project context files in .codestudio/:',
-            '  - context.md — Project overview, what this project is, who it is for',
-            '  - architecture.md — Architecture decisions, module boundaries, data flow',
-            '  - conventions.md — Coding conventions, naming rules, formatting, patterns',
-            '  - stack.md — Detailed tech stack: languages, frameworks, deps with versions',
-            '  - boundaries.md — Always do / Ask first / Never do rules',
-            '  - codestudio-instructions.md — Combined agent instructions for this project',
-            'Then call engineering_start_workflow with the objective, workType, complexity, and riskLevel.',
-          ],
-        }, null, 2)),
+        new vscodeModule.LanguageModelTextPart(
+          JSON.stringify(
+            {
+              success: true,
+              created: [
+                '.codestudio/',
+                '.codestudio/config.json',
+                ...CODESTUDIO_DIRECTORIES.map((d) => `.codestudio/${d}/`),
+              ],
+              nextSteps: [
+                'Scan the workspace and create these project context files in .codestudio/:',
+                '  - context.md — Project overview, what this project is, who it is for',
+                '  - architecture.md — Architecture decisions, module boundaries, data flow',
+                '  - conventions.md — Coding conventions, naming rules, formatting, patterns',
+                '  - stack.md — Detailed tech stack: languages, frameworks, deps with versions',
+                '  - boundaries.md — Always do / Ask first / Never do rules',
+                '  - codestudio-instructions.md — Combined agent instructions for this project',
+                'Then call engineering_start_workflow with the objective, workType, complexity, and riskLevel.',
+              ],
+            },
+            null,
+            2,
+          ),
+        ),
       ]);
     } catch (err) {
-      throw new Error(`Failed to create .codestudio/: ${err instanceof Error ? err.message : 'unknown error'}`);
+      throw new Error(
+        `Failed to create .codestudio/: ${err instanceof Error ? err.message : 'unknown error'}`,
+      );
     }
   }
 }

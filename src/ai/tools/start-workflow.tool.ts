@@ -56,12 +56,12 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
         title: 'Start Engineering Workflow',
         message: new (await import('vscode')).MarkdownString(
           `Start an engineering workflow?\n\n` +
-          `> **Objective:** ${objective}\n\n` +
-          `| Field | Value |\n|---|---|\n` +
-          `| Work Type | ${workType} |\n` +
-          `| Complexity | ${options.input.complexity} |\n` +
-          `| Risk Level | ${riskLevel} |\n` +
-          `| Process Level | ${options.input.processLevel ?? 'auto'} |`,
+            `> **Objective:** ${objective}\n\n` +
+            `| Field | Value |\n|---|---|\n` +
+            `| Work Type | ${workType} |\n` +
+            `| Complexity | ${options.input.complexity} |\n` +
+            `| Risk Level | ${riskLevel} |\n` +
+            `| Process Level | ${options.input.processLevel ?? 'auto'} |`,
         ),
       },
     };
@@ -75,8 +75,8 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     const { objective, workType, complexity, riskLevel, contextSignals } = options.input;
 
     // Map risk level to process level if not provided
-    const processLevel: ProcessLevel = options.input.processLevel
-      ?? this.inferProcessLevel(riskLevel, complexity);
+    const processLevel: ProcessLevel =
+      options.input.processLevel ?? this.inferProcessLevel(riskLevel, complexity);
 
     // Build assessment from agent's input (NOT from keyword matching)
     const assessment = {
@@ -90,11 +90,7 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     };
 
     // Generate workflow
-    const wf = this.workflowGenerator.generate(
-      `wf-${Date.now()}`,
-      objective,
-      assessment as never,
-    );
+    const wf = this.workflowGenerator.generate(`wf-${Date.now()}`, objective, assessment as never);
 
     // Start workflow (activates first stage)
     const started = await this.workflowEngine.start(wf);
@@ -111,27 +107,35 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     this.onWorkflowStarted(started);
 
     return new vscodeModule.LanguageModelToolResult([
-      new vscodeModule.LanguageModelTextPart(JSON.stringify({
-        workflowId: started.id,
-        objective,
-        workType,
-        complexity,
-        riskLevel,
-        processLevel: started.processLevel,
-        activeSkills: started.activeSkills,
-        currentStage: started.state.currentStage,
-        totalStages: started.stages.length,
-        stages: started.stages.map((s) => `${s.name} (${s.status})`),
-        stageAction: stageAction ? {
-          stage: stageAction.stage,
-          description: stageAction.description,
-          requiredArtifacts: stageAction.requiredArtifacts,
-          requiredGates: stageAction.requiredGates,
-          skills: stageAction.skills,
-        } : null,
-        instructions,
-        nextSteps: this.getNextSteps(started),
-      }, null, 2)),
+      new vscodeModule.LanguageModelTextPart(
+        JSON.stringify(
+          {
+            workflowId: started.id,
+            objective,
+            workType,
+            complexity,
+            riskLevel,
+            processLevel: started.processLevel,
+            activeSkills: started.activeSkills,
+            currentStage: started.state.currentStage,
+            totalStages: started.stages.length,
+            stages: started.stages.map((s) => `${s.name} (${s.status})`),
+            stageAction: stageAction
+              ? {
+                  stage: stageAction.stage,
+                  description: stageAction.description,
+                  requiredArtifacts: stageAction.requiredArtifacts,
+                  requiredGates: stageAction.requiredGates,
+                  skills: stageAction.skills,
+                }
+              : null,
+            instructions,
+            nextSteps: this.getNextSteps(started),
+          },
+          null,
+          2,
+        ),
+      ),
     ]);
   }
 
@@ -149,11 +153,14 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
 
     const stageSkillMap: Record<string, string> = {
       onboard: 'Call engineering_advance_stage — this stage auto-advances.',
-      define: 'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
+      define:
+        'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
       plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
-      build: 'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD.',
+      build:
+        'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD.',
       verify: 'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
-      review: 'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
+      review:
+        'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
       ship: 'Follow the shipping-and-launch skill. Complete the pre-launch checklist. Then call engineering_save_artifact with type="report".',
     };
 

@@ -55,18 +55,24 @@ export class SaveArtifactTool implements vscode.LanguageModelTool<SaveArtifactIn
     this.onArtifactSaved(artifact);
 
     return new vscodeModule.LanguageModelToolResult([
-      new vscodeModule.LanguageModelTextPart(JSON.stringify({
-        success: true,
-        artifactId: artifact.id,
-        path: artifact.path,
-        type: artifact.type,
-        stage: artifact.stage,
-        message: `Artifact saved to ${artifact.path}. The user can review and approve it in the Engineering Workspace sidebar.`,
-        nextSteps: [
-          'Wait for the user to review and approve the artifact in the sidebar.',
-          'Once approved, call engineering_advance_stage to move to the next stage.',
-        ],
-      }, null, 2)),
+      new vscodeModule.LanguageModelTextPart(
+        JSON.stringify(
+          {
+            success: true,
+            artifactId: artifact.id,
+            path: artifact.path,
+            type: artifact.type,
+            stage: artifact.stage,
+            message: `Artifact saved to ${artifact.path}. The user can review and approve it in the Engineering Workspace sidebar.`,
+            nextSteps: [
+              'Wait for the user to review and approve the artifact in the sidebar.',
+              'Once approved, call engineering_advance_stage to move to the next stage.',
+            ],
+          },
+          null,
+          2,
+        ),
+      ),
     ]);
   }
 }

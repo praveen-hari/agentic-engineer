@@ -411,102 +411,47 @@ async function handleGenerateArtifact(
 
 // ─── Onboarding Handlers ────────────────────────────────────────────────────
 
-async function handleSetupExistingProject(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
-  const root = deps.workspaceService.getWorkspaceRoot();
-  if (!root) {
-    reply({ type: 'error', message: 'No workspace folder open' });
-    return;
-  }
+async function handleSetupExistingProject(
+  deps: MessageHandlerDeps,
+  _reply: ReplyFn,
+): Promise<void> {
+  // For existing projects, the agent does everything via tools.
+  // The extension just sends the prompt — no scanning, no file creation.
+  // The ArtifactWatcher detects .codestudio/config.json and auto-transitions UI.
 
-  // Scan workspace and detect project context
-  try {
-    const scanner = new WorkspaceScanner(deps.fileSystem, root);
-    const files = await scanner.scan();
-    const detection = deps.projectDetector.detect(files);
-    const context = deps.projectDetector.toContext(detection, root);
-    deps.contextSignalDetector.detect(context); // detect signals for side effects
+  const prompt = `Set up the Engineering Workspace for this existing project.
 
-    // Cache the context
-    cachedContext = context;
+## Steps — use these tools and follow in order:
 
-    // Ensure .codestudio/ directory exists
-    try {
-      await deps.fileSystem.mkdir(`${root}/.codestudio`);
-    } catch {
-      // Directory may already exist
-    }
+### Step 1: Call \`engineering_setup_project\` tool
+This creates the .codestudio/ directory structure and config.json.
 
-    // Generate context.md
-    const markdown = deps.contextAnalyzer.generateMarkdown(context);
-    const contextPath = `${root}/.codestudio/context.md`;
-    await deps.fileSystem.write(contextPath, markdown);
+### Step 2: Scan the workspace and create project context files
+Read the codebase thoroughly — package.json, source files, config files, tests, README, etc.
+Then create these files in .codestudio/ based on what you ACTUALLY find:
 
-    // Create config.json so returning users skip onboarding
-    const configPath = `${root}/.codestudio/config.json`;
-    const configExists = await deps.fileSystem.exists(configPath);
-    if (!configExists) {
-      const defaultConfig = {
-        version: 1,
-        processLevelDefault: 'auto',
-        autoApproveLowRisk: false,
-        reviewTimeoutMinutes: 5,
-        historyHotThreshold: 5,
-        historyWarmThreshold: 20,
-        historyColdAgeDays: 180,
-        autoRefreshContext: true,
-      };
-      await deps.fileSystem.write(configPath, JSON.stringify(defaultConfig, null, 2));
-    }
+- \`context.md\` — Project overview: what this project is, its purpose, target users
+- \`architecture.md\` — Architecture: module boundaries, patterns, data flow, key abstractions
+- \`conventions.md\` — Coding conventions: naming, formatting, file organization, patterns used
+- \`stack.md\` — Tech stack: languages, frameworks, dependencies with versions, build tools
+- \`boundaries.md\` — Rules: Always do / Ask first / Never do (based on existing patterns)
+- \`codestudio-instructions.md\` — Combined agent instructions summarizing all the above
 
-    // Send prompt to agent to create codestudio-instructions.md
-    // The extension already called engineering_setup_project internally
-    // (created .codestudio/, config.json, context.md). Now the agent
-    // just needs to create the instructions file.
-    const instructionsPrompt = `The Engineering Workspace has been initialized for this existing project.
+**Important:** Base everything on the ACTUAL codebase. Read real files. Don't guess or use generic templates.
 
-## Project Context (auto-detected)
-${formatContextForPrompt(context)}
+### Step 3: Ask the user what they want to build
+Tell the user: "Your project is set up! What would you like to build or change?"
 
-## Steps — follow these in order:
+When they respond, call \`engineering_start_workflow\` tool with:
+- \`objective\`: what the user described
+- \`workType\`: your assessment — "feature", "bugfix", "refactor", "infrastructure", "documentation", or "security"
+- \`complexity\`: your assessment — "trivial", "simple", "moderate", "complex", or "critical"
+- \`riskLevel\`: your assessment — "low", "medium", or "high"
+- \`contextSignals\`: what the project touches — e.g. ["touches_ui", "touches_api", "touches_auth_or_input"]
 
-### Step 1: Create project context files in .codestudio/
-Scan the workspace thoroughly and create these files based on the ACTUAL codebase:
-- \`context.md\` — Project overview, purpose, what this project does
-- \`architecture.md\` — Architecture patterns, module boundaries, data flow
-- \`conventions.md\` — Coding conventions, naming, formatting, patterns found
-- \`stack.md\` — Detailed tech stack: languages, frameworks, deps with versions
-- \`boundaries.md\` — Always do / Ask first / Never do rules
-- \`codestudio-instructions.md\` — Combined agent instructions for this project
+Then follow the SDLC stages using the skills and tools as instructed by the start_workflow response.`;
 
-Base everything on the ACTUAL codebase — not generic templates.
-
-### Step 2: Ready
-The project is now set up. When the user describes what they want to build,
-call \`engineering_start_workflow\` tool with:
-- \`objective\`: what the user wants
-- \`workType\`: your assessment (feature/bugfix/refactor/etc.)
-- \`complexity\`: your assessment (trivial/simple/moderate/complex/critical)
-- \`riskLevel\`: your assessment (low/medium/high)
-- \`contextSignals\`: what the project touches`;
-
-    await deps.agentBridge.sendToChat(instructionsPrompt);
-
-    // Tell webview the scan is complete
-    const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
-    reply({
-      type: 'onboardingStatus',
-      status: 'setup-existing',
-      projectType: pType,
-      context,
-      hasExistingFiles: true,
-    });
-    reply({ type: 'context', context });
-  } catch (err) {
-    reply({
-      type: 'error',
-      message: `Failed to scan workspace: ${err instanceof Error ? err.message : 'unknown error'}`,
-    });
-  }
+  await deps.agentBridge.sendToChat(prompt);
 }
 
 async function handleSetupNewProject(
@@ -625,15 +570,4 @@ async function handleRequestOnboardingStatus(
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function formatContextForPrompt(context: ProjectContext): string {
-  const parts: string[] = [];
-  if (context.languages.length > 0) parts.push(`- Languages: ${context.languages.join(', ')}`);
-  if (context.frameworks.length > 0) parts.push(`- Frameworks: ${context.frameworks.join(', ')}`);
-  if (context.testFramework) parts.push(`- Test framework: ${context.testFramework}`);
-  if (context.packageManager) parts.push(`- Package manager: ${context.packageManager}`);
-  if (context.conventions.length > 0)
-    parts.push(`- Conventions: ${context.conventions.join(', ')}`);
-  return parts.length > 0 ? parts.join('\n') : '- No specific context detected';
-}
+// No helpers needed — agent handles all context generation via tools.
