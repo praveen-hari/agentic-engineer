@@ -1,0 +1,70 @@
+{
+  "id": "stripe-payments",
+  "version": 1,
+  "objective": "Add Stripe payment processing",
+  "processLevel": "standard",
+  "detectedRisks": [
+    {
+      "type": "keyword",
+      "signal": "payment",
+      "severity": "high",
+      "impact": "security-review gate added"
+    }
+  ],
+  "stages": [
+    {
+      "id": "onboard",
+      "name": "Onboard",
+      "status": "completed",
+      "skippable": false,
+      "entryConditions": [],
+      "exitConditions": [],
+      "artifacts": ["context.md"],
+      "startedAt": "2026-07-11T10:00:00Z",
+      "completedAt": "2026-07-11T10:05:00Z"
+    },
+    {
+      "id": "define",
+      "name": "Define",
+      "status": "active",
+      "skippable": false,
+      "entryConditions": [],
+      "exitConditions": [],
+      "artifacts": []
+    }
+  ],
+  "qualityGates": [
+    {
+      "id": "spec-approved",
+      "name": "Spec Approved",
+      "type": "approval",
+      "status": "pending",
+      "stage": "define",
+      "blocking": true,
+      "conditional": false
+    }
+  ],
+  "approvals": [
+    {
+      "id": "approval-spec",
+      "level": "explicit",
+      "artifact": "spec",
+      "status": "pending",
+      "reason": "Spec requires explicit approval"
+    }
+  ],
+  "activeSkills": ["spec-driven-development", "security-and-hardening"],
+  "skillActivationReason": {
+    "spec-driven-development": "Standard process requires spec",
+    "security-and-hardening": "Payment keyword detected"
+  },
+  "state": {
+    "currentStage": "define",
+    "currentTask": null,
+    "tasksCompleted": 0,
+    "tasksTotal": 0,
+    "startedAt": "2026-07-11T10:00:00Z",
+    "lastActivityAt": "2026-07-11T10:05:00Z",
+    "status": "active"
+  }
+}
