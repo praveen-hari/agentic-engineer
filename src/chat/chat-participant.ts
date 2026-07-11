@@ -119,10 +119,7 @@ export class ChatParticipantHandler {
   /**
    * Handle `/analyze <objective>` — analyze a work request.
    */
-  private async handleAnalyze(
-    prompt: string,
-    stream: vscode.ChatResponseStream,
-  ): Promise<void> {
+  private async handleAnalyze(prompt: string, stream: vscode.ChatResponseStream): Promise<void> {
     const objective = prompt.trim();
     if (!objective) {
       stream.markdown(

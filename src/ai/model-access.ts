@@ -35,6 +35,6 @@ export interface ModelAccess {
   sendRequest(
     model: ModelInfo,
     messages: readonly ChatMessage[],
-    token?: { isCancellationRequested: boolean },
+    token?: unknown,
   ): Promise<string>;
 }

@@ -1,11 +1,6 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal, useComputed } from '@preact/signals';
-import {
-  workflowStore,
-  isWorkflowComplete,
-  progress,
-  currentStage,
-} from '../store/workflow.store';
+import { workflowStore, isWorkflowComplete, progress, currentStage } from '../store/workflow.store';
 import { bridge } from '../bridge';
 
 export const TasksView: FunctionalComponent = () => {
