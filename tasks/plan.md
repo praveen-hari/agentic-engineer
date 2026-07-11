@@ -38,13 +38,13 @@
      ┌────────▼───────┐ ┌───▼──────────┐ ┌▼──────────────┐
      │7a. Skill Reg.  │ │8. Context    │ │10. AI Layer   │
      │7b. Skill Eng.  │ │  Analyzer    │ │(LM API + tools)│
-     │7c. Workflow Gen.│ │              │ │               │
+     │7c. Workflow Gen.│ │9. Signals   │ │               │
      └────────┬───────┘ └───┬──────────┘ └┬───────────────┘
               │              │              │
               └──────────────┼──────────────┘
                              │
                     ┌────────▼────────┐
-                    │10. Services     │
+                    │11. Services     │
                     │(FS, Git, Notif.)│
                     └────────┬────────┘
                              │
@@ -75,13 +75,13 @@ Scaffold + types. No runtime behavior yet, but everything compiles and tests run
 ### Slice B: Core Engine (Tasks 3–6)
 Event stream + state + risk + workflow engine. All pure TypeScript, fully unit-tested. No VS Code deps.
 
-### Slice C: Intelligence (Tasks 7–9)
-Workflow generation + context analysis + AI layer. The "brain" of the extension.
+### Slice C: Intelligence (Tasks 7–10)
+Workflow generation + context analysis + context signals + AI layer. The "brain" of the extension.
 
-### Slice D: Integration (Tasks 10–13)
+### Slice D: Integration (Tasks 11–14)
 VS Code services + Preact webview + chat participant + extension entry point. The "body" that connects brain to IDE.
 
-### Slice E: Polish (Task 14)
+### Slice E: Polish (Task 15)
 Status bar, activation timing, bundle optimization, final integration testing.
 
 ---
@@ -107,7 +107,7 @@ Status bar, activation timing, bundle optimization, final integration testing.
 | B (Core Engine) | 30+ unit tests pass, ≥ 80% coverage on core/ | `npm run test:coverage` |
 | C (Intelligence) | Skill engine activates correct skills per scenario, AI fallback works, workflow generation uses skills | `npm test` |
 | D (Integration) | Extension activates, sidebar renders, chat responds, tools registered | Manual: F5 → Extension Development Host |
-| E (Polish) | All M1 success criteria met (21 items from spec) | Full checklist walkthrough |
+| E (Polish) | All M1 success criteria met (18 items from spec) | Full checklist walkthrough |
 
 ---
 
@@ -130,8 +130,9 @@ Tasks are numbered 1–14. Each task has acceptance criteria and verification st
 | 9 | C | Context signal detector (UI/API/auth/perf pattern detection) | 1.5h |
 | 10 | C | AI layer (model access, risk analyzer, LM tools) | 3h |
 | 11 | D | Services (file system, git, workspace, notification) | 2h |
-| 12 | D | Preact webview shell (sidebar, nav, 7 views, bridge) | 4h |
+| 12 | D | Preact webview shell (sidebar, nav, 5 views, bridge) | 4h |
 | 13 | D | Chat participant (@engineering + slash commands) | 2h |
 | 14 | D | Extension entry point (activate, register all) | 2h |
 | 15 | E | Status bar, bundle optimization, integration test | 2h |
 | | | **Total estimated** | **~38h** |
+| | | **Tasks** | **15** |

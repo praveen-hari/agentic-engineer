@@ -1,0 +1,145 @@
+<!-- WORKFLOW VIEW — ACTIVE STATE
+     DD-018: Kill the Pipeline. Show outcomes, not process.
+     Only 3 things: Objective + Progress, NOW (agent activity), Approval (when needed).
+     No pipeline. No stages. No quality gates checklist. No stats grid.
+-->
+
+<div class="view-workflow">
+
+  <!-- ===== OBJECTIVE + PROGRESS ===== -->
+  <div style="margin-bottom: var(--space-xl);">
+    <h3 style="margin-bottom: var(--space-md);">Integrate Stripe payment processing with idempotency support</h3>
+
+    <!-- Progress bar -->
+    <div style="margin-bottom: var(--space-sm);">
+      <div style="height: 6px; background: var(--color-surface-hover); border-radius: var(--radius-full); overflow: hidden;">
+        <div style="width: 37%; height: 100%; background: var(--color-accent); border-radius: var(--radius-full); transition: width 0.3s;"></div>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: var(--font-caption-size); color: var(--color-secondary);">
+      <span>4 of 8 tasks done</span>
+      <span>~45 min remaining</span>
+    </div>
+  </div>
+
+  <!-- ===== NOW: What the agent is doing ===== -->
+  <div class="card" style="border-left: 3px solid var(--color-success); margin-bottom: var(--space-xl);">
+    <!-- Status header -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); flex-shrink: 0; animation: pulse 2s infinite;"></div>
+      <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Building Task 4: POST /api/payments/intent</span>
+      <span class="badge badge-success" style="font-size: 9px; height: 14px;">TDD: GREEN</span>
+      <button class="btn btn-secondary btn-sm" title="Pause agent"><i class="codicon codicon-debug-pause"></i></button>
+    </div>
+
+    <!-- Current action -->
+    <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+      Writing error handler for Stripe API failures • <code style="font-size: 10px;">src/services/payment.service.ts</code>
+    </div>
+
+    <!-- Recent actions (last 3 only) -->
+    <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 11px;"></i>
+        <span style="color: var(--color-secondary);">Test passed: "returns 201 with client_secret"</span>
+        <span style="color: var(--color-secondary); margin-left: auto;">30s ago</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size);">
+        <i class="codicon codicon-edit" style="color: var(--color-secondary); font-size: 11px;"></i>
+        <span style="color: var(--color-secondary);">Implemented payment intent creation (+42 lines)</span>
+        <span style="color: var(--color-secondary); margin-left: auto;">45s ago</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-caption-size);">
+        <i class="codicon codicon-beaker" style="color: var(--color-error); font-size: 11px;"></i>
+        <span style="color: var(--color-secondary);">Wrote failing test (TDD RED phase)</span>
+        <span style="color: var(--color-secondary); margin-left: auto;">1m ago</span>
+      </div>
+    </div>
+
+    <!-- Link to full activity -->
+    <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border);">
+      <a href="#" onclick="loadScreen('activity'); return false;" style="font-size: var(--font-caption-size); color: var(--color-text-link);">
+        View full activity →
+      </a>
+    </div>
+  </div>
+
+  <!-- ===== APPROVAL NEEDED (inline, only when agent needs input) ===== -->
+  <div class="card" style="border-left: 3px solid var(--color-warning); margin-bottom: var(--space-xl); background: rgba(204, 167, 0, 0.04);">
+    <!-- Header -->
+    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+      <i class="codicon codicon-shield" style="color: var(--color-warning); font-size: 18px;"></i>
+      <span style="font-size: var(--font-small-size); font-weight: 600; flex: 1;">Security gate — approval needed</span>
+      <span class="badge badge-error" style="font-size: 9px; height: 14px;">High Risk</span>
+    </div>
+
+    <!-- What was detected -->
+    <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-md);">
+      Payment data detected in this task. I've verified the following:
+    </div>
+
+    <!-- Checklist (compact, single line each) -->
+    <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md);">
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i>
+        <span>No raw card data stored</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i>
+        <span>Webhook signature verification</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i>
+        <span>Idempotency keys prevent duplicates</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+        <i class="codicon codicon-warning" style="color: var(--color-warning); font-size: 12px;"></i>
+        <span>Rate limiting not yet implemented (Task 8)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-small-size);">
+        <i class="codicon codicon-pass-filled" style="color: var(--color-success); font-size: 12px;"></i>
+        <span>All inputs validated with Zod</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; gap: var(--space-md);">
+      <button class="btn btn-success btn-sm"><i class="codicon codicon-pass"></i> Approve</button>
+      <button class="btn btn-danger btn-sm"><i class="codicon codicon-close"></i> Reject</button>
+      <button class="btn btn-ghost btn-sm">Ask me more</button>
+    </div>
+  </div>
+
+  <!-- ===== Second pending approval (compact) ===== -->
+  <div class="card card-compact" style="border-left: 3px solid var(--color-warning); margin-bottom: var(--space-xl);">
+    <div style="display: flex; align-items: center; gap: var(--space-md);">
+      <i class="codicon codicon-package" style="color: var(--color-warning); font-size: 16px;"></i>
+      <div style="flex: 1;">
+        <div style="font-size: var(--font-small-size); font-weight: 600;">New dependency: stripe@14.0.0</div>
+        <div style="font-size: var(--font-caption-size); color: var(--color-secondary);">MIT • 0 vulnerabilities • 2.1M downloads/week</div>
+      </div>
+      <button class="btn btn-success btn-sm">Approve</button>
+      <button class="btn btn-danger btn-sm">Reject</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Prototype state toggle -->
+<div style="margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px dashed var(--color-border);">
+  <div style="font-size: var(--font-caption-size); color: var(--color-secondary); margin-bottom: var(--space-sm);">
+    <i class="codicon codicon-beaker" style="font-size: 11px;"></i> Prototype: View other states
+  </div>
+  <div style="display: flex; gap: var(--space-sm);">
+    <button class="btn btn-ghost btn-sm" onclick="loadScreen('workflow-empty')">Empty (new request)</button>
+    <button class="btn btn-ghost btn-sm" style="border-bottom: 2px solid var(--color-accent);">Active (current)</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadScreen('workflow-complete')">Complete</button>
+  </div>
+</div>
+
+<style>
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+</style>

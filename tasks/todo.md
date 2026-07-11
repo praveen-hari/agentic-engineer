@@ -396,19 +396,22 @@
 
 ### Task 12: Preact Webview Shell
 
-**Description:** Build the Preact-based webview with sidebar navigation, 7 view components, signal-based state management, and postMessage bridge to extension host. This is the visual interface matching the `.designs/` prototype.
+**Description:** Build the Preact-based webview with sidebar navigation, 5 view components (Tasks, Capabilities, Knowledge, History, Settings per DD-016 through DD-022), signal-based state management, and postMessage bridge to extension host. This is the visual interface matching the `.designs/` prototype.
 
 **Acceptance criteria:**
 - [ ] `index.tsx` renders `<App />` into webview DOM
 - [ ] `app.tsx` has sidebar nav + content area with signal-based routing
 - [ ] `bridge.ts` handles postMessage send/receive with type-safe protocol
-- [ ] `sidebar-nav.tsx` renders 7 nav items + settings pinned to bottom + new work request button
-- [ ] `workflow-view.tsx` renders all 3 states (empty/active/complete)
+- [ ] `sidebar-nav.tsx` renders 5 nav items + settings pinned to bottom + new work request button
+- [ ] `tasks-view.tsx` renders all 3 states (empty/active/complete) with tabs for Stages, Artifacts, Approvals (DD-019, DD-020)
 - [ ] Empty state: objective input with progressive disclosure (analyze button appears after ≥10 chars)
-- [ ] Active state: stage pipeline + stats grid + current stage details
+- [ ] Active state: current stage details + stats grid + stage list (no pipeline viz — DD-018)
 - [ ] Complete state: success banner + summary + archive button
-- [ ] 6 placeholder views (tasks, activity, artifacts, approvals, history, settings) with empty states
-- [ ] Signal stores: `workflow.store.ts`, `ui.store.ts`, `activity.store.ts`
+- [ ] `capabilities-view.tsx` renders: summary stats, missing capability alert, skills (toggleable, grouped), specialist agents, LM tools, chat participant status (DD-022)
+- [ ] `knowledge-view.tsx` renders: Project Context, ADRs, Conventions, Boundaries, Capabilities link card (DD-021, DD-022)
+- [ ] `history-view.tsx` renders: three-tier history (hot/warm/cold) with pagination (DD-006, DD-007)
+- [ ] `settings-view.tsx` renders: process level override, approval policy, history retention, agent mode toggle
+- [ ] Signal stores: `workflow.store.ts`, `ui.store.ts`, `capabilities.store.ts`
 - [ ] CSS uses VS Code theme tokens (`--vscode-*` custom properties)
 - [ ] BEM naming convention for all CSS classes
 - [ ] Webview bundle < 100KB
@@ -416,7 +419,7 @@
 **Verification:**
 - [ ] `npm run build` — webview bundle produced
 - [ ] Manual: F5 → sidebar renders with correct layout
-- [ ] Manual: navigation between views works
+- [ ] Manual: navigation between 5 views works
 - [ ] Manual: theme matches VS Code dark theme
 
 **Dependencies:** Tasks 2, 11
@@ -430,16 +433,13 @@
 - `src/webview/bridge.ts`
 - `src/webview/store/workflow.store.ts`
 - `src/webview/store/ui.store.ts`
-- `src/webview/store/activity.store.ts`
-- `src/webview/views/workflow-view.tsx`
+- `src/webview/store/capabilities.store.ts`
 - `src/webview/views/tasks-view.tsx`
-- `src/webview/views/activity-view.tsx`
-- `src/webview/views/artifacts-view.tsx`
-- `src/webview/views/approvals-view.tsx`
+- `src/webview/views/capabilities-view.tsx`
+- `src/webview/views/knowledge-view.tsx`
 - `src/webview/views/history-view.tsx`
 - `src/webview/views/settings-view.tsx`
 - `src/webview/components/sidebar-nav.tsx`
-- `src/webview/components/stage-pipeline.tsx`
 - `src/webview/components/stats-grid.tsx`
 - `src/webview/components/progress-bar.tsx`
 - `src/webview/components/risk-badge.tsx`
@@ -546,11 +546,12 @@
 
 | Metric | Target |
 |--------|--------|
-| Total tasks | 16 (1, 2, 3, 4, 5, 6, 7a, 7b, 7c, 8, 9, 10, 11, 12, 13, 14, 15) |
+| Total tasks | 15 (1, 2, 3, 4, 5, 6, 7a, 7b, 7c, 8, 9, 10, 11, 12, 13, 14, 15) |
 | Total estimated hours | ~38h |
 | Unit tests expected | 100+ |
 | Core coverage target | ≥ 80% |
-| Files to create | ~65 |
+| Files to create | ~60 |
 | Bundles | 2 (extension.js + webview.js) |
+| Webview views | 5 (Tasks, Capabilities, Knowledge, History, Settings) |
 | Skills cataloged | 24 (from addyosmani/agent-skills) |
 | Context signals detected | 6 types |

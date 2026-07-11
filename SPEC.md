@@ -50,8 +50,8 @@ The extension automatically calibrates engineering rigor (specs, plans, tests, r
 | Criteria | Measurement |
 |----------|-------------|
 | Extension installs and activates without errors | `sfcode --install-extension` succeeds; no activation errors in Output panel |
-| Sidebar shows 7 views with correct navigation | Visual verification against `.designs/` prototype |
-| Workflow view handles all 3 states (empty/active/complete) | State transitions work correctly |
+| Sidebar shows 5 views with correct navigation | Visual verification against `.designs/` prototype |
+| Tasks view handles all 3 states (empty/active/complete) | State transitions work correctly |
 | `.codestudio/` directory is created and persisted | Files survive Code Studio restart |
 | Event sourcing records all state changes | `events.jsonl` contains correct entries |
 | Risk assessment uses LLM when available, falls back to rules | Unit tests pass for both paths |
@@ -64,13 +64,13 @@ The extension automatically calibrates engineering rigor (specs, plans, tests, r
 
 ### User Stories (MVP — Milestone 1)
 
-1. **As a developer**, I can install the extension and see the Engineering Workspace sidebar with 7 navigation items
+1. **As a developer**, I can install the extension and see the Engineering Workspace sidebar with 5 navigation items
 2. **As a developer**, I can type a work request objective and see AI-powered analysis (type, complexity, risk, process level)
 3. **As a developer**, I can start a workflow and see it progress through stages
 4. **As a developer**, I can see my project context auto-generated in `.codestudio/context.md`
 5. **As a developer**, I can see the workflow state persist across Code Studio restarts
 6. **As a developer**, I can see the event log of all actions taken
-7. **As a developer**, I can switch between the 7 views without losing state
+7. **As a developer**, I can switch between the 5 views without losing state
 8. **As a developer**, I can ask `@engineering what's my workflow status?` in chat and get a response
 9. **As a developer**, I can use agent mode and it automatically invokes `analyze_work_request` when I describe a task
 10. **As a developer**, I can use the extension even without an LLM (deterministic fallback)
@@ -212,22 +212,20 @@ codestudio-engineering-workspace/
 │   │   ├── store/                   # Global state (Preact signals)
 │   │   │   ├── workflow.store.ts    # Workflow state signal
 │   │   │   ├── ui.store.ts          # UI state (active view, theme, etc.)
-│   │   │   └── activity.store.ts    # Activity feed signal
-│   │   ├── views/                   # Top-level view components
-│   │   │   ├── workflow-view.tsx    # Workflow (empty/active/complete)
-│   │   │   ├── tasks-view.tsx       # Tasks with inline expansion
-│   │   │   ├── activity-view.tsx    # Real-time activity feed
-│   │   │   ├── artifacts-view.tsx   # Artifacts + review
-│   │   │   ├── approvals-view.tsx   # Approval actions
-│   │   │   ├── history-view.tsx     # History with inline expansion
+│   │   │   └── capabilities.store.ts # Capabilities state signal
+│   │   ├── views/                   # Top-level view components (5 views)
+│   │   │   ├── tasks-view.tsx       # Tasks (empty/active/complete + Stages/Artifacts/Approvals tabs)
+│   │   │   ├── capabilities-view.tsx # Skills, agents, tools, chat participant status
+│   │   │   ├── knowledge-view.tsx   # Project context, ADRs, conventions, boundaries
+│   │   │   ├── history-view.tsx     # History with inline expansion (hot/warm/cold)
 │   │   │   └── settings-view.tsx    # Extension configuration
 │   │   ├── components/              # Reusable Preact components
-│   │   │   ├── sidebar-nav.tsx      # Navigation sidebar
-│   │   │   ├── stage-pipeline.tsx   # Workflow stage visualization
+│   │   │   ├── sidebar-nav.tsx      # Navigation sidebar (5 nav items)
+│   │   │   ├── stage-list.tsx       # Stage list (no pipeline viz — DD-018)
 │   │   │   ├── task-card.tsx        # Task with inline expansion
-│   │   │   ├── activity-item.tsx    # Activity timeline entry
 │   │   │   ├── artifact-viewer.tsx  # Markdown artifact renderer
 │   │   │   ├── approval-card.tsx    # Approval action card
+│   │   │   ├── skill-toggle.tsx     # Skill toggle switch
 │   │   │   ├── stats-grid.tsx       # Statistics grid
 │   │   │   ├── progress-bar.tsx     # Progress indicator
 │   │   │   ├── risk-badge.tsx       # Risk level badge
@@ -303,7 +301,7 @@ codestudio-engineering-workspace/
         │   │  │  index.tsx → <App />                          │   │
         │   │  │    ├── router.ts (signal-based routing)       │   │
         │   │  │    ├── store/ (Preact signals)                │   │
-        │   │  │    ├── views/ (7 view components)             │   │
+        │   │  │    ├── views/ (5 view components)             │   │
         │   │  │    ├── components/ (reusable UI)              │   │
         │   │  │    └── bridge.ts (postMessage ↔ host)         │   │
         │   │  └───────────────────────────────────────────────┘   │
@@ -761,7 +759,7 @@ export interface RiskSignal {
 ### Example: Preact Webview Component
 
 ```tsx
-// src/webview/components/stage-pipeline.tsx
+// src/webview/components/stage-list.tsx
 import { h, FunctionComponent } from 'preact';
 import { useComputed } from '@preact/signals';
 import { workflowStore } from '../store/workflow.store';
@@ -773,18 +771,21 @@ interface StageData {
   status: 'pending' | 'active' | 'completed' | 'skipped';
 }
 
-export const StagePipeline: FunctionComponent = () => {
+// DD-018: No pipeline visualization — stages shown as a list with outcomes
+export const StageList: FunctionComponent = () => {
   const stages = useComputed(() => workflowStore.value?.stages ?? []);
 
   return (
-    <div class="stage-pipeline">
-      {stages.value.map((stage: StageData, i: number) => (
+    <div class="stage-list">
+      {stages.value.map((stage: StageData) => (
         <div key={stage.id} class={`stage stage--${stage.status}`}>
           <div class="stage__icon">
             <Icon name={getStageIcon(stage)} />
           </div>
-          <span class="stage__label">{stage.name}</span>
-          {i < stages.value.length - 1 && <div class="stage__connector" />}
+          <div class="stage__body">
+            <span class="stage__label">{stage.name}</span>
+            <span class="stage__status">{stage.status}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -809,7 +810,7 @@ import { signal, computed } from '@preact/signals';
 import type { WorkflowDefinition } from '../../core/types';
 
 export const workflowStore = signal<WorkflowDefinition | null>(null);
-export const activeView = signal<string>('workflow');
+export const activeView = signal<string>('tasks');
 
 export const isWorkflowActive = computed(() => workflowStore.value?.state.status === 'active');
 export const currentStage = computed(() =>
@@ -932,8 +933,8 @@ export const progress = computed(() => {
 | # | Criterion | Verification |
 |---|-----------|-------------|
 | 1 | Extension activates in Code Studio without errors | `sfcode --install-extension` + check Output panel |
-| 2 | Sidebar shows 7 navigation items with correct icons | Visual check against prototype |
-| 3 | Workflow view renders empty state with objective input | Visual check |
+| 2 | Sidebar shows 5 navigation items with correct icons | Visual check against prototype |
+| 3 | Tasks view renders empty state with objective input | Visual check |
 | 4 | Risk assessment engine returns correct process level for 10+ test cases | `npm test` — risk-engine.test.ts |
 | 5 | AI risk analyzer uses LLM when available, falls back gracefully | `npm test` — risk-analyzer.test.ts |
 | 6 | Workflow can be created, stages transition correctly | `npm test` — workflow-engine.test.ts |
@@ -957,10 +958,10 @@ export const progress = computed(() => {
 
 | # | Criterion | Verification |
 |---|-----------|-------------|
-| 22 | Tasks view shows generated tasks with inline expansion | Visual check |
-| 23 | Artifacts view shows generated specs/plans | Visual check |
-| 24 | Approvals view shows pending items with approve/reject | Visual check |
-| 25 | Activity view shows real-time event feed | Visual check |
+| 22 | Tasks view shows stages with inline expansion (DD-019) | Visual check |
+| 23 | Tasks view Artifacts tab shows generated specs/plans (DD-020) | Visual check |
+| 24 | Tasks view Approvals tab shows pending items with approve/reject (DD-020) | Visual check |
+| 25 | Capabilities view shows skills, agents, tools, chat participant status (DD-022) | Visual check |
 | 26 | History view shows archived workflows with inline expansion | Visual check |
 | 27 | Settings view allows configuration changes (incl. skill visibility in advanced mode) | Visual check |
 | 28 | Chat participant handles natural language queries beyond slash commands | Chat test |
@@ -972,7 +973,7 @@ export const progress = computed(() => {
 |---|-----------|-------------|
 | 30 | History tiering (hot/warm/cold) works correctly | Unit tests |
 | 31 | Workflow complete state shows summary + archive button | Visual check |
-| 32 | All 7 views are fully functional and match prototype | Full walkthrough |
+| 32 | All 5 views are fully functional and match prototype | Full walkthrough |
 | 33 | Chat participant provides contextual follow-up suggestions | Chat test |
 | 34 | Advanced mode shows active skills per stage (V2 prep) | Visual check |
 
@@ -1004,8 +1005,8 @@ export const progress = computed(() => {
 - Risk assessment engine (deterministic rules + context signal detection)
 - AI risk analyzer (LLM-powered with fallback)
 - Workflow generator (uses active skills to determine stages/gates/approvals)
-- Sidebar webview with Preact (7-view navigation)
-- Workflow view (all 3 states: empty/active/complete)
+- Sidebar webview with Preact (5-view navigation: Tasks, Capabilities, Knowledge, History, Settings)
+- Tasks view (all 3 states: empty/active/complete, with Stages/Artifacts/Approvals tabs)
 - Project context analyzer
 - Status bar integration
 - Chat participant (`@engineering` with `/status`, `/analyze`, `/history`)
@@ -1013,10 +1014,11 @@ export const progress = computed(() => {
 - Unit tests (≥ 80% on core/)
 
 ### M2: Interactive Views + Full Chat (Next Spec)
-- Tasks view with inline expansion
-- Artifacts view with markdown rendering
-- Approvals view with approve/reject actions
-- Activity view with real-time feed
+- Tasks view: Stages tab with inline expansion (DD-019)
+- Tasks view: Artifacts tab with markdown rendering (DD-020)
+- Tasks view: Approvals tab with approve/reject actions (DD-020)
+- Capabilities view: skills, agents, tools, chat participant status (DD-022)
+- Knowledge view: project context, ADRs, conventions, boundaries (DD-021)
 - History view with inline expansion
 - Settings view with configuration
 - Enhanced chat participant (natural language beyond slash commands)
