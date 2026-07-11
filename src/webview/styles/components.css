@@ -1147,3 +1147,469 @@
   height: 16px;
   padding: 1px var(--space-xs);
 }
+
+/* ─── Stage Accordion ──────────────────────────────────────────── */
+
+.stage-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stage-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.stage-accordion--active {
+  border-color: var(--color-accent);
+}
+
+.stage-accordion--completed {
+  opacity: 0.75;
+}
+
+.stage-accordion--pending {
+  opacity: 0.5;
+}
+
+.stage-accordion--skipped {
+  opacity: 0.4;
+}
+
+.stage-accordion--blocked {
+  border-color: var(--color-warning);
+}
+
+.stage-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  background: var(--color-surface);
+  user-select: none;
+}
+
+.stage-accordion-header:hover {
+  background: var(--color-surface-hover);
+}
+
+.stage-accordion-title {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.stage-accordion-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.stage-accordion-chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.stage-accordion-body {
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ─── Agent Status Banner ──────────────────────────────────────── */
+
+.agent-status-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.agent-status-banner--working {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-text);
+}
+
+.agent-status-banner--working .codicon {
+  color: var(--color-accent);
+}
+
+.agent-status-banner--waiting-approval {
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  border-left: 3px solid var(--color-warning);
+  color: var(--color-text);
+}
+
+.agent-status-banner--waiting-approval .codicon {
+  color: var(--color-warning);
+}
+
+.agent-status-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-status-banner-label {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.agent-status-banner-message {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ─── Skills Row ───────────────────────────────────────────────── */
+
+.stage-skills-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.stage-skills-icon {
+  color: var(--color-text-muted);
+  margin-right: 2px;
+}
+
+.skill-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+/* ─── Completion Checklist ─────────────────────────────────────── */
+
+.completion-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.completion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.completion-item .codicon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.completion-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.completion-item-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.completion-item--met {
+  color: var(--color-text);
+}
+
+.completion-item--unmet {
+  color: var(--color-text-muted);
+}
+
+/* ─── Stage Section Labels ─────────────────────────────────────── */
+
+.stage-section-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+/* ─── Stage Gates ──────────────────────────────────────────────── */
+
+.stage-gates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.stage-gate {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.stage-gate-status {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ─── Stage Artifacts ──────────────────────────────────────────── */
+
+.stage-artifacts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.stage-artifact-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.stage-artifact-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.stage-artifact-title {
+  flex: 1;
+}
+
+/* ─── Stage Actions Bar ────────────────────────────────────────── */
+
+.stage-actions-bar {
+  display: flex;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ─── Stage Description ────────────────────────────────────────── */
+
+.stage-description {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* ─── Analyze Hint ─────────────────────────────────────────────── */
+
+.analyze-hint {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-sm);
+}
+
+/* ─── Button Disabled State ────────────────────────────────────── */
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-full {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.btn-danger {
+  background: var(--color-error);
+  color: #fff;
+}
+
+.btn-sm {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.badge-accent {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  color: var(--color-accent);
+}
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.risk-badge--sm {
+  font-size: 10px;
+  padding: 0 var(--space-xs);
+}
+
+.progress-bar-fill--success {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.3s ease;
+}
+
+.stat-value--success {
+  color: var(--color-success);
+}
+
+.stat-value--accent {
+  color: var(--color-accent);
+}
+
+/* ─── Stage Approvals ──────────────────────────────────────────── */
+
+.stage-approvals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* ─── Stage Document Cards ─────────────────────────────────────── */
+
+.stage-documents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.stage-document-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.1s;
+}
+
+.stage-document-card:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-hover);
+}
+
+.stage-document-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stage-document-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-document-action {
+  font-size: var(--font-size-xs);
+  color: var(--color-link);
+}
+
+/* ─── Stage Approval Actions ───────────────────────────────────── */
+
+.stage-approval-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.stage-approval-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  border-left: 3px solid var(--color-warning);
+}
+
+.stage-approval-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.stage-approval-buttons {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+/* ─── Artifacts List (Artifacts Tab) ───────────────────────────── */
+
+.artifacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.artifact-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.artifact-list-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.artifact-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.artifact-list-item-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artifact-list-item-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.artifact-list-item-arrow {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}

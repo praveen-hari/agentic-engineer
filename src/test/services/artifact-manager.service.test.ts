@@ -37,7 +37,7 @@ describe('ArtifactManager', () => {
       expect(artifact.type).toBe('spec');
       expect(artifact.title).toBe('User Authentication');
       expect(artifact.path).toContain('specs/');
-      expect(artifact.path).toContain('user-authentication.md');
+      expect(artifact.path).toContain('spec.md');
       expect(artifact.stage).toBe('define');
       expect(artifact.status).toBe('draft');
       expect(fs.write).toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe('ArtifactManager', () => {
       const artifact = await manager.save('plan', 'Implementation Plan', '# Plan', 'plan');
 
       expect(artifact.path).toContain('plans/');
-      expect(artifact.path).toContain('implementation-plan.md');
+      expect(artifact.path).toContain('plan.md');
     });
 
     it('saves a review artifact to reviews directory', async () => {
@@ -62,7 +62,7 @@ describe('ArtifactManager', () => {
       expect(artifact.path).toContain('reviews/');
     });
 
-    it('generates correct slug for title', async () => {
+    it('uses standard filename per type (not title-based slug)', async () => {
       const fs = createMockFS();
       const manager = new ArtifactManager(fs, '/workspace');
 
@@ -73,7 +73,8 @@ describe('ArtifactManager', () => {
         'define',
       );
 
-      expect(artifact.path).toContain('add-oauth2-session-management');
+      // Standard filename: spec.md, not a slug of the title
+      expect(artifact.path).toContain('spec.md');
     });
   });
 

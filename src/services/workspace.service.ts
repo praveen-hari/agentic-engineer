@@ -45,4 +45,14 @@ export class WorkspaceService {
       }
     });
   }
+
+  /**
+   * Open a file in the editor.
+   * Used to open artifact .md files for review.
+   */
+  async openFileInEditor(filePath: string): Promise<void> {
+    const uri = this.vscode.Uri.file(filePath);
+    const doc = await this.vscode.workspace.openTextDocument(uri);
+    await this.vscode.window.showTextDocument(doc, { preview: true });
+  }
 }

@@ -272,7 +272,12 @@ export type MessageToHost =
   | { readonly type: 'generateArtifact'; readonly stage: LifecycleStage }
   | { readonly type: 'setupExistingProject' }
   | { readonly type: 'setupNewProject'; readonly projectName: string; readonly description: string }
-  | { readonly type: 'requestOnboardingStatus' };
+  | { readonly type: 'requestOnboardingStatus' }
+  | { readonly type: 'requestStageDetail' }
+  | { readonly type: 'requestArtifactContent'; readonly artifactId: string }
+  | { readonly type: 'sendToAgent'; readonly stage: LifecycleStage }
+  | { readonly type: 'notifyArtifactDetected'; readonly artifact: Artifact }
+  | { readonly type: 'openArtifact'; readonly artifactId: string };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -301,7 +306,30 @@ export type MessageToWebview =
       readonly projectType: ProjectType | null;
       readonly context: ProjectContext | null;
       readonly hasExistingFiles: boolean;
+    }
+  | {
+      readonly type: 'stageDetail';
+      readonly stage: LifecycleStage | null;
+      readonly action: StageAction | null;
+      readonly completion: StageExecutionResult;
+      readonly instructions: string;
+      readonly artifacts: readonly Artifact[];
+    }
+  | {
+      readonly type: 'artifactContent';
+      readonly artifactId: string;
+      readonly content: string | null;
+    }
+  | {
+      readonly type: 'agentStatus';
+      readonly status: AgentActivityStatus;
+      readonly stage?: LifecycleStage;
+      readonly message?: string;
     };
+
+// ─── Agent Activity ────────────────────────────────────────────────────────
+
+export type AgentActivityStatus = 'idle' | 'working' | 'waiting-approval';
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
 

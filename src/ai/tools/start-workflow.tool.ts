@@ -157,7 +157,7 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
         'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
       plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
       build:
-        'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD.',
+        'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD. When all tasks are done, call engineering_advance_stage.',
       verify: 'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
       review:
         'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',

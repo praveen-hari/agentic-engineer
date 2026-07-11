@@ -7,11 +7,15 @@
 
 import { signal, computed } from '@preact/signals';
 import type {
+  AgentActivityStatus,
   Artifact,
+  LifecycleStage,
   OnboardingStatus,
   ProjectContext,
   ProjectType,
   RiskAssessment,
+  StageAction,
+  StageExecutionResult,
   WorkflowDefinition,
   HistoryEntry,
 } from '../../core/types';
@@ -40,7 +44,7 @@ export const error = signal<string | null>(null);
 // Tasks view UI state — lifted here so it survives view switches
 export const objectiveInput = signal<string>('');
 export const isAnalyzing = signal<boolean>(false);
-export const tasksActiveTab = signal<'tasks' | 'artifacts'>('tasks');
+export const tasksActiveTab = signal<'stages' | 'artifacts'>('stages');
 
 // ─── Assessment State ──────────────────────────────────────────────────────
 
@@ -66,6 +70,27 @@ export const isOnboarded = computed(() => onboardingStatus.value === 'ready');
 
 export const generatingStage = signal<string | null>(null);
 export const detectedArtifacts = signal<readonly Artifact[]>([]);
+
+// ─── Stage Detail State (Task 1: Tasks View) ─────────────────────────────
+
+/** Combined detail for the active stage — action, completion, instructions, artifacts. */
+export interface StageDetailData {
+  readonly stage: LifecycleStage | null;
+  readonly action: StageAction | null;
+  readonly completion: StageExecutionResult;
+  readonly instructions: string;
+  readonly artifacts: readonly Artifact[];
+}
+
+export const stageDetailStore = signal<StageDetailData | null>(null);
+
+/** Agent activity status — idle, working, or waiting for approval. */
+export const agentStatus = signal<AgentActivityStatus>('idle');
+export const agentStatusMessage = signal<string | null>(null);
+export const agentStatusStage = signal<LifecycleStage | null>(null);
+
+/** Cached artifact content keyed by artifact ID. */
+export const artifactContents = signal<Readonly<Record<string, string>>>({});
 
 // ─── Capabilities State ───────────────────────────────────────────────────
 

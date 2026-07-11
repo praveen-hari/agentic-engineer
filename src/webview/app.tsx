@@ -15,6 +15,11 @@ import {
   generatingStage,
   detectedArtifacts,
   error,
+  stageDetailStore,
+  agentStatus,
+  agentStatusMessage,
+  agentStatusStage,
+  artifactContents,
 } from './store/workflow.store';
 import { bridge } from './bridge';
 import { OnboardingView } from './views/onboarding-view';
@@ -56,6 +61,20 @@ export const App: FunctionalComponent = () => {
         case 'state':
           workflowStore.value = msg.workflow;
           isAnalyzing.value = false;
+          // Auto-refresh stage detail when workflow state changes
+          bridge.send({ type: 'requestStageDetail' });
+          break;
+        case 'stageResult':
+          // Stage is blocked — refresh stage detail to show what's missing
+          bridge.send({ type: 'requestStageDetail' });
+          // Show the blocking reason as an error so the user knows why
+          if (msg.result && msg.result.status === 'blocked') {
+            error.value = msg.result.message;
+            // Auto-clear after 5 seconds
+            setTimeout(() => {
+              error.value = null;
+            }, 5000);
+          }
           break;
         case 'assessment':
           assessmentStore.value = msg.assessment;
@@ -86,6 +105,28 @@ export const App: FunctionalComponent = () => {
         case 'artifactDetected':
           generatingStage.value = null;
           detectedArtifacts.value = [...detectedArtifacts.value, msg.artifact];
+          break;
+        case 'stageDetail':
+          stageDetailStore.value = {
+            stage: msg.stage,
+            action: msg.action,
+            completion: msg.completion,
+            instructions: msg.instructions,
+            artifacts: msg.artifacts,
+          };
+          break;
+        case 'agentStatus':
+          agentStatus.value = msg.status;
+          agentStatusMessage.value = msg.message ?? null;
+          agentStatusStage.value = msg.stage ?? null;
+          break;
+        case 'artifactContent':
+          if (msg.content !== null) {
+            artifactContents.value = {
+              ...artifactContents.value,
+              [msg.artifactId]: msg.content,
+            };
+          }
           break;
       }
     });

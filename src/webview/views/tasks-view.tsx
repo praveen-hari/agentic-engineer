@@ -1,23 +1,34 @@
+/**
+ * Tasks View — the main view after SDLC workflow starts.
+ *
+ * Three states:
+ * 1. Empty — no workflow. Shows objective input → "Start in Chat" button.
+ * 2. Active — workflow running. Stage-centric accordion layout.
+ * 3. Complete — workflow done. Success banner + stats.
+ *
+ * The Active state uses StageAccordion components — one per SDLC stage.
+ * The active stage auto-expands with full detail (agent status, skills,
+ * completion requirements, artifacts, gates, actions).
+ */
 import { type FunctionalComponent } from 'preact';
-import { useComputed, type Signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
+import { useComputed } from '@preact/signals';
 import {
   workflowStore,
   isWorkflowComplete,
   progress,
-  currentStage,
-  assessmentStore,
   objectiveInput,
   isAnalyzing,
   tasksActiveTab,
+  stageDetailStore,
+  agentStatus as agentStatusSignal,
+  agentStatusMessage,
 } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
 import { ProgressBar } from '../components/progress-bar';
 import { RiskBadge } from '../components/risk-badge';
-import { TaskCard, type TaskStatus, type TaskChecklistItem } from '../components/task-card';
-import { ApprovalCard } from '../components/approval-card';
-import { ArtifactViewer } from '../components/artifact-viewer';
-import type { Stage, Approval, RiskAssessment } from '../../core/types';
+import { StageAccordion } from '../components/stage-accordion';
 
 // ─── Quick Start suggestions ────────────────────────────────────────────────
 
@@ -30,13 +41,9 @@ const QUICK_START_SUGGESTIONS: readonly { readonly icon: string; readonly text: 
 // ─── Tasks View ─────────────────────────────────────────────────────────────
 
 export const TasksView: FunctionalComponent = () => {
-  // UI state lives in the store so it survives view switches
   const objective = objectiveInput;
-  const activeTab = tasksActiveTab;
   const analyzing = isAnalyzing;
-
-  const showAnalyze = useComputed(() => objective.value.trim().length >= 10);
-  const hasResults = useComputed(() => assessmentStore.value !== null);
+  const showStart = useComputed(() => objective.value.trim().length >= 10);
 
   // ─── Empty State ───────────────────────────────────────────────
   if (!workflowStore.value) {
@@ -48,7 +55,7 @@ export const TasksView: FunctionalComponent = () => {
             <Icon name="rocket" size={24} />
           </div>
           <h2>What do you want to build?</h2>
-          <p>Describe your objective. I'll analyze it and propose a plan.</p>
+          <p>Describe your objective and the agent will plan &amp; execute it.</p>
         </div>
 
         {/* Objective input */}
@@ -68,58 +75,44 @@ export const TasksView: FunctionalComponent = () => {
           </div>
         </div>
 
-        {/* Analyze button (progressive disclosure) */}
-        {showAnalyze.value && !analyzing.value && !hasResults.value && (
+        {/* Start in Chat button */}
+        {showStart.value && !analyzing.value && (
           <div class="analyze-section">
             <button
               class="btn btn-primary btn-full"
               onClick={() => {
                 analyzing.value = true;
-                bridge.send({ type: 'analyzeObjective', objective: objective.value.trim() });
+                bridge.send({
+                  type: 'analyzeObjective',
+                  objective: objective.value.trim(),
+                });
               }}
             >
-              <Icon name="sparkle" size={14} /> Analyze &amp; Plan
+              <Icon name="sparkle" size={14} /> Start in Chat
             </button>
+            <div class="analyze-hint">
+              The agent will assess complexity, select skills, and create a workflow.
+            </div>
           </div>
         )}
 
         {/* Analyzing spinner */}
-        {analyzing.value && !hasResults.value && (
+        {analyzing.value && (
           <div class="analyze-section">
             <div class="card analyzing-card">
               <Icon name="loading" size={18} spin />
               <div>
-                <div class="analyzing-card-title">Analyzing your objective…</div>
+                <div class="analyzing-card-title">Starting workflow…</div>
                 <div class="analyzing-card-sub">
-                  Detecting risks, estimating complexity, selecting skills
+                  The agent is analyzing your objective and creating a plan.
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Analysis results */}
-        {hasResults.value && assessmentStore.value && (
-          <AnalysisResults
-            assessment={assessmentStore.value}
-            onCancel={() => {
-              assessmentStore.value = null;
-              analyzing.value = false;
-            }}
-            onStart={() => {
-              if (assessmentStore.value) {
-                bridge.send({
-                  type: 'startWorkflow',
-                  objective: objective.value.trim(),
-                  assessment: assessmentStore.value,
-                });
-              }
-            }}
-          />
-        )}
-
         {/* Quick start */}
-        {!analyzing.value && !hasResults.value && (
+        {!analyzing.value && (
           <div class="quick-start">
             <div class="quick-start-label">Quick Start</div>
             <div class="quick-start-list">
@@ -147,113 +140,47 @@ export const TasksView: FunctionalComponent = () => {
   }
 
   // ─── Active State ──────────────────────────────────────────────
-  return <ActiveState activeTab={activeTab} />;
+  return <ActiveState />;
 };
 
-// ─── Analysis Results Sub-component ─────────────────────────────────────────
+// ─── Active State ───────────────────────────────────────────────────────────
 
-interface AnalysisResultsProps {
-  readonly assessment: RiskAssessment;
-  readonly onCancel: () => void;
-  readonly onStart: () => void;
-}
-
-const AnalysisResults: FunctionalComponent<AnalysisResultsProps> = ({
-  assessment,
-  onCancel,
-  onStart,
-}) => {
-  const riskColor =
-    assessment.riskLevel === 'high'
-      ? 'var(--color-error)'
-      : assessment.riskLevel === 'medium'
-        ? 'var(--color-warning)'
-        : 'var(--color-success)';
-
-  return (
-    <div>
-      <div class="card analysis-results-card">
-        <div class="analysis-results-header">
-          <Icon name="sparkle" size={16} />
-          <span class="analysis-results-header-title">Analysis Complete</span>
-          <button
-            class="btn-icon"
-            onClick={() => {
-              assessmentStore.value = null;
-            }}
-          >
-            <Icon name="refresh" size={12} />
-          </button>
-        </div>
-        <div class="analysis-meta">
-          <div>
-            <span class="analysis-meta-label">Type:</span> <strong>{assessment.workType}</strong>
-          </div>
-          <div>
-            <span class="analysis-meta-label">Risk:</span>{' '}
-            <strong style={`color: ${riskColor};`}>{assessment.riskLevel}</strong>
-          </div>
-          <div>
-            <span class="analysis-meta-label">Process:</span>{' '}
-            <strong>{assessment.processLevel}</strong>
-          </div>
-        </div>
-        {assessment.signals.length > 0 && (
-          <div class="analysis-risk-signals">
-            <Icon name="warning" size={11} /> Risk signals:{' '}
-            {assessment.signals.map((s) => s.signal).join(', ')}
-          </div>
-        )}
-        <div class="analysis-recommendation">
-          Recommended: <strong>{assessment.processLevel}</strong> process
-        </div>
-      </div>
-      <div class="analysis-actions">
-        <button class="btn btn-secondary" onClick={onCancel}>
-          Cancel
-        </button>
-        <button class="btn btn-primary" onClick={onStart}>
-          <Icon name="play" size={14} /> Start Building
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ─── Active State Sub-component ─────────────────────────────────────────────
-
-interface ActiveStateProps {
-  readonly activeTab: Signal<'tasks' | 'artifacts'>;
-}
-
-const ActiveState: FunctionalComponent<ActiveStateProps> = ({ activeTab }) => {
+const ActiveState: FunctionalComponent = () => {
   const wf = workflowStore.value!;
-  const stage = currentStage.value;
-  const pendingApprovals = wf.approvals.filter((a) => a.status === 'pending');
+  const detail = stageDetailStore.value;
+  const agentSt = agentStatusSignal.value;
+  const agentMsg = agentStatusMessage.value;
+  const activeTab = tasksActiveTab;
+  const allArtifacts = detail?.artifacts ?? [];
+
+  // Request stage detail on mount and when workflow changes
+  useEffect(() => {
+    bridge.send({ type: 'requestStageDetail' });
+  }, [wf.state.currentStage, wf.state.lastActivityAt]);
 
   return (
     <div class="tasks-active">
-      {/* Objective + Progress */}
+      {/* Objective + Progress Header */}
       <div class="tasks-header">
         <h3>{wf.objective}</h3>
         <ProgressBar value={progress.value} />
         <div class="tasks-progress-meta">
           <span>
-            {wf.state.tasksCompleted} of {wf.state.tasksTotal} tasks done
+            {wf.stages.filter((s) => s.status === 'completed').length} of {wf.stages.length} stages
           </span>
           <RiskBadge level={wf.processLevel} size="sm" />
         </div>
       </div>
 
-      {/* Tab Switcher */}
+      {/* Tab Switcher: Stages / Artifacts */}
       <div class="tab-strip">
         <button
-          class={`tab-strip-item${activeTab.value === 'tasks' ? ' is-active' : ''}`}
+          class={`tab-strip-item${activeTab.value === 'stages' ? ' is-active' : ''}`}
           onClick={() => {
-            activeTab.value = 'tasks';
+            activeTab.value = 'stages';
           }}
         >
-          <Icon name="tasklist" size={12} /> Tasks
+          <Icon name="list-tree" size={12} /> Stages
         </button>
         <button
           class={`tab-strip-item${activeTab.value === 'artifacts' ? ' is-active' : ''}`}
@@ -262,195 +189,141 @@ const ActiveState: FunctionalComponent<ActiveStateProps> = ({ activeTab }) => {
           }}
         >
           <Icon name="file-code" size={12} /> Artifacts
+          {allArtifacts.length > 0 && (
+            <span class="badge badge-sm" style="margin-left: var(--space-xs);">
+              {allArtifacts.length}
+            </span>
+          )}
         </button>
       </div>
 
       {/* Tab Content */}
-      {activeTab.value === 'tasks' ? (
-        <TasksTab stages={wf.stages} approvals={pendingApprovals} currentStage={stage} />
+      {activeTab.value === 'stages' ? (
+        <StagesTab wf={wf} detail={detail} agentSt={agentSt} agentMsg={agentMsg} />
       ) : (
-        <ArtifactsTab stages={wf.stages} />
+        <ArtifactsTab artifacts={allArtifacts} />
       )}
     </div>
   );
 };
 
-// ─── Tasks Tab ──────────────────────────────────────────────────────────────
+// ─── Stages Tab ─────────────────────────────────────────────────────────────
 
-interface TasksTabProps {
-  readonly stages: readonly Stage[];
-  readonly approvals: readonly Approval[];
-  readonly currentStage: Stage | null;
+import type { WorkflowDefinition } from '../../core/types';
+import type { StageDetailData } from '../store/workflow.store';
+import type { AgentActivityStatus } from '../../core/types';
+
+interface StagesTabProps {
+  readonly wf: WorkflowDefinition;
+  readonly detail: StageDetailData | null;
+  readonly agentSt: AgentActivityStatus;
+  readonly agentMsg: string | null;
 }
 
-const TasksTab: FunctionalComponent<TasksTabProps> = ({ stages, approvals, currentStage }) => {
-  return (
-    <div>
-      {stages.map((stage) => (
-        <PhaseGroup
+const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, agentMsg }) => (
+  <div class="stage-accordion-list">
+    {wf.stages.map((stage) => {
+      const isActive = stage.status === 'active';
+      return (
+        <StageAccordion
           key={stage.id}
           stage={stage}
-          approvals={approvals}
-          isCurrent={currentStage?.id === stage.id}
-        />
-      ))}
-    </div>
-  );
-};
-
-// ─── Phase Group ────────────────────────────────────────────────────────────
-
-interface PhaseGroupProps {
-  readonly stage: Stage;
-  readonly approvals: readonly Approval[];
-  readonly isCurrent: boolean;
-}
-
-const PhaseGroup: FunctionalComponent<PhaseGroupProps> = ({ stage, approvals, isCurrent }) => {
-  const phaseStatus: TaskStatus =
-    stage.status === 'completed' ? 'completed' : stage.status === 'active' ? 'active' : 'pending';
-
-  return (
-    <div class="phase-group">
-      <div class={`phase-header phase-header--${stage.status}`}>
-        <Icon
-          name={
-            stage.status === 'completed'
-              ? 'pass-filled'
-              : stage.status === 'active'
-                ? 'loading'
-                : 'circle-outline'
+          isActive={isActive}
+          action={isActive ? detail?.action : null}
+          completion={isActive ? detail?.completion : null}
+          artifacts={detail?.artifacts}
+          gates={wf.qualityGates}
+          approvals={isActive ? wf.approvals.filter((a) => a.status === 'pending') : []}
+          agentStatus={isActive ? agentSt : undefined}
+          agentMessage={isActive ? (agentMsg ?? undefined) : undefined}
+          onSendToAgent={
+            isActive ? () => bridge.send({ type: 'sendToAgent', stage: stage.id }) : undefined
           }
-          size={14}
-          spin={stage.status === 'active'}
-          class="phase-header-icon"
+          onCompleteStage={isActive ? () => bridge.send({ type: 'executeStage' }) : undefined}
+          onSkipStage={
+            isActive && stage.skippable
+              ? () => bridge.send({ type: 'skipStage', stageId: stage.id })
+              : undefined
+          }
+          onApprove={(id) => bridge.send({ type: 'approve', approvalId: id })}
+          onReject={(id) => bridge.send({ type: 'reject', approvalId: id })}
+          onViewArtifact={(id) => bridge.send({ type: 'openArtifact', artifactId: id })}
         />
-        <span class="phase-header-title">{stage.name}</span>
-        <span class="phase-header-count">{stage.artifacts.length} artifacts</span>
-      </div>
-
-      {/* Inline approvals for this phase */}
-      {stage.status === 'active' &&
-        approvals.map((a) => (
-          <ApprovalCard
-            key={a.id}
-            title={`${stage.name} — approval needed`}
-            subtitle={a.reason}
-            riskBadge={a.level === 'restricted' ? 'High Risk' : undefined}
-            onApprove={() => bridge.send({ type: 'approve', approvalId: a.id })}
-            onReject={() => bridge.send({ type: 'reject', approvalId: a.id })}
-          />
-        ))}
-
-      {/* Task cards from artifacts */}
-      <div class="phase-tasks">
-        {stage.artifacts.length > 0 ? (
-          stage.artifacts.map((artifact, idx) => (
-            <TaskCard
-              key={artifact}
-              label={`Task ${idx + 1}: ${artifact}`}
-              status={phaseStatus}
-              sizeBadge={idx % 3 === 0 ? 'M' : 'S'}
-              tddBadge={stage.status === 'active' ? 'TDD: GREEN' : undefined}
-              checklist={
-                stage.status === 'active'
-                  ? ([
-                      {
-                        label: 'Returns 201 with client_secret',
-                        status: 'completed' as TaskStatus,
-                      },
-                      { label: 'Validates amount > 0', status: 'completed' as TaskStatus },
-                      { label: 'Handles API errors', status: 'active' as TaskStatus },
-                      { label: 'Idempotency key support', status: 'pending' as TaskStatus },
-                    ] satisfies TaskChecklistItem[])
-                  : undefined
-              }
-              hasActivity={stage.status === 'active'}
-            />
-          ))
-        ) : (
-          <TaskCard label={`Task: ${stage.name}`} status={phaseStatus} sizeBadge="S" />
-        )}
-      </div>
-
-      {/* Stage actions */}
-      {isCurrent && (
-        <div style="margin-top: var(--space-sm); display: flex; gap: var(--space-sm);">
-          <button
-            class="btn btn-primary btn-sm"
-            onClick={() => bridge.send({ type: 'executeStage' })}
-          >
-            <Icon name="pass" size={12} /> Complete Stage
-          </button>
-          {stage.skippable && (
-            <button
-              class="btn btn-secondary btn-sm"
-              onClick={() => bridge.send({ type: 'skipStage', stageId: stage.id })}
-            >
-              Skip
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+      );
+    })}
+  </div>
+);
 
 // ─── Artifacts Tab ──────────────────────────────────────────────────────────
 
+import type { Artifact } from '../../core/types';
+
 interface ArtifactsTabProps {
-  readonly stages: readonly Stage[];
+  readonly artifacts: readonly Artifact[];
 }
 
-const ArtifactsTab: FunctionalComponent<ArtifactsTabProps> = ({ stages }) => {
-  const allArtifacts = stages.flatMap((s) =>
-    s.artifacts.map((a) => ({ name: a, stage: s.name, stageStatus: s.status })),
-  );
+const STAGE_LABELS: Record<string, string> = {
+  onboard: 'Onboard',
+  define: 'Define',
+  plan: 'Plan',
+  build: 'Build',
+  verify: 'Verify',
+  review: 'Review',
+  ship: 'Ship',
+};
 
-  if (allArtifacts.length === 0) {
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  draft: '',
+  'pending-review': 'badge-warning',
+  approved: 'badge-success',
+  rejected: 'badge-error',
+};
+
+const ArtifactsTab: FunctionalComponent<ArtifactsTabProps> = ({ artifacts }) => {
+  if (artifacts.length === 0) {
     return (
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon name="file-code" size={32} />
         </div>
         <div class="empty-state-title">No Artifacts Yet</div>
-        <div class="empty-state-description">Artifacts will appear as stages produce them.</div>
+        <div class="empty-state-description">
+          Artifacts (specs, plans, reviews, reports) will appear here as the agent produces them.
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      {allArtifacts.map((artifact) => {
-        const status =
-          artifact.stageStatus === 'completed'
-            ? 'approved'
-            : artifact.stageStatus === 'active'
-              ? 'active'
-              : 'pending';
-        return (
-          <ArtifactViewer
-            key={artifact.name}
-            name={artifact.name}
-            meta={`${artifact.stage} • ${artifact.stageStatus}`}
-            status={status}
-            icon="file-text"
-            iconColor={artifact.stageStatus === 'completed' ? 'success' : 'muted'}
-            detail={
-              artifact.stageStatus === 'completed' ? (
-                <div>
-                  <div style="margin-bottom: var(--space-sm);">
-                    <strong>Objective:</strong> {workflowStore.value?.objective}
-                  </div>
-                  <div>
-                    <strong>Stage:</strong> {artifact.stage}
-                  </div>
-                </div>
-              ) : undefined
+    <div class="artifacts-list">
+      {artifacts.map((artifact) => (
+        <div
+          key={artifact.id}
+          class="artifact-list-item"
+          onClick={() => bridge.send({ type: 'openArtifact', artifactId: artifact.id })}
+        >
+          <Icon
+            name="file-text"
+            size={16}
+            class={
+              artifact.status === 'approved'
+                ? 'task-card-icon--completed'
+                : 'task-card-icon--pending'
             }
           />
-        );
-      })}
+          <div class="artifact-list-item-content">
+            <div class="artifact-list-item-title">{artifact.title}</div>
+            <div class="artifact-list-item-meta">
+              {artifact.type} · {STAGE_LABELS[artifact.stage] ?? artifact.stage}
+              {artifact.updatedAt && ` · ${new Date(artifact.updatedAt).toLocaleDateString()}`}
+            </div>
+          </div>
+          <span class={`badge badge-sm ${STATUS_BADGE_CLASS[artifact.status] ?? ''}`}>
+            {artifact.status}
+          </span>
+          <Icon name="chevron-right" size={14} class="artifact-list-item-arrow" />
+        </div>
+      ))}
     </div>
   );
 };
@@ -459,8 +332,8 @@ const ArtifactsTab: FunctionalComponent<ArtifactsTabProps> = ({ stages }) => {
 
 const CompleteState: FunctionalComponent = () => {
   const wf = workflowStore.value!;
-  const completedTasks = wf.state.tasksCompleted;
-  const totalTasks = wf.state.tasksTotal;
+  const completedStages = wf.stages.filter((s) => s.status === 'completed').length;
+  const skippedStages = wf.stages.filter((s) => s.status === 'skipped').length;
 
   return (
     <div class="tasks-complete">
@@ -479,21 +352,25 @@ const CompleteState: FunctionalComponent = () => {
       <div class="complete-stats">
         <div>
           <div class="complete-stat-value complete-stat-value--success">
-            {completedTasks}/{totalTasks}
+            {completedStages}/{wf.stages.length}
           </div>
-          <div class="complete-stat-label">Tasks</div>
+          <div class="complete-stat-label">Stages</div>
         </div>
         <div>
-          <div class="complete-stat-value">—</div>
-          <div class="complete-stat-label">Tests</div>
+          <div class="complete-stat-value">{skippedStages}</div>
+          <div class="complete-stat-label">Skipped</div>
         </div>
         <div>
-          <div class="complete-stat-value">—</div>
-          <div class="complete-stat-label">Coverage</div>
+          <div class="complete-stat-value">
+            {wf.qualityGates.filter((g) => g.status === 'passed').length}
+          </div>
+          <div class="complete-stat-label">Gates Passed</div>
         </div>
         <div>
-          <div class="complete-stat-value">—</div>
-          <div class="complete-stat-label">Lines</div>
+          <div class="complete-stat-value">
+            {wf.approvals.filter((a) => a.status === 'approved').length}
+          </div>
+          <div class="complete-stat-label">Approvals</div>
         </div>
       </div>
 
@@ -502,14 +379,20 @@ const CompleteState: FunctionalComponent = () => {
         <div class="plan-vs-actual-header">
           <span class="plan-vs-actual-title">Plan vs Actual</span>
           <span class="plan-vs-actual-score">
-            {Math.round((completedTasks / Math.max(totalTasks, 1)) * 100)}% aligned
+            {Math.round((completedStages / Math.max(wf.stages.length, 1)) * 100)}% completed
           </span>
         </div>
         <div class="plan-vs-actual-list">
           {wf.stages.map((s) => (
             <div class="plan-vs-actual-item">
               <Icon
-                name={s.status === 'completed' ? 'pass-filled' : 'warning'}
+                name={
+                  s.status === 'completed'
+                    ? 'pass-filled'
+                    : s.status === 'skipped'
+                      ? 'close'
+                      : 'warning'
+                }
                 size={12}
                 class={
                   s.status === 'completed' ? 'task-card-icon--completed' : 'task-card-icon--pending'
@@ -518,10 +401,10 @@ const CompleteState: FunctionalComponent = () => {
               <span>{s.name}</span>
               <span class="plan-vs-actual-item-detail">
                 {s.status === 'completed'
-                  ? `Matches plan (${s.artifacts.length} artifacts)`
+                  ? 'Completed'
                   : s.status === 'skipped'
                     ? 'Skipped'
-                    : 'In progress'}
+                    : 'Not reached'}
               </span>
             </div>
           ))}

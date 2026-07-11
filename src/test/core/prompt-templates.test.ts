@@ -44,11 +44,10 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('high');
     });
 
-    it('includes save path', () => {
+    it('instructs agent to use save_artifact tool (not create file directly)', () => {
       const prompt = templates.getDefinePrompt('Add auth', SAMPLE_CONTEXT, [], 'standard');
-      expect(prompt).toContain('.codestudio/');
-      expect(prompt).toContain('specs/');
-      expect(prompt).toContain('.md');
+      expect(prompt).toContain('engineering_save_artifact');
+      expect(prompt).toContain('Do NOT create the file directly');
     });
 
     it('includes spec sections instructions', () => {
@@ -81,10 +80,10 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('specs/auth.md');
     });
 
-    it('includes save path for plan', () => {
+    it('instructs agent to use save_artifact tool for plan', () => {
       const prompt = templates.getPlanPrompt('Add auth', 'specs/auth.md', 'standard');
-      expect(prompt).toContain('plans/');
-      expect(prompt).toContain('.md');
+      expect(prompt).toContain('engineering_save_artifact');
+      expect(prompt).toContain('type="plan"');
     });
 
     it('references planning-and-task-breakdown skill', () => {
@@ -133,9 +132,10 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('npm run build');
     });
 
-    it('includes save path for report', () => {
+    it('instructs agent to use save_artifact tool for report', () => {
       const prompt = templates.getVerifyPrompt('Add auth', null, null);
-      expect(prompt).toContain('reports/');
+      expect(prompt).toContain('engineering_save_artifact');
+      expect(prompt).toContain('type="report"');
     });
   });
 
@@ -165,10 +165,10 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('checklist');
     });
 
-    it('includes save path', () => {
+    it('instructs agent to use save_artifact tool for ship report', () => {
       const prompt = templates.getShipPrompt('Add auth');
-      expect(prompt).toContain('reports/');
-      expect(prompt).toContain('.md');
+      expect(prompt).toContain('engineering_save_artifact');
+      expect(prompt).toContain('type="report"');
     });
   });
 
@@ -184,8 +184,10 @@ describe('PromptTemplates', () => {
       expect(templates.getPromptForStage('onboard', params)).toBeNull();
     });
 
-    it('returns null for build (user-driven)', () => {
-      expect(templates.getPromptForStage('build', params)).toBeNull();
+    it('returns prompt for build (agent implements the plan)', () => {
+      const prompt = templates.getPromptForStage('build', params);
+      expect(prompt).not.toBeNull();
+      expect(prompt).toContain('incremental-implementation');
     });
 
     it('returns prompt for define', () => {

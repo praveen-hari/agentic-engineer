@@ -148,8 +148,11 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   );
 
-  const saveArtifactTool = new SaveArtifactTool(artifactManager, (artifact) => {
-    panelProvider.postMessage({ type: 'artifactDetected', artifact });
+  const saveArtifactTool = new SaveArtifactTool(artifactManager, (_artifact) => {
+    // Don't send artifactDetected here — the ArtifactWatcher will
+    // detect the file and route through notifyArtifactDetected,
+    // which also resets agentStatus and refreshes stageDetail.
+    // Sending here would cause a double notification.
   });
 
   const advanceStageTool = new AdvanceStageTool(
@@ -223,9 +226,10 @@ export function activate(context: vscode.ExtensionContext): void {
     const watcherDisposable = artifactWatcher.start();
     context.subscriptions.push(watcherDisposable);
 
-    // When an artifact is detected, notify the webview
+    // When an artifact is detected, route through the message handler
+    // so it can reset agentStatus and refresh stageDetail in one shot.
     artifactWatcher.onArtifactDetected((artifact) => {
-      panelProvider.postMessage({ type: 'artifactDetected', artifact });
+      void messageHandler({ type: 'notifyArtifactDetected', artifact });
     });
 
     // When a setup file is detected (onboarding completion),

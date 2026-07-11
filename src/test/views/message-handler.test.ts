@@ -173,12 +173,12 @@ describe('handleWebviewMessage', () => {
   // ─── analyzeObjective ─────────────────────────────────────────
 
   describe('analyzeObjective', () => {
-    it('sends prompt to agent and replies with placeholder assessment', async () => {
+    it('sends prompt to agent (no reply — agent triggers state via tools)', async () => {
       await handler({ type: 'analyzeObjective', objective: 'Add payment processing' });
-      // Now sends to agent bridge instead of using RiskEngine
       expect(deps.agentBridge.sendToChat).toHaveBeenCalled();
-      expect(replies).toHaveLength(1);
-      expect(replies[0]).toHaveProperty('type', 'assessment');
+      // No reply — the agent will call engineering_start_workflow
+      // which sends the 'state' message to the webview
+      expect(replies).toHaveLength(0);
     });
   });
 

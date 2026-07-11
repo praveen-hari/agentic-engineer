@@ -1,0 +1,446 @@
+/**
+ * Edge-case tests for the webview message handler.
+ *
+ * Covers: stage execution flow, artifact generation, onboarding
+ * handlers, approval with comments, concurrent operations, and
+ * error propagation from all handler paths.
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  handleWebviewMessage,
+  type MessageHandlerDeps,
+  type ReplyFn,
+} from '../../views/message-handler';
+import type { MessageToWebview, WorkflowDefinition } from '../../core/types';
+import sampleWorkflow from '../fixtures/sample-workflow.json';
+
+const SAMPLE_WORKFLOW = sampleWorkflow as unknown as WorkflowDefinition;
+
+function createMockDeps(): MessageHandlerDeps {
+  return {
+    stateManager: {
+      load: vi.fn().mockResolvedValue(SAMPLE_WORKFLOW),
+      save: vi.fn().mockResolvedValue(undefined),
+    } as unknown as MessageHandlerDeps['stateManager'],
+
+    workflowEngine: {
+      start: vi.fn().mockResolvedValue({
+        ...SAMPLE_WORKFLOW,
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
+      }),
+      advanceStage: vi.fn().mockResolvedValue({
+        ...SAMPLE_WORKFLOW,
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active' },
+      }),
+      skipStage: vi.fn().mockResolvedValue({ ...SAMPLE_WORKFLOW }),
+    } as unknown as MessageHandlerDeps['workflowEngine'],
+
+    workflowGenerator: {
+      generate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
+    } as unknown as MessageHandlerDeps['workflowGenerator'],
+
+    notificationService: {
+      showInfo: vi.fn(),
+      showError: vi.fn(),
+    } as unknown as MessageHandlerDeps['notificationService'],
+
+    workspaceService: {
+      getWorkspaceRoot: vi.fn().mockReturnValue('/project'),
+    } as unknown as MessageHandlerDeps['workspaceService'],
+
+    fileSystem: {
+      read: vi.fn().mockRejectedValue(new Error('not found')),
+      write: vi.fn().mockResolvedValue(undefined),
+      append: vi.fn().mockResolvedValue(undefined),
+      exists: vi.fn().mockResolvedValue(false),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      readDir: vi.fn().mockResolvedValue([]),
+    } as unknown as MessageHandlerDeps['fileSystem'],
+
+    stageExecutor: {
+      getStageAction: vi.fn().mockReturnValue(null),
+      evaluateStageCompletion: vi.fn().mockReturnValue({
+        stage: 'build',
+        status: 'completed',
+        artifacts: [],
+        pendingGates: [],
+        pendingApprovals: [],
+        message: 'Ready',
+      }),
+      getStageInstructions: vi.fn().mockReturnValue('No active stage'),
+    } as unknown as MessageHandlerDeps['stageExecutor'],
+
+    artifactManager: {
+      listAll: vi.fn().mockResolvedValue([]),
+      listByStage: vi.fn().mockResolvedValue([]),
+      save: vi.fn().mockResolvedValue({
+        id: 'test',
+        type: 'spec',
+        title: 'Test',
+        path: 'specs/test.md',
+        stage: 'define',
+        createdAt: '',
+        updatedAt: '',
+        status: 'draft',
+      }),
+      read: vi.fn().mockResolvedValue(null),
+      saveObjective: vi.fn().mockResolvedValue(undefined),
+    } as unknown as MessageHandlerDeps['artifactManager'],
+
+    promptTemplates: {
+      getPromptForStage: vi.fn().mockReturnValue('Generate a spec for: test objective'),
+      getDefinePrompt: vi.fn().mockReturnValue('Generate a spec...'),
+      getPlanPrompt: vi.fn().mockReturnValue('Generate a plan...'),
+      getReviewPrompt: vi.fn().mockReturnValue('Review the code...'),
+    } as unknown as MessageHandlerDeps['promptTemplates'],
+
+    agentBridge: {
+      sendToChat: vi.fn().mockResolvedValue(undefined),
+      sendViaParticipant: vi.fn().mockResolvedValue(undefined),
+      sendToAgentMode: vi.fn().mockResolvedValue(undefined),
+    } as unknown as MessageHandlerDeps['agentBridge'],
+  };
+}
+
+describe('handleWebviewMessage — Edge Cases', () => {
+  let deps: MessageHandlerDeps;
+  let reply: ReplyFn;
+  let replies: MessageToWebview[];
+  let handler: (message: unknown) => Promise<void>;
+
+  beforeEach(() => {
+    deps = createMockDeps();
+    replies = [];
+    reply = (msg) => replies.push(msg);
+    handler = handleWebviewMessage(deps, reply);
+  });
+
+  // ─── Stage Execution Flow ─────────────────────────────────────────
+
+  describe('executeStage', () => {
+    it('auto-advances when stage is completed', async () => {
+      vi.mocked(deps.stageExecutor.evaluateStageCompletion).mockReturnValue({
+        stage: 'define',
+        status: 'completed',
+        artifacts: [],
+        pendingGates: [],
+        pendingApprovals: [],
+        message: 'Ready to advance',
+      });
+
+      await handler({ type: 'executeStage' });
+
+      expect(deps.workflowEngine.advanceStage).toHaveBeenCalled();
+      expect(deps.stateManager.save).toHaveBeenCalled();
+      expect(replies[0].type).toBe('state');
+    });
+
+    it('returns stageResult when stage is blocked', async () => {
+      vi.mocked(deps.stageExecutor.evaluateStageCompletion).mockReturnValue({
+        stage: 'define',
+        status: 'blocked',
+        artifacts: [],
+        pendingGates: ['spec-approved'],
+        pendingApprovals: ['a1'],
+        message: 'Missing artifacts: spec. Pending gates: spec-approved',
+      });
+
+      await handler({ type: 'executeStage' });
+
+      expect(deps.workflowEngine.advanceStage).not.toHaveBeenCalled();
+      expect(replies[0].type).toBe('stageResult');
+      const result = (replies[0] as { type: 'stageResult'; result: unknown }).result as {
+        status: string;
+        message: string;
+      };
+      expect(result.status).toBe('blocked');
+      expect(result.message).toContain('Missing artifacts');
+    });
+
+    it('returns error when no workflow exists', async () => {
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
+      await handler({ type: 'executeStage' });
+      expect(replies[0]).toEqual({ type: 'error', message: 'No active workflow' });
+    });
+  });
+
+  // ─── requestStageActions ──────────────────────────────────────────
+
+  describe('requestStageActions', () => {
+    it('returns stage action when workflow exists', async () => {
+      vi.mocked(deps.stageExecutor.getStageAction).mockReturnValue({
+        stage: 'define',
+        description: 'Define — Capture objective',
+        skills: ['spec-driven-development'],
+        requiredArtifacts: ['spec'],
+        requiredGates: ['spec-approved'],
+        autoAdvance: false,
+      });
+
+      await handler({ type: 'requestStageActions' });
+
+      expect(replies[0].type).toBe('stageActions');
+      const actions = (replies[0] as { type: 'stageActions'; actions: unknown }).actions;
+      expect(actions).not.toBeNull();
+    });
+
+    it('returns null actions when no workflow', async () => {
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
+      await handler({ type: 'requestStageActions' });
+      expect(replies[0]).toEqual({ type: 'stageActions', actions: null });
+    });
+  });
+
+  // ─── requestArtifacts ─────────────────────────────────────────────
+
+  describe('requestArtifacts', () => {
+    it('returns artifacts list', async () => {
+      vi.mocked(deps.artifactManager.listAll).mockResolvedValue([
+        {
+          id: 'spec-1',
+          type: 'spec',
+          title: 'Auth Spec',
+          path: 'specs/auth.md',
+          stage: 'define',
+          createdAt: '',
+          updatedAt: '',
+          status: 'draft',
+        },
+      ]);
+
+      await handler({ type: 'requestArtifacts' });
+
+      expect(replies[0].type).toBe('artifacts');
+      const artifacts = (replies[0] as { type: 'artifacts'; artifacts: unknown[] }).artifacts;
+      expect(artifacts).toHaveLength(1);
+    });
+
+    it('returns empty array when no artifacts', async () => {
+      await handler({ type: 'requestArtifacts' });
+      const artifacts = (replies[0] as { type: 'artifacts'; artifacts: unknown[] }).artifacts;
+      expect(artifacts).toEqual([]);
+    });
+  });
+
+  // ─── requestGateStatus ────────────────────────────────────────────
+
+  describe('requestGateStatus', () => {
+    it('returns gates from workflow', async () => {
+      await handler({ type: 'requestGateStatus' });
+      expect(replies[0].type).toBe('gateStatus');
+    });
+
+    it('returns empty gates when no workflow', async () => {
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
+      await handler({ type: 'requestGateStatus' });
+      expect(replies[0]).toEqual({ type: 'gateStatus', gates: [] });
+    });
+  });
+
+  // ─── generateArtifact ─────────────────────────────────────────────
+
+  describe('generateArtifact', () => {
+    it('sends prompt to agent for define stage (delegates to sendToAgent)', async () => {
+      await handler({ type: 'generateArtifact', stage: 'define' });
+
+      expect(deps.agentBridge.sendToChat).toHaveBeenCalled();
+      // Now delegates to handleSendToAgent which sends agentStatus
+      expect(replies[0].type).toBe('agentStatus');
+    });
+
+    it('returns error when no workflow exists', async () => {
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
+      await handler({ type: 'generateArtifact', stage: 'define' });
+      expect(replies[0]).toEqual({ type: 'error', message: 'No active workflow' });
+    });
+
+    it('returns error when stage has no prompt', async () => {
+      vi.mocked(deps.promptTemplates.getPromptForStage).mockReturnValue(null);
+      await handler({ type: 'generateArtifact', stage: 'onboard' });
+      expect(replies[0].type).toBe('error');
+    });
+
+    it('looks up spec path for plan stage', async () => {
+      vi.mocked(deps.artifactManager.listAll).mockResolvedValue([
+        {
+          id: 'spec-1',
+          type: 'spec',
+          title: 'Auth Spec',
+          path: 'specs/auth.md',
+          stage: 'define',
+          createdAt: '',
+          updatedAt: '',
+          status: 'draft',
+        },
+      ]);
+
+      await handler({ type: 'generateArtifact', stage: 'plan' });
+
+      expect(deps.promptTemplates.getPromptForStage).toHaveBeenCalledWith(
+        'plan',
+        expect.objectContaining({ specPath: 'specs/auth.md' }),
+      );
+    });
+  });
+
+  // ─── Approval with Comments ───────────────────────────────────────
+
+  describe('approval with comments', () => {
+    it('approve without comment sets approvedAt', async () => {
+      await handler({ type: 'approve', approvalId: 'approval-spec' });
+
+      const wf = (replies[0] as { type: 'state'; workflow: WorkflowDefinition }).workflow;
+      const approval = wf.approvals.find((a) => a.id === 'approval-spec');
+      expect(approval?.status).toBe('approved');
+      expect(approval?.approvedAt).toBeDefined();
+    });
+
+    it('approve with comment preserves comment', async () => {
+      await handler({
+        type: 'approve',
+        approvalId: 'approval-spec',
+        comment: 'Looks good!',
+      });
+
+      const wf = (replies[0] as { type: 'state'; workflow: WorkflowDefinition }).workflow;
+      const approval = wf.approvals.find((a) => a.id === 'approval-spec');
+      expect(approval?.comment).toBe('Looks good!');
+    });
+
+    it('reject without comment still rejects', async () => {
+      await handler({ type: 'reject', approvalId: 'approval-spec' });
+
+      const wf = (replies[0] as { type: 'state'; workflow: WorkflowDefinition }).workflow;
+      const approval = wf.approvals.find((a) => a.id === 'approval-spec');
+      expect(approval?.status).toBe('rejected');
+    });
+
+    it('approving non-existent approval does not crash', async () => {
+      await handler({ type: 'approve', approvalId: 'nonexistent' });
+      // Should still reply with state (approval just won't be found)
+      expect(replies[0].type).toBe('state');
+    });
+  });
+
+  // ─── Onboarding Handlers ─────────────────────────────────────────
+
+  describe('onboarding handlers', () => {
+    it('setupExistingProject sends prompt to agent', async () => {
+      await handler({ type: 'setupExistingProject' });
+      expect(deps.agentBridge.sendToChat).toHaveBeenCalledWith(
+        expect.stringContaining('engineering_setup_project'),
+      );
+    });
+
+    it('setupNewProject sends prompt with project name', async () => {
+      await handler({
+        type: 'setupNewProject',
+        projectName: 'MyApp',
+        description: 'A todo app',
+      });
+      expect(deps.agentBridge.sendToChat).toHaveBeenCalledWith(expect.stringContaining('MyApp'));
+    });
+
+    it('setupNewProject uses project name as fallback objective', async () => {
+      await handler({
+        type: 'setupNewProject',
+        projectName: 'MyApp',
+        description: '',
+      });
+      expect(deps.agentBridge.sendToChat).toHaveBeenCalledWith(
+        expect.stringContaining('Build MyApp'),
+      );
+    });
+
+    it('requestOnboardingStatus checks for config.json', async () => {
+      await handler({ type: 'requestOnboardingStatus' });
+      expect(replies[0].type).toBe('onboardingStatus');
+    });
+  });
+
+  // ─── Error Propagation ────────────────────────────────────────────
+
+  describe('error propagation from all paths', () => {
+    it('catches workflowEngine.advanceStage errors', async () => {
+      vi.mocked(deps.workflowEngine.advanceStage).mockRejectedValue(
+        new Error('Cannot advance: no active stage'),
+      );
+      await handler({ type: 'advanceStage' });
+      expect(replies[0]).toEqual({
+        type: 'error',
+        message: 'Cannot advance: no active stage',
+      });
+    });
+
+    it('catches workflowEngine.skipStage errors', async () => {
+      vi.mocked(deps.workflowEngine.skipStage).mockRejectedValue(new Error('Stage not skippable'));
+      await handler({ type: 'skipStage', stageId: 'build' });
+      expect(replies[0]).toEqual({
+        type: 'error',
+        message: 'Stage not skippable',
+      });
+    });
+
+    it('catches stateManager.save errors', async () => {
+      vi.mocked(deps.stateManager.save).mockRejectedValue(new Error('Disk full'));
+      await handler({
+        type: 'startWorkflow',
+        objective: 'Test',
+        assessment: {
+          workType: 'feature',
+          complexity: 'moderate',
+          riskLevel: 'medium',
+          processLevel: 'standard',
+          signals: [],
+          contextSignals: [],
+          source: 'llm',
+        },
+      });
+      expect(replies[0]).toEqual({ type: 'error', message: 'Disk full' });
+    });
+
+    it('catches agentBridge.sendToChat errors in generateArtifact', async () => {
+      vi.mocked(deps.agentBridge.sendToChat).mockRejectedValue(new Error('Chat not available'));
+      await handler({ type: 'generateArtifact', stage: 'define' });
+      expect(replies).toHaveLength(2); // generatingArtifact + error
+      expect(replies[1]).toEqual({ type: 'error', message: 'Chat not available' });
+    });
+
+    it('handles non-Error throws gracefully', async () => {
+      vi.mocked(deps.stateManager.load).mockRejectedValue(42);
+      await handler({ type: 'requestState' });
+      expect(replies[0]).toEqual({
+        type: 'error',
+        message: 'An unexpected error occurred',
+      });
+    });
+  });
+
+  // ─── Message Validation ───────────────────────────────────────────
+
+  describe('message validation', () => {
+    it('ignores array messages', async () => {
+      await handler([1, 2, 3]);
+      expect(replies).toHaveLength(0);
+    });
+
+    it('ignores boolean messages', async () => {
+      await handler(true);
+      expect(replies).toHaveLength(0);
+    });
+
+    it('ignores messages with unknown type', async () => {
+      await handler({ type: 'unknownMessageType' });
+      expect(replies).toHaveLength(0);
+    });
+
+    it('handles rapid sequential messages', async () => {
+      await Promise.all([
+        handler({ type: 'requestState' }),
+        handler({ type: 'requestContext' }),
+        handler({ type: 'requestHistory' }),
+      ]);
+      expect(replies).toHaveLength(3);
+    });
+  });
+});

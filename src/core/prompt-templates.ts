@@ -1,11 +1,4 @@
 import type { LifecycleStage, ProcessLevel, ProjectContext, RiskSignal } from './types';
-import {
-  ARTIFACTS_SPECS_DIR,
-  ARTIFACTS_PLANS_DIR,
-  ARTIFACTS_REVIEWS_DIR,
-  ARTIFACTS_REPORTS_DIR,
-  WORKFLOW_DIR,
-} from '../constants';
 
 /**
  * Prompt templates for each SDLC stage.
@@ -13,11 +6,11 @@ import {
  * These prompts are sent to the agent (via AgentBridge). Each prompt:
  * 1. References a bundled skill by name (agent loads it via chatSkills)
  * 2. Provides the objective + project context
- * 3. Specifies where to save the artifact in .codestudio/
+ * 3. Tells the agent to call `engineering_save_artifact` tool to save
  *
- * The skills themselves (from addyosmani/agent-skills) contain the
- * detailed instructions. We don't duplicate them — we just reference
- * them and add the save path.
+ * IMPORTANT: Prompts must NOT tell the agent to create files directly.
+ * All artifacts must go through the `engineering_save_artifact` tool
+ * so the ArtifactWatcher can detect them and update the UI.
  *
  * Pure TypeScript — no VS Code or LLM dependencies.
  *
@@ -35,8 +28,6 @@ export class PromptTemplates {
     signals: readonly RiskSignal[],
     processLevel: ProcessLevel,
   ): string {
-    const slug = slugify(objective);
-    const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_SPECS_DIR}/${slug}.md`;
     const contextBlock = context ? formatContext(context) : 'No project context available.';
     const signalBlock =
       signals.length > 0
@@ -60,7 +51,7 @@ ${contextBlock}
 2. Follow the spec-driven-development skill workflow (Phase 1: Specify).
 3. The spec must cover: Objective, Tech Stack, Commands, Project Structure, Code Style, Testing Strategy, Boundaries, Success Criteria.
 4. Base the spec on the ACTUAL project — not generic templates.
-5. **Save the spec to:** \`${savePath}\``;
+5. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="spec" and the full content.`;
   }
 
   /**
@@ -68,9 +59,6 @@ ${contextBlock}
    * References: planning-and-task-breakdown skill
    */
   getPlanPrompt(objective: string, specPath: string, processLevel: ProcessLevel): string {
-    const slug = slugify(objective);
-    const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_PLANS_DIR}/${slug}.md`;
-
     return `Follow the **planning-and-task-breakdown** skill to create an implementation plan.
 
 ## Objective
@@ -86,11 +74,34 @@ Read the spec at: \`${specPath}\`
 4. Size each task (XS/S/M/L). Reject XL — break down further.
 5. Order by dependencies, risk-first.
 6. Process level is **${processLevel}** — ${processLevel === 'light' ? 'keep it minimal, 1-3 tasks' : processLevel === 'standard' ? 'standard detail, 3-8 tasks' : 'thorough detail, include security/performance tasks'}.
-7. **Save the plan to:** \`${savePath}\``;
+7. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="plan" and the full content.`;
   }
 
   /**
-   * BUILD stage — instructions shown in UI (not sent to agent).
+   * BUILD stage — sent to agent to implement the plan.
+   * References: incremental-implementation + test-driven-development skills
+   */
+  getBuildPrompt(objective: string, planPath: string): string {
+    return `Implement the plan for: **${objective}**
+
+## Plan
+Read the implementation plan at: \`${planPath}\`
+
+## Instructions
+1. Read the plan file first to understand all tasks.
+2. Follow the **incremental-implementation** skill — implement one task at a time.
+3. For each task, follow the **test-driven-development** skill:
+   - **RED** — Write a failing test
+   - **GREEN** — Write minimal code to pass
+   - **REFACTOR** — Clean up without changing behavior
+4. Run the full test suite after each task.
+5. Commit with a descriptive message after each task.
+6. Move to the next task until all are done.
+7. When all tasks are complete, call \`engineering_advance_stage\` to move to the Verify stage.`;
+  }
+
+  /**
+   * BUILD stage — instructions shown in UI.
    * References: incremental-implementation + test-driven-development skills
    */
   getBuildInstructions(taskDescription: string, taskIndex: number, totalTasks: number): string {
@@ -115,8 +126,6 @@ Follow the **test-driven-development** and **incremental-implementation** skills
     testCommand: string | null,
     buildCommand: string | null,
   ): string {
-    const slug = slugify(objective);
-    const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_REPORTS_DIR}/${slug}-verify.md`;
     const testCmd = testCommand ?? 'npm test';
     const buildCmd = buildCommand ?? 'npm run build';
 
@@ -131,7 +140,7 @@ ${objective}
 3. Run the type checker if applicable: \`npm run typecheck\`
 4. Run the linter if applicable: \`npm run lint\`
 5. Compile a verification report with results for each check.
-6. **Save the report to:** \`${savePath}\`
+6. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="report" and the full content.
 
 Report results honestly — if tests fail, document which ones and why.`;
   }
@@ -141,9 +150,6 @@ Report results honestly — if tests fail, document which ones and why.`;
    * References: code-review-and-quality skill
    */
   getReviewPrompt(objective: string): string {
-    const slug = slugify(objective);
-    const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_REVIEWS_DIR}/${slug}-review.md`;
-
     return `Follow the **code-review-and-quality** skill to review the implementation.
 
 ## Objective
@@ -153,7 +159,7 @@ ${objective}
 1. Review all changes made during this workflow.
 2. Follow the code-review-and-quality skill — evaluate across five axes: correctness, readability, architecture, security, performance.
 3. Categorize findings: Critical / Required / Optional / Nit / FYI.
-4. **Save the review to:** \`${savePath}\``;
+4. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="review" and the full content.`;
   }
 
   /**
@@ -161,9 +167,6 @@ ${objective}
    * References: shipping-and-launch skill
    */
   getShipPrompt(objective: string): string {
-    const slug = slugify(objective);
-    const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_REPORTS_DIR}/${slug}-ship.md`;
-
     return `Follow the **shipping-and-launch** skill to complete the pre-launch checklist.
 
 ## Objective
@@ -172,7 +175,7 @@ ${objective}
 ## Instructions
 1. Follow the shipping-and-launch skill pre-launch checklist.
 2. Verify: tests pass, build succeeds, no type errors, no lint warnings, code review approved, documentation updated, no secrets in code, error handling appropriate.
-3. **Save the checklist to:** \`${savePath}\``;
+3. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="report" and the full content.`;
   }
 
   /**
@@ -205,7 +208,7 @@ ${objective}
       case 'plan':
         return this.getPlanPrompt(params.objective, params.specPath ?? '', params.processLevel);
       case 'build':
-        return null; // User-driven, not agent-generated
+        return this.getBuildPrompt(params.objective, params.specPath ?? '');
       case 'verify':
         return this.getVerifyPrompt(
           params.objective,
@@ -240,14 +243,6 @@ ${objective}
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .substring(0, 60);
-}
 
 function formatContext(context: ProjectContext): string {
   const parts: string[] = [];

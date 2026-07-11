@@ -33,7 +33,10 @@ export class ArtifactManager {
     stage: LifecycleStage,
   ): Promise<Artifact> {
     const dir = this.getArtifactDir(type);
-    const filename = this.slugify(title) + '.md';
+    // Use a standard filename per type (spec.md, plan.md, etc.)
+    // so there's always exactly one artifact per type per workflow.
+    // If the agent calls save multiple times, it overwrites.
+    const filename = `${type}.md`;
     const path = `${dir}/${filename}`;
     const fullPath = `${this.rootPath}/${WORKFLOW_DIR}/${path}`;
     const now = new Date().toISOString();
@@ -41,7 +44,7 @@ export class ArtifactManager {
     await this.fs.write(fullPath, content);
 
     return {
-      id: `${type}-${this.slugify(title)}`,
+      id: `${type}-${type}`,
       type,
       title,
       path,
