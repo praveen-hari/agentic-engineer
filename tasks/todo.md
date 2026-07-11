@@ -443,7 +443,7 @@
 - [ ] Empty state: objective input with progressive disclosure (analyze button appears after ≥10 chars)
 - [ ] Active state: current stage details + stats grid + stage list (no pipeline viz — DD-018)
 - [ ] Complete state: success banner + summary + archive button
-- [ ] `capabilities-view.tsx` renders 3 zones: (1) Recommended for This Project — context-aware suggestions with Why explanations, (2) Installed — skill packs, custom instructions, agents/prompts/hooks, (3) Skill Pack Marketplace — 14 Syncfusion packs filterable by category (Web/.NET/Document) with install buttons (DD-022, DD-023, DD-024, DD-025)
+- [ ] `capabilities-view.tsx` renders 3 zones: (1) Recommended for This Project — context-aware suggestions with Why explanations, (2) Current Setup — summary counts with deep links that open native Agent Customizations panel, (3) Syncfusion Skill Pack Marketplace — 14 packs filterable by Web/.NET/Document (DD-022–DD-026)
 - [ ] `knowledge-view.tsx` renders: Project Context, ADRs, Conventions, Boundaries, Capabilities link card (DD-021, DD-022)
 - [ ] `history-view.tsx` renders: three-tier history (hot/warm/cold) with pagination (DD-006, DD-007)
 - [ ] `settings-view.tsx` renders: process level override, approval policy, history retention, agent mode toggle
@@ -482,6 +482,7 @@
 - `src/webview/components/approval-card.tsx`
 - `src/webview/components/capability-card.tsx`
 - `src/webview/components/skill-pack-card.tsx`
+- `src/webview/components/launcher-row.tsx`
 - `src/webview/components/stats-grid.tsx`
 - `src/webview/components/progress-bar.tsx`
 - `src/webview/components/risk-badge.tsx`

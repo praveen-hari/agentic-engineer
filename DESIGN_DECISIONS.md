@@ -1081,6 +1081,74 @@ The 14 Syncfusion skill pack repos:
 
 ---
 
+## DD-026: Capabilities is a Smart Launcher, Not a Parallel UI
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** Code Studio already ships a native **Agent Customizations** panel with full management UI for:
+- **Overview** — "Customize Your Agent" input + quick-create cards
+- **Agents** — custom agent management
+- **Skills** — skill management (shows count)
+- **Instructions** — always-on instruction management
+- **Hooks** — lifecycle hook management
+- **MCP Servers** — external integration management (shows count)
+- **Plugins** — plugin management
+
+DD-022 through DD-025 progressively designed a Capabilities view with its own UI for managing instructions, agents, skills, prompts, hooks, and a Syncfusion skill pack marketplace. But this duplicates what Code Studio already provides natively. Building a parallel UI means:
+- Double maintenance burden — our webview UI will go stale as Code Studio evolves
+- Inconsistent UX — users see two different UIs for the same thing
+- Wasted implementation time — we'd be rebuilding what already exists
+- Users already know where customizations live — in the native panel
+
+**Decision:** The Capabilities view is a **smart launcher** with three zones, not a management UI:
+
+### Zone 1: Recommended for This Project (unchanged from DD-024)
+Context-aware recommendations with "Why" explanations. This is the intelligence layer that the native panel doesn't have. Actions:
+- **"Install Pack"** → runs `npx skills add syncfusion/<repo> -y` in terminal
+- **"Create"** → opens the native Agent Customizations panel to the relevant section (Instructions, Agents, etc.) with pre-filled context
+
+### Zone 2: Current Setup (summary + deep links)
+A compact summary showing counts for each customization type, matching the native panel's sidebar:
+- Skill Packs (1) → click opens native Plugins section
+- Skills (11) → click opens native Skills section
+- Instructions (2) → click opens native Instructions section
+- Agents (0) → click opens native Agents section
+- Hooks (0) → click opens native Hooks section
+- MCP Servers (4) → click opens native MCP Servers section
+- Plugins (2) → click opens native Plugins section
+
+Each row shows: icon, name, description, count, chevron-right. Clicking opens the native panel via `vscode.commands.executeCommand`.
+
+### Zone 3: Syncfusion Skill Pack Marketplace (unchanged from DD-025)
+14 pack cards filterable by Web/.NET/Document. Install button runs `npx skills add`. This is the only part that doesn't exist in the native panel — it's our value-add.
+
+**What we DON'T build:**
+- No custom instruction editor (native panel has one)
+- No agent editor (native panel has one)
+- No skill file manager (native panel has one)
+- No hook editor (native panel has one)
+- No MCP server config (native panel has one)
+- No plugin manager (native panel has one)
+
+**What we DO build (our unique value):**
+- Context-aware recommendations (Zone 1) — the native panel doesn't analyze your project
+- Syncfusion skill pack marketplace (Zone 3) — the native panel doesn't surface these
+- Summary dashboard with deep links (Zone 2) — quick overview without opening the full panel
+
+**Rationale:**
+- Don't rebuild what exists — leverage the native panel for all CRUD operations
+- Our value is intelligence (recommendations) and discovery (marketplace), not management UI
+- Deep links keep users in the native flow — they learn one place for customizations
+- Reduces implementation scope significantly — no editors, no file managers, no CRUD
+- The native panel is maintained by the Code Studio team — it will evolve and improve without our effort
+
+**Alternatives Considered:**
+- *Build full management UI in webview* — Rejected: duplicates native panel, double maintenance, inconsistent UX
+- *Remove Capabilities view entirely, just use native panel* — Rejected: we lose the recommendation engine and Syncfusion marketplace, which are our unique value
+- *Embed native panel inside our webview* — Rejected: not technically possible; webviews can't embed native panels
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -1110,3 +1178,4 @@ The 14 Syncfusion skill pack repos:
 | DD-023 | Capabilities Shows User-Added Customizations, Not Built-In Plumbing | Accepted |
 | DD-024 | Capabilities View is a Recommendation Engine (context-aware + Syncfusion marketplace) | Accepted (revised by DD-025) |
 | DD-025 | Skill Packs, Not Individual Skills — Plugin Marketplace Model (14 packs, 700+ skills) | Accepted |
+| DD-026 | Capabilities is a Smart Launcher, Not a Parallel UI (delegate to native Agent Customizations) | Accepted |

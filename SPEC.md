@@ -215,7 +215,7 @@ codestudio-engineering-workspace/
 │   │   │   └── capabilities.store.ts # Capabilities state signal
 │   │   ├── views/                   # Top-level view components (5 views)
 │   │   │   ├── tasks-view.tsx       # Tasks (empty/active/complete + Stages/Artifacts/Approvals tabs)
-│   │   │   ├── capabilities-view.tsx # Recommendations + installed + Syncfusion marketplace
+│   │   │   ├── capabilities-view.tsx # Smart launcher: recommendations + deep links + Syncfusion marketplace
 │   │   │   ├── knowledge-view.tsx   # Project context, ADRs, conventions, boundaries
 │   │   │   ├── history-view.tsx     # History with inline expansion (hot/warm/cold)
 │   │   │   └── settings-view.tsx    # Extension configuration
@@ -225,8 +225,9 @@ codestudio-engineering-workspace/
 │   │   │   ├── task-card.tsx        # Task with inline expansion
 │   │   │   ├── artifact-viewer.tsx  # Markdown artifact renderer
 │   │   │   ├── approval-card.tsx    # Approval action card
-│   │   │   ├── capability-card.tsx  # Recommendation card with Why explanation + install button
-│   │   │   ├── skill-pack-card.tsx  # Syncfusion skill pack card (platform, skill count, repo, install)
+│   │   │   ├── capability-card.tsx  # Recommendation card with Why explanation + action button
+│   │   │   ├── skill-pack-card.tsx  # Syncfusion skill pack card (platform, skill count, install)
+│   │   │   ├── launcher-row.tsx     # Deep link row to native Agent Customizations panel
 │   │   │   ├── stats-grid.tsx       # Statistics grid
 │   │   │   ├── progress-bar.tsx     # Progress indicator
 │   │   │   ├── risk-badge.tsx       # Risk level badge
@@ -962,7 +963,7 @@ export const progress = computed(() => {
 | 22 | Tasks view shows stages with inline expansion (DD-019) | Visual check |
 | 23 | Tasks view Artifacts tab shows generated specs/plans (DD-020) | Visual check |
 | 24 | Tasks view Approvals tab shows pending items with approve/reject (DD-020) | Visual check |
-| 25 | Capabilities view shows context-aware recommendations, installed skill packs/customizations, and Skill Pack Marketplace (14 Syncfusion packs) (DD-022, DD-023, DD-024, DD-025) | Visual check |
+| 25 | Capabilities view shows context-aware recommendations, deep links to native Agent Customizations, and Skill Pack Marketplace (DD-022–DD-026) | Visual check |
 | 26 | History view shows archived workflows with inline expansion | Visual check |
 | 27 | Settings view allows configuration changes (incl. skill visibility in advanced mode) | Visual check |
 | 28 | Chat participant handles natural language queries beyond slash commands | Chat test |
@@ -1018,7 +1019,7 @@ export const progress = computed(() => {
 - Tasks view: Stages tab with inline expansion (DD-019)
 - Tasks view: Artifacts tab with markdown rendering (DD-020)
 - Tasks view: Approvals tab with approve/reject actions (DD-020)
-- Capabilities view: context-aware recommendations + installed skill packs/customizations + Skill Pack Marketplace (14 Syncfusion packs) (DD-022, DD-023, DD-024, DD-025)
+- Capabilities view: smart launcher — recommendations + deep links to native Agent Customizations + Skill Pack Marketplace (DD-022–DD-026)
 - Knowledge view: project context, ADRs, conventions, boundaries (DD-021)
 - History view with inline expansion
 - Settings view with configuration
