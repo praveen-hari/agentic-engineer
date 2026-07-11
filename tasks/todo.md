@@ -407,7 +407,7 @@
 - [ ] Empty state: objective input with progressive disclosure (analyze button appears after ≥10 chars)
 - [ ] Active state: current stage details + stats grid + stage list (no pipeline viz — DD-018)
 - [ ] Complete state: success banner + summary + archive button
-- [ ] `capabilities-view.tsx` renders: Add Capability button, summary counts, custom instructions, custom agents, custom skills, custom prompts, hooks, built-in extensibility (LM tools + chat participant, read-only) (DD-022, DD-023)
+- [ ] `capabilities-view.tsx` renders: Add Capability button, summary counts, custom instructions, custom agents, custom skills, custom prompts, hooks (DD-022, DD-023)
 - [ ] `knowledge-view.tsx` renders: Project Context, ADRs, Conventions, Boundaries, Capabilities link card (DD-021, DD-022)
 - [ ] `history-view.tsx` renders: three-tier history (hot/warm/cold) with pagination (DD-006, DD-007)
 - [ ] `settings-view.tsx` renders: process level override, approval policy, history retention, agent mode toggle

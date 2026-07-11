@@ -878,7 +878,7 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 
 Meanwhile, the Agent Capabilities section was buried inside the Knowledge view. But capabilities are actionable — users need to install missing agents, see which skills are active, configure tools. That's more important than a log.
 
-**Decision:** Replace Activity view with Capabilities view. The Capabilities view shows **user-added customizations** (not built-in plumbing) plus the two built-in extensibility surfaces that are genuinely visible to users:
+**Decision:** Replace Activity view with Capabilities view. The Capabilities view shows **user-added customizations** only (not built-in plumbing):
 
 1. **Add Capability** — primary action to create new instructions, agents, skills, prompts, or hooks
 2. **Summary** — counts of user-added: Instructions, Agents, Skills, Prompts, Hooks
@@ -887,7 +887,6 @@ Meanwhile, the Agent Capabilities section was buried inside the Knowledge view. 
 5. **Custom Skills** — `.codestudio/skills/<name>/SKILL.md` (reusable workflows with /slash commands)
 6. **Custom Prompts** — `.codestudio/prompts/*.prompt.md` (parameterized single-task commands)
 7. **Hooks** — `.codestudio/hooks/*.json` (deterministic lifecycle enforcement)
-8. **Built-in Extensibility (read-only)** — LM tools + chat participant that are always available
 
 The Knowledge view's Agent Capabilities section is replaced with a link card to the Capabilities view.
 
@@ -935,25 +934,22 @@ Meanwhile, Code Studio has a rich agent-customization system (`.codestudio/instr
 4. **Custom Prompts** — `.prompt.md` files for parameterized single-task commands
 5. **Hooks** — `.json` files that enforce deterministic behavior at agent lifecycle events
 
-The only built-in items shown are the two extensibility surfaces that ARE genuinely visible to users:
-- **Language Model Tools** (3 tools: `analyze_work_request`, `get_workflow_status`, `get_project_context`) — these appear in agent mode's tool list
-- **Chat Participant** (`@engineering`) — this appears in the chat interface
+Built-in engineering skills (the 24 from agent-skills), built-in specialist agents, LM tools, and the chat participant are NEVER shown in the UI. They are part of the extension's internal machinery — not user-configurable, not user-visible.
 
-These are shown in a read-only "Built-in Extensibility" section at the bottom, clearly separated from user-added content.
-
-Built-in engineering skills (the 24 from agent-skills) and built-in specialist agents are NEVER shown in the UI. They are activated automatically by the skill engine based on task type, context signals, and process level.
+Built-in engineering skills (the 24 from agent-skills) and built-in specialist agents are activated automatically by the skill engine based on task type, context signals, and process level. LM tools and the chat participant are registered by the extension at activation — users interact with them in agent mode and chat, not in this view.
 
 **Rationale:**
 - Respects DD-007: built-in skills remain invisible plumbing
 - Shows users what they can actually control — their own additions
 - The agent-customization system is the right abstraction: users add project-specific knowledge, not toggle generic engineering practices
 - The "Add Capability" primary action guides users toward the customization system
-- Built-in extensibility (LM tools, chat participant) is read-only context, not actionable — users can't add or remove these
+- LM tools and chat participant are used where they live (agent mode, chat) — surfacing them in a read-only list adds no value
 
 **Alternatives Considered:**
 - *Show built-in skills in an "Advanced Mode" toggle* — Rejected: DD-007 already deferred this to V2 via CLI (`codestudio skill run`), not the UI
 - *Show built-in skills but make them read-only* — Rejected: seeing 24 skill names with no action is confusing, not helpful
-- *Remove the Capabilities view entirely* — Rejected: user-added customizations still need a home, and the built-in extensibility surfaces (tools, chat) are worth surfacing
+- *Show LM tools and chat participant in a read-only section* — Rejected: users interact with these in agent mode and chat, not in a capabilities list; showing them here adds noise without value
+- *Remove the Capabilities view entirely* — Rejected: user-added customizations still need a home
 
 ---
 
