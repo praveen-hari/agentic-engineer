@@ -8,6 +8,7 @@ import {
   historyStore,
   historyHasMore,
   isAnalyzing,
+  hasExistingFiles,
   isOnboarded,
   onboardingStatus,
   projectType,
@@ -74,6 +75,7 @@ export const App: FunctionalComponent = () => {
         case 'onboardingStatus':
           onboardingStatus.value = msg.status;
           projectType.value = msg.projectType;
+          hasExistingFiles.value = msg.hasExistingFiles;
           if (msg.context) {
             contextStore.value = msg.context;
           }

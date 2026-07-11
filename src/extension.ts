@@ -204,6 +204,7 @@ export function activate(context: vscode.ExtensionContext): void {
           status: 'ready',
           projectType: pType,
           context: ctx,
+          hasExistingFiles: true,
         });
         panelProvider.postMessage({ type: 'context', context: ctx });
 
@@ -217,6 +218,7 @@ export function activate(context: vscode.ExtensionContext): void {
           status: 'ready',
           projectType: 'brownfield',
           context: null,
+          hasExistingFiles: true,
         });
       }
     });

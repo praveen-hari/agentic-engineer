@@ -487,6 +487,7 @@ Base everything on the ACTUAL codebase — not generic templates.`;
       status: 'setup-existing',
       projectType: pType,
       context,
+      hasExistingFiles: true,
     });
     reply({ type: 'context', context });
   } catch (err) {
@@ -536,6 +537,7 @@ Start by asking me clarifying questions about what I want to build.`;
     status: 'setup-new',
     projectType: 'greenfield',
     context: null,
+    hasExistingFiles: false,
   });
 }
 
@@ -545,7 +547,13 @@ async function handleRequestOnboardingStatus(
 ): Promise<void> {
   const root = deps.workspaceService.getWorkspaceRoot();
   if (!root) {
-    reply({ type: 'onboardingStatus', status: 'welcome', projectType: null, context: null });
+    reply({
+      type: 'onboardingStatus',
+      status: 'welcome',
+      projectType: null,
+      context: null,
+      hasExistingFiles: false,
+    });
     return;
   }
 
@@ -562,7 +570,13 @@ async function handleRequestOnboardingStatus(
       cachedContext = context;
 
       const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
-      reply({ type: 'onboardingStatus', status: 'ready', projectType: pType, context });
+      reply({
+        type: 'onboardingStatus',
+        status: 'ready',
+        projectType: pType,
+        context,
+        hasExistingFiles: true,
+      });
       reply({ type: 'context', context });
     } catch {
       reply({
@@ -570,11 +584,26 @@ async function handleRequestOnboardingStatus(
         status: 'ready',
         projectType: 'brownfield',
         context: null,
+        hasExistingFiles: true,
       });
     }
   } else {
-    // Not onboarded yet — show welcome
-    reply({ type: 'onboardingStatus', status: 'welcome', projectType: null, context: null });
+    // Not onboarded yet — check if workspace has existing files
+    let hasFiles = false;
+    try {
+      const scanner = new WorkspaceScanner(deps.fileSystem, root);
+      const files = await scanner.scan();
+      hasFiles = !WorkspaceScanner.isGreenfield(files);
+    } catch {
+      // If scan fails, assume no files
+    }
+    reply({
+      type: 'onboardingStatus',
+      status: 'welcome',
+      projectType: null,
+      context: null,
+      hasExistingFiles: hasFiles,
+    });
   }
 }
 

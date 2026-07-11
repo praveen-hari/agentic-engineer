@@ -1,6 +1,6 @@
 import { type FunctionalComponent } from 'preact';
 import { signal } from '@preact/signals';
-import { onboardingStatus, contextStore } from '../store/workflow.store';
+import { onboardingStatus, contextStore, hasExistingFiles } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
 
@@ -59,27 +59,29 @@ const WelcomeScreen: FunctionalComponent = () => {
       </div>
 
       <div class="onboarding__options">
-        <button
-          class="onboarding__card"
-          onClick={() => {
-            onboardingStatus.value = 'scanning';
-            bridge.send({ type: 'setupExistingProject' });
-          }}
-        >
-          <div class="onboarding__card-icon onboarding__card-icon--existing">
-            <Icon name="folder-library" size={20} />
-          </div>
-          <div class="onboarding__card-content">
-            <div class="onboarding__card-title">Set Up Existing Project</div>
-            <div class="onboarding__card-desc">
-              Scan your workspace to detect the tech stack, folder structure, and conventions
-              automatically. Best for projects that already have code.
+        {hasExistingFiles.value && (
+          <button
+            class="onboarding__card"
+            onClick={() => {
+              onboardingStatus.value = 'scanning';
+              bridge.send({ type: 'setupExistingProject' });
+            }}
+          >
+            <div class="onboarding__card-icon onboarding__card-icon--existing">
+              <Icon name="folder-library" size={20} />
             </div>
-          </div>
-          <div class="onboarding__card-arrow">
-            <Icon name="chevron-right" size={16} />
-          </div>
-        </button>
+            <div class="onboarding__card-content">
+              <div class="onboarding__card-title">Set Up Existing Project</div>
+              <div class="onboarding__card-desc">
+                Scan your workspace to detect the tech stack, folder structure, and conventions
+                automatically. Best for projects that already have code.
+              </div>
+            </div>
+            <div class="onboarding__card-arrow">
+              <Icon name="chevron-right" size={16} />
+            </div>
+          </button>
+        )}
 
         <button
           class="onboarding__card"

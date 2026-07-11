@@ -300,6 +300,7 @@ export type MessageToWebview =
       readonly status: OnboardingStatus;
       readonly projectType: ProjectType | null;
       readonly context: ProjectContext | null;
+      readonly hasExistingFiles: boolean;
     };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────

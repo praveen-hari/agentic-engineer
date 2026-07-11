@@ -58,6 +58,7 @@ export const historyHasMore = signal<boolean>(false);
 // ─── Onboarding State ─────────────────────────────────────────────────────
 
 export const onboardingStatus = signal<OnboardingStatus>('welcome');
+export const hasExistingFiles = signal<boolean>(false);
 export const projectType = signal<ProjectType | null>(null);
 export const isOnboarded = computed(() => onboardingStatus.value === 'ready');
 
