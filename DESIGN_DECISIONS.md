@@ -870,6 +870,46 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 
 ---
 
+## DD-022: Replace Activity with Capabilities View
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** The Activity view was a log viewer — a chronological timeline of agent actions. Audit revealed that all its useful information already lived in other views: current task status in Tasks, decisions in Knowledge (ADRs), audit trail in events.jsonl. Log viewers are rarely visited proactively — users glance at them when something breaks.
+
+Meanwhile, the Agent Capabilities section was buried inside the Knowledge view. But capabilities are actionable — users need to install missing agents, see which skills are active, configure tools. That's more important than a log.
+
+**Decision:** Replace Activity view with Capabilities view. The Capabilities view shows:
+
+1. **Summary** — Skills (18/24), Agents (3/4), Tools (3), Missing (1)
+2. **Missing capability alert** — Proactive warning with install button
+3. **Skills** — Toggleable list grouped by: Always Active, Active for Current Work, Inactive
+4. **Specialist Agents** — Available agents with descriptions + install for missing ones
+5. **LM Tools** — Registered language model tools for agent mode
+6. **Chat Participant** — @engineering registration status
+
+The Knowledge view's Agent Capabilities section is replaced with a link card to the Capabilities view.
+
+**Navigation: still 5 views (swapped one for another):**
+1. Tasks
+2. Capabilities (replaces Activity)
+3. Knowledge (loses capabilities section, gains link to Capabilities)
+4. History
+5. Settings
+
+**Rationale:**
+- Capabilities are actionable (install, toggle, configure) — Activity was passive (read-only log)
+- "What can the agent do?" is a question users actually ask — "What did the agent do 30s ago?" is not
+- Missing capability detection is critical for trust — users need to know what the agent CAN'T do
+- The audit trail (events.jsonl) is the source of truth for activity — the UI doesn't need to replicate it
+- Agent activity is still visible in the Tasks view (active task badge, TDD phase, criteria progress)
+
+**Alternatives Considered:**
+- *Keep Activity, add Capabilities as 6th view* — Rejected: 6 views is too many; Activity doesn't earn its slot
+- *Keep Activity, put Capabilities in Settings* — Rejected: capabilities are too important to bury in settings
+- *Merge Activity into Tasks as a collapsible drawer* — Rejected: still a log viewer, just smaller
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -895,3 +935,4 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 | DD-019 | Merge Workflow + Tasks into Single Tasks View (6→5 views) | Accepted |
 | DD-020 | Merge Artifacts into Tasks as Tab (5→4 views) | Accepted |
 | DD-021 | Knowledge as Separate Navigation Item (4→5 views) | Accepted |
+| DD-022 | Replace Activity with Capabilities View (actionable, not passive) | Accepted |
