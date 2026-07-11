@@ -791,6 +791,36 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 
 ---
 
+## DD-020: Merge Artifacts into Tasks as Tab
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** Artifacts (specs, plans, ADRs, reviews, reports) are produced BY tasks DURING a work request. Having a separate Artifacts view created the same artificial separation as the old Workflow/Tasks split — the user had to navigate away from the task list to see what the tasks produced.
+
+**Decision:** Merge Artifacts into the Tasks view as a second tab. The Tasks view now has a tab switcher at the top:
+
+- **[Tasks]** tab — task list by phase + inline approvals (default)
+- **[Artifacts]** tab — all artifacts produced during this work request, with inline expansion
+
+**Navigation: 5 → 4 views:**
+1. Tasks (with Tasks/Artifacts tabs)
+2. Activity
+3. History
+4. Settings
+
+**Rationale:**
+- Artifacts are produced by tasks — they belong in the same context
+- Removes navigation: user doesn't leave the work request to see its outputs
+- Tab switcher is faster than navigating to a separate view
+- 4 views is extremely lean — each answers a distinct question
+
+**Alternatives Considered:**
+- *Keep Artifacts as separate view* — Rejected: same artificial separation as Workflow/Tasks
+- *Show artifacts inline under each task* — Rejected: not all artifacts map to a single task (spec is for the whole work request, ADRs span multiple tasks)
+- *Add a third tab for project knowledge* — Deferred: project-level docs (context.md, architecture) can be a third tab in a future iteration
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -814,3 +844,4 @@ The "NOW" section is removed — current task activity lives in the Activity vie
 | DD-017 | Work Request Lifecycle: Three Workflow States (Empty/Active/Complete) | Accepted |
 | DD-018 | Kill the Pipeline — Workflow Shows Outcomes, Not Process (inline approvals, 7→6 views) | Accepted |
 | DD-019 | Merge Workflow + Tasks into Single Tasks View (6→5 views) | Accepted |
+| DD-020 | Merge Artifacts into Tasks as Tab (5→4 views) | Accepted |
