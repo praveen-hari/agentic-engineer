@@ -97,14 +97,18 @@ export class WorkflowGenerator {
     // Thorough+ gates
     if (assessment.processLevel === 'thorough' || assessment.processLevel === 'guarded') {
       gates.push(this.makeGate('security-review', 'Security Review', 'review', 'review', false));
-      gates.push(this.makeGate('performance-budget', 'Performance Budget', 'automated', 'verify', false));
+      gates.push(
+        this.makeGate('performance-budget', 'Performance Budget', 'automated', 'verify', false),
+      );
       gates.push(this.makeGate('docs-complete', 'Documentation Complete', 'review', 'ship', false));
     }
 
     // Guarded-only gates
     if (assessment.processLevel === 'guarded') {
       gates.push(this.makeGate('rollback-tested', 'Rollback Tested', 'automated', 'ship', false));
-      gates.push(this.makeGate('data-integrity', 'Data Integrity Check', 'automated', 'verify', false));
+      gates.push(
+        this.makeGate('data-integrity', 'Data Integrity Check', 'automated', 'verify', false),
+      );
     }
 
     // Conditional gates based on context signals
@@ -114,7 +118,9 @@ export class WorkflowGenerator {
   }
 
   private addConditionalGates(gates: QualityGate[], signals: readonly ContextSignal[]): void {
-    const signalGateMap: Readonly<Record<ContextSignal, { id: string; name: string; reason: string }>> = {
+    const signalGateMap: Readonly<
+      Record<ContextSignal, { id: string; name: string; reason: string }>
+    > = {
       touches_auth_or_input: {
         id: 'security-review',
         name: 'Security Review',
@@ -186,35 +192,69 @@ export class WorkflowGenerator {
     if (minCount === 0) return approvals;
 
     // Standard: spec + code review
-    approvals.push(this.makeApproval('approval-spec', 'explicit', 'spec', 'Spec requires explicit approval'));
-    approvals.push(this.makeApproval('approval-review', 'review', 'code-review', 'Code review required before merge'));
+    approvals.push(
+      this.makeApproval('approval-spec', 'explicit', 'spec', 'Spec requires explicit approval'),
+    );
+    approvals.push(
+      this.makeApproval(
+        'approval-review',
+        'review',
+        'code-review',
+        'Code review required before merge',
+      ),
+    );
 
     // Thorough: + architecture
     if (assessment.processLevel === 'thorough' || assessment.processLevel === 'guarded') {
       approvals.push(
-        this.makeApproval('approval-architecture', 'review', 'architecture', 'Architecture review required for thorough process'),
+        this.makeApproval(
+          'approval-architecture',
+          'review',
+          'architecture',
+          'Architecture review required for thorough process',
+        ),
       );
     }
 
     // Guarded: + restricted approvals
     if (assessment.processLevel === 'guarded') {
       approvals.push(
-        this.makeApproval('approval-restricted-1', 'restricted', 'schema-migration', 'Restricted approval: schema migration'),
+        this.makeApproval(
+          'approval-restricted-1',
+          'restricted',
+          'schema-migration',
+          'Restricted approval: schema migration',
+        ),
       );
       approvals.push(
-        this.makeApproval('approval-restricted-2', 'restricted', 'deployment', 'Restricted approval: production deployment'),
+        this.makeApproval(
+          'approval-restricted-2',
+          'restricted',
+          'deployment',
+          'Restricted approval: production deployment',
+        ),
       );
     }
 
     // Conditional approvals based on context signals
     if (assessment.contextSignals.includes('touches_auth_or_input')) {
       approvals.push(
-        this.makeApproval('approval-security', 'explicit', 'security-review', 'Security review required for auth/input changes'),
+        this.makeApproval(
+          'approval-security',
+          'explicit',
+          'security-review',
+          'Security review required for auth/input changes',
+        ),
       );
     }
     if (assessment.contextSignals.includes('touches_external_services')) {
       approvals.push(
-        this.makeApproval('approval-integration', 'review', 'integration', 'Integration review required for external service changes'),
+        this.makeApproval(
+          'approval-integration',
+          'review',
+          'integration',
+          'Integration review required for external service changes',
+        ),
       );
     }
 

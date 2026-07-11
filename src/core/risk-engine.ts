@@ -130,7 +130,9 @@ export class RiskEngine {
   private detectContextSignals(text: string): ContextSignal[] {
     const signals: ContextSignal[] = [];
 
-    if (/\bui|page|component|button|form|dashboard|layout|css|style|frontend|screen\b/i.test(text)) {
+    if (
+      /\bui|page|component|button|form|dashboard|layout|css|style|frontend|screen\b/i.test(text)
+    ) {
       signals.push('touches_ui');
     }
     if (/\bapi|endpoint|rest|graphql|route|controller|handler\b/i.test(text)) {

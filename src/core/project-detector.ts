@@ -157,10 +157,18 @@ export class ProjectDetector {
     for (const file of files) {
       const basename = this.getBasename(file.path);
 
-      if (basename === 'vitest.config.ts' || basename === 'vitest.config.js' || basename === 'vitest.config.mts') {
+      if (
+        basename === 'vitest.config.ts' ||
+        basename === 'vitest.config.js' ||
+        basename === 'vitest.config.mts'
+      ) {
         return 'Vitest';
       }
-      if (basename === 'jest.config.js' || basename === 'jest.config.ts' || basename === 'jest.config.mjs') {
+      if (
+        basename === 'jest.config.js' ||
+        basename === 'jest.config.ts' ||
+        basename === 'jest.config.mjs'
+      ) {
         return 'Jest';
       }
       if (basename === 'pytest.ini' || basename === 'pyproject.toml' || basename === 'setup.cfg') {
@@ -257,7 +265,10 @@ export class ProjectDetector {
 
   private parsePackageJsonDeps(content: string): Set<string> {
     try {
-      const pkg = JSON.parse(content) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+      const pkg = JSON.parse(content) as {
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
       const deps = new Set<string>();
       for (const key of Object.keys(pkg.dependencies ?? {})) deps.add(key);
       for (const key of Object.keys(pkg.devDependencies ?? {})) deps.add(key);

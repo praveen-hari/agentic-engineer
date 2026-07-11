@@ -16,33 +16,16 @@ export type ProcessLevel = 'light' | 'standard' | 'thorough' | 'guarded';
 export type StageStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'blocked';
 
 export type WorkType =
-  | 'feature'
-  | 'bugfix'
-  | 'refactor'
-  | 'infrastructure'
-  | 'documentation'
-  | 'security';
+  'feature' | 'bugfix' | 'refactor' | 'infrastructure' | 'documentation' | 'security';
 
 export type Complexity = 'trivial' | 'simple' | 'moderate' | 'complex' | 'critical';
 
 export type RiskLevel = 'low' | 'medium' | 'high';
 
-export type LifecycleStage =
-  | 'onboard'
-  | 'define'
-  | 'plan'
-  | 'build'
-  | 'verify'
-  | 'review'
-  | 'ship';
+export type LifecycleStage = 'onboard' | 'define' | 'plan' | 'build' | 'verify' | 'review' | 'ship';
 
 export type SkillCategory =
-  | 'always'
-  | 'by-task-type'
-  | 'by-context'
-  | 'interactive'
-  | 'quality-gate'
-  | 'specialist';
+  'always' | 'by-task-type' | 'by-context' | 'interactive' | 'quality-gate' | 'specialist';
 
 export type ContextSignal =
   | 'touches_ui'
@@ -104,8 +87,7 @@ export type SkillId =
 // ─── Result Type (for expected failures, per SPEC §6) ───────────────────────
 
 export type Result<T, E = string> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: E };
+  { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E };
 
 export const ok = <T>(value: T): Result<T, never> => ({ ok: true, value });
 
@@ -272,7 +254,11 @@ export type MessageToHost =
   | { readonly type: 'requestState' }
   | { readonly type: 'requestContext' }
   | { readonly type: 'analyzeObjective'; readonly objective: string }
-  | { readonly type: 'startWorkflow'; readonly objective: string; readonly assessment: RiskAssessment }
+  | {
+      readonly type: 'startWorkflow';
+      readonly objective: string;
+      readonly assessment: RiskAssessment;
+    }
   | { readonly type: 'advanceStage' }
   | { readonly type: 'skipStage'; readonly stageId: LifecycleStage }
   | { readonly type: 'approve'; readonly approvalId: string; readonly comment?: string }
@@ -284,7 +270,11 @@ export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
   | { readonly type: 'context'; readonly context: ProjectContext | null }
   | { readonly type: 'assessment'; readonly assessment: RiskAssessment }
-  | { readonly type: 'history'; readonly entries: readonly HistoryEntry[]; readonly hasMore: boolean }
+  | {
+      readonly type: 'history';
+      readonly entries: readonly HistoryEntry[];
+      readonly hasMore: boolean;
+    }
   | { readonly type: 'error'; readonly message: string };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
@@ -294,7 +284,10 @@ export type ChatCommand = 'status' | 'analyze' | 'history';
 export interface ChatCommandContext {
   readonly command: ChatCommand;
   readonly prompt: string;
-  readonly history: ReadonlyArray<{ readonly role: 'user' | 'assistant'; readonly content: string }>;
+  readonly history: ReadonlyArray<{
+    readonly role: 'user' | 'assistant';
+    readonly content: string;
+  }>;
 }
 
 // ─── Language Model Tool Inputs ────────────────────────────────────────────

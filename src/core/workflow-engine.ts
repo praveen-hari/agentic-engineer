@@ -24,7 +24,11 @@ export class WorkflowEngine {
    * Create a new workflow from a risk assessment.
    * Workflow starts in 'idle' state — call {@link start} to activate it.
    */
-  async create(id: string, objective: string, assessment: RiskAssessment): Promise<WorkflowDefinition> {
+  async create(
+    id: string,
+    objective: string,
+    assessment: RiskAssessment,
+  ): Promise<WorkflowDefinition> {
     const stages = this.generateStages(assessment.processLevel);
     const now = new Date().toISOString();
 
@@ -72,9 +76,7 @@ export class WorkflowEngine {
 
     const now = new Date().toISOString();
     const updatedStages = workflow.stages.map((s, i) =>
-      i === 0
-        ? { ...s, status: 'active' as StageStatus, startedAt: now }
-        : s,
+      i === 0 ? { ...s, status: 'active' as StageStatus, startedAt: now } : s,
     );
 
     const updated: WorkflowDefinition = {
@@ -165,7 +167,10 @@ export class WorkflowEngine {
    * Skip the current stage if it's skippable.
    * @throws Error if stage is not skippable or not active
    */
-  async skipStage(workflow: WorkflowDefinition, stageId: LifecycleStage): Promise<WorkflowDefinition> {
+  async skipStage(
+    workflow: WorkflowDefinition,
+    stageId: LifecycleStage,
+  ): Promise<WorkflowDefinition> {
     if (workflow.state.status !== 'active') {
       throw new Error(`Cannot skip: workflow is ${workflow.state.status}`);
     }

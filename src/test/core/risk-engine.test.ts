@@ -66,12 +66,18 @@ describe('RiskEngine', () => {
 
     it('detects database-related risk signals', () => {
       const result = engine.assess('Migrate user table schema');
-      expect(result.signals.some((s) => s.signal.includes('database') || s.signal.includes('migration'))).toBe(true);
+      expect(
+        result.signals.some((s) => s.signal.includes('database') || s.signal.includes('migration')),
+      ).toBe(true);
     });
 
     it('detects security-related risk signals', () => {
       const result = engine.assess('Fix XSS vulnerability in comment form');
-      expect(result.signals.some((s) => s.signal.includes('security') || s.signal.includes('vulnerability'))).toBe(true);
+      expect(
+        result.signals.some(
+          (s) => s.signal.includes('security') || s.signal.includes('vulnerability'),
+        ),
+      ).toBe(true);
     });
 
     it('detects deployment-related risk signals', () => {

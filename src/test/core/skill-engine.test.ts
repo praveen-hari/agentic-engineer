@@ -59,9 +59,7 @@ describe('SkillEngine', () => {
     });
 
     it('includes task-type skills for infrastructure work', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ workType: 'infrastructure' }),
-      );
+      const result = engine.computeActiveSkills(makeAssessment({ workType: 'infrastructure' }));
       expect(result.activeSkills).toContain('spec-driven-development');
       expect(result.activeSkills).toContain('planning-and-task-breakdown');
     });
@@ -69,9 +67,7 @@ describe('SkillEngine', () => {
 
   describe('context signal activation', () => {
     it('adds frontend-ui-engineering when touches_ui signal present', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ contextSignals: ['touches_ui'] }),
-      );
+      const result = engine.computeActiveSkills(makeAssessment({ contextSignals: ['touches_ui'] }));
       expect(result.activeSkills).toContain('frontend-ui-engineering');
     });
 
@@ -123,9 +119,7 @@ describe('SkillEngine', () => {
     });
 
     it('standard process includes quality-gate skills', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ processLevel: 'standard' }),
-      );
+      const result = engine.computeActiveSkills(makeAssessment({ processLevel: 'standard' }));
       expect(result.activeSkills).toContain('code-review-and-quality');
     });
 
@@ -146,12 +140,8 @@ describe('SkillEngine', () => {
     });
 
     it('higher process levels include lower level skills (additive)', () => {
-      const standard = engine.computeActiveSkills(
-        makeAssessment({ processLevel: 'standard' }),
-      );
-      const thorough = engine.computeActiveSkills(
-        makeAssessment({ processLevel: 'thorough' }),
-      );
+      const standard = engine.computeActiveSkills(makeAssessment({ processLevel: 'standard' }));
+      const thorough = engine.computeActiveSkills(makeAssessment({ processLevel: 'thorough' }));
       // Every standard skill should be in thorough
       for (const skill of standard.activeSkills) {
         expect(thorough.activeSkills).toContain(skill);
@@ -205,9 +195,7 @@ describe('SkillEngine', () => {
     });
 
     it('reason for context skill mentions the signal', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ contextSignals: ['touches_ui'] }),
-      );
+      const result = engine.computeActiveSkills(makeAssessment({ contextSignals: ['touches_ui'] }));
       expect(result.activationReasons['frontend-ui-engineering']).toMatch(/ui/i);
     });
 
@@ -234,9 +222,7 @@ describe('SkillEngine', () => {
     });
 
     it('guarded process level → includes shipping, security, performance, documentation', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ processLevel: 'guarded' }),
-      );
+      const result = engine.computeActiveSkills(makeAssessment({ processLevel: 'guarded' }));
       expect(result.activeSkills).toContain('shipping-and-launch');
       expect(result.activeSkills).toContain('security-and-hardening');
       expect(result.activeSkills).toContain('performance-optimization');

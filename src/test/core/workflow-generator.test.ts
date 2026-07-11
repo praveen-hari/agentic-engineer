@@ -30,15 +30,17 @@ describe('WorkflowGenerator', () => {
     });
 
     it('sets process level from assessment', () => {
-      const wf = generator.generate('wf-001', 'Fix typo', makeAssessment({ processLevel: 'light' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
       expect(wf.processLevel).toBe('light');
     });
 
     it('includes detected risks from assessment', () => {
       const assessment = makeAssessment({
-        signals: [
-          { type: 'keyword', signal: 'auth', severity: 'high', impact: 'security gate' },
-        ],
+        signals: [{ type: 'keyword', signal: 'auth', severity: 'high', impact: 'security gate' }],
       });
       const wf = generator.generate('wf-001', 'Add login', assessment);
       expect(wf.detectedRisks).toEqual(assessment.signals);
@@ -53,23 +55,39 @@ describe('WorkflowGenerator', () => {
 
   describe('light process', () => {
     it('generates 3 stages: plan, build, verify', () => {
-      const wf = generator.generate('wf-001', 'Fix typo', makeAssessment({ processLevel: 'light' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
       const stageIds = wf.stages.map((s) => s.id);
       expect(stageIds).toEqual(['plan', 'build', 'verify']);
     });
 
     it('has 0 approvals for light process', () => {
-      const wf = generator.generate('wf-001', 'Fix typo', makeAssessment({ processLevel: 'light' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
       expect(wf.approvals).toHaveLength(0);
     });
 
     it('all stages start as pending', () => {
-      const wf = generator.generate('wf-001', 'Fix typo', makeAssessment({ processLevel: 'light' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
       expect(wf.stages.every((s) => s.status === 'pending')).toBe(true);
     });
 
     it('workflow state starts as idle', () => {
-      const wf = generator.generate('wf-001', 'Fix typo', makeAssessment({ processLevel: 'light' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
       expect(wf.state.status).toBe('idle');
       expect(wf.state.currentStage).toBeNull();
     });
@@ -77,30 +95,50 @@ describe('WorkflowGenerator', () => {
 
   describe('standard process', () => {
     it('generates 7 stages: onboard, define, plan, build, verify, review, ship', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'standard' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
       const stageIds = wf.stages.map((s) => s.id);
       expect(stageIds).toEqual(['onboard', 'define', 'plan', 'build', 'verify', 'review', 'ship']);
     });
 
     it('has at least 2 approvals (spec + review)', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'standard' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
       expect(wf.approvals.length).toBeGreaterThanOrEqual(2);
     });
 
     it('includes spec approval at define stage', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'standard' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
       const specApproval = wf.approvals.find((a) => a.artifact === 'spec');
       expect(specApproval).toBeDefined();
     });
 
     it('includes code review approval at review stage', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'standard' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
       const reviewApproval = wf.approvals.find((a) => a.artifact === 'code-review');
       expect(reviewApproval).toBeDefined();
     });
 
     it('includes tests-pass quality gate', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'standard' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
       const testGate = wf.qualityGates.find((g) => g.id === 'tests-pass');
       expect(testGate).toBeDefined();
     });
@@ -108,37 +146,69 @@ describe('WorkflowGenerator', () => {
 
   describe('thorough process', () => {
     it('generates 7 stages (same as standard, more gates)', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'thorough' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'thorough' }),
+      );
       expect(wf.stages).toHaveLength(7);
     });
 
     it('has more quality gates than standard', () => {
-      const standard = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'standard' }));
-      const thorough = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'thorough' }));
+      const standard = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
+      const thorough = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'thorough' }),
+      );
       expect(thorough.qualityGates.length).toBeGreaterThan(standard.qualityGates.length);
     });
 
     it('has 3-4 approvals', () => {
-      const wf = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'thorough' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'thorough' }),
+      );
       expect(wf.approvals.length).toBeGreaterThanOrEqual(3);
     });
   });
 
   describe('guarded process', () => {
     it('generates 7 stages with none skippable', () => {
-      const wf = generator.generate('wf-001', 'Migrate DB', makeAssessment({ processLevel: 'guarded' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Migrate DB',
+        makeAssessment({ processLevel: 'guarded' }),
+      );
       expect(wf.stages).toHaveLength(7);
       expect(wf.stages.every((s) => !s.skippable)).toBe(true);
     });
 
     it('has more gates than thorough', () => {
-      const thorough = generator.generate('wf-001', 'Add feature', makeAssessment({ processLevel: 'thorough' }));
-      const guarded = generator.generate('wf-001', 'Migrate DB', makeAssessment({ processLevel: 'guarded' }));
+      const thorough = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'thorough' }),
+      );
+      const guarded = generator.generate(
+        'wf-001',
+        'Migrate DB',
+        makeAssessment({ processLevel: 'guarded' }),
+      );
       expect(guarded.qualityGates.length).toBeGreaterThan(thorough.qualityGates.length);
     });
 
     it('includes restricted approvals', () => {
-      const wf = generator.generate('wf-001', 'Migrate DB', makeAssessment({ processLevel: 'guarded' }));
+      const wf = generator.generate(
+        'wf-001',
+        'Migrate DB',
+        makeAssessment({ processLevel: 'guarded' }),
+      );
       const restricted = wf.approvals.filter((a) => a.level === 'restricted');
       expect(restricted.length).toBeGreaterThan(0);
     });

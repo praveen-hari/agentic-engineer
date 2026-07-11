@@ -66,9 +66,7 @@ export class StateManager {
     }
 
     if (expectedVersion !== undefined && current.version !== expectedVersion) {
-      throw new Error(
-        `Version conflict: expected ${expectedVersion}, found ${current.version}`,
-      );
+      throw new Error(`Version conflict: expected ${expectedVersion}, found ${current.version}`);
     }
 
     const updated: WorkflowDefinition = {

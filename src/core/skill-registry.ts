@@ -1,10 +1,4 @@
-import type {
-  LifecycleStage,
-  SkillCategory,
-  SkillDefinition,
-  SkillId,
-  WorkType,
-} from './types';
+import type { LifecycleStage, SkillCategory, SkillDefinition, SkillId, WorkType } from './types';
 
 /**
  * Static catalog of all 24 engineering skills (DD-007, DD-010).
@@ -67,7 +61,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Context Engineering',
     label: 'Context Engineering',
     category: 'always',
-    description: 'Optimizes agent context setup — rules files, context configuration, and project context for AI sessions.',
+    description:
+      'Optimizes agent context setup — rules files, context configuration, and project context for AI sessions.',
     activation: {
       mode: 'always',
       stages: ['onboard', 'define', 'plan', 'build'],
@@ -78,7 +73,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Git Workflow & Versioning',
     label: 'Git Workflow',
     category: 'always',
-    description: 'Structures git workflow practices — branching, committing, semantic versioning, changelogs.',
+    description:
+      'Structures git workflow practices — branching, committing, semantic versioning, changelogs.',
     activation: {
       mode: 'always',
       stages: ['build', 'review', 'ship'],
@@ -89,7 +85,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Incremental Implementation',
     label: 'Incremental Delivery',
     category: 'always',
-    description: 'Delivers changes incrementally — vertical slices, small PRs, progressive complexity.',
+    description:
+      'Delivers changes incrementally — vertical slices, small PRs, progressive complexity.',
     activation: {
       mode: 'always',
       stages: ['plan', 'build'],
@@ -102,7 +99,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Spec-Driven Development',
     label: 'Spec-Driven Dev',
     category: 'by-task-type',
-    description: 'Creates specs before coding — requirements, scenarios, and acceptance criteria before implementation.',
+    description:
+      'Creates specs before coding — requirements, scenarios, and acceptance criteria before implementation.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['feature', 'refactor', 'infrastructure'],
@@ -115,7 +113,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Planning & Task Breakdown',
     label: 'Planning',
     category: 'by-task-type',
-    description: 'Breaks work into ordered tasks — scope estimation, dependency analysis, parallel work identification.',
+    description:
+      'Breaks work into ordered tasks — scope estimation, dependency analysis, parallel work identification.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['feature', 'refactor', 'infrastructure'],
@@ -128,7 +127,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Test-Driven Development',
     label: 'TDD',
     category: 'by-task-type',
-    description: 'Drives development with tests — RED/GREEN/REFACTOR cycle, test pyramid, prove-it pattern for bugs.',
+    description:
+      'Drives development with tests — RED/GREEN/REFACTOR cycle, test pyramid, prove-it pattern for bugs.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['feature', 'bugfix', 'refactor', 'security'],
@@ -142,7 +142,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Source-Driven Development',
     label: 'Source-Driven Dev',
     category: 'by-task-type',
-    description: 'Grounds implementation decisions in official documentation — authoritative, source-cited code.',
+    description:
+      'Grounds implementation decisions in official documentation — authoritative, source-cited code.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['feature', 'infrastructure'],
@@ -155,7 +156,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Doubt-Driven Development',
     label: 'Doubt-Driven Dev',
     category: 'by-task-type',
-    description: 'Subjects non-trivial decisions to adversarial review — fresh-context verification before standing.',
+    description:
+      'Subjects non-trivial decisions to adversarial review — fresh-context verification before standing.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['feature', 'security', 'infrastructure'],
@@ -168,7 +170,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Debugging & Error Recovery',
     label: 'Debugging',
     category: 'by-task-type',
-    description: 'Systematic root-cause debugging — hypothesis testing, binary search, error isolation.',
+    description:
+      'Systematic root-cause debugging — hypothesis testing, binary search, error isolation.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['bugfix', 'security'],
@@ -180,7 +183,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Deprecation & Migration',
     label: 'Migration',
     category: 'by-task-type',
-    description: 'Manages deprecation and migration — sunsetting old systems, migrating users, maintaining backward compat.',
+    description:
+      'Manages deprecation and migration — sunsetting old systems, migrating users, maintaining backward compat.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['refactor', 'infrastructure'],
@@ -195,7 +199,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Frontend UI Engineering',
     label: 'Frontend UI',
     category: 'by-context',
-    description: 'Builds production-quality, accessible, responsive UIs — WCAG compliance, component architecture.',
+    description:
+      'Builds production-quality, accessible, responsive UIs — WCAG compliance, component architecture.',
     activation: {
       mode: 'by-context',
       contextSignals: ['touches_ui'],
@@ -207,7 +212,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'API & Interface Design',
     label: 'API Design',
     category: 'by-context',
-    description: 'Guides stable API and interface design — REST/GraphQL endpoints, module boundaries, type contracts.',
+    description:
+      'Guides stable API and interface design — REST/GraphQL endpoints, module boundaries, type contracts.',
     activation: {
       mode: 'by-context',
       contextSignals: ['touches_api'],
@@ -219,7 +225,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Browser Testing with DevTools',
     label: 'Browser Testing',
     category: 'by-context',
-    description: 'Tests in real browsers via Chrome DevTools — DOM inspection, console errors, network, performance.',
+    description:
+      'Tests in real browsers via Chrome DevTools — DOM inspection, console errors, network, performance.',
     activation: {
       mode: 'by-context',
       contextSignals: ['touches_ui'],
@@ -231,7 +238,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Security & Hardening',
     label: 'Security Hardening',
     category: 'by-context',
-    description: 'Hardens code against vulnerabilities — input validation, auth, data storage, third-party integration.',
+    description:
+      'Hardens code against vulnerabilities — input validation, auth, data storage, third-party integration.',
     activation: {
       mode: 'by-context',
       contextSignals: ['touches_auth_or_input', 'touches_external_services', 'high_risk_decision'],
@@ -245,7 +253,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Performance Optimization',
     label: 'Performance',
     category: 'by-context',
-    description: 'Optimizes performance — Core Web Vitals, N+1 queries, profiling, bundle size, rendering.',
+    description:
+      'Optimizes performance — Core Web Vitals, N+1 queries, profiling, bundle size, rendering.',
     activation: {
       mode: 'by-context',
       contextSignals: ['performance_sensitive', 'touches_ui'],
@@ -259,7 +268,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Observability & Instrumentation',
     label: 'Observability',
     category: 'by-context',
-    description: 'Instruments code for production visibility — logging, metrics, tracing, alerting.',
+    description:
+      'Instruments code for production visibility — logging, metrics, tracing, alerting.',
     activation: {
       mode: 'by-context',
       contextSignals: ['touches_external_services', 'touches_api'],
@@ -272,7 +282,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'CI/CD & Automation',
     label: 'CI/CD',
     category: 'by-context',
-    description: 'Automates CI/CD pipelines — build, test, deploy, quality gates, deployment strategies.',
+    description:
+      'Automates CI/CD pipelines — build, test, deploy, quality gates, deployment strategies.',
     activation: {
       mode: 'by-context',
       contextSignals: ['high_risk_decision'],
@@ -288,7 +299,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Interview Me',
     label: 'Requirements Interview',
     category: 'interactive',
-    description: 'Extracts actual user intent through one-question-at-a-time interview until ~95% confidence.',
+    description:
+      'Extracts actual user intent through one-question-at-a-time interview until ~95% confidence.',
     activation: {
       mode: 'interactive',
       stages: ['define'],
@@ -299,7 +311,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Idea Refine',
     label: 'Idea Refinement',
     category: 'interactive',
-    description: 'Refines raw ideas into sharp, actionable concepts through structured divergent and convergent thinking.',
+    description:
+      'Refines raw ideas into sharp, actionable concepts through structured divergent and convergent thinking.',
     activation: {
       mode: 'interactive',
       stages: ['define'],
@@ -310,7 +323,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Documentation & ADRs',
     label: 'Documentation',
     category: 'by-task-type',
-    description: 'Records decisions and documentation — ADRs, architectural context, API docs, changelogs.',
+    description:
+      'Records decisions and documentation — ADRs, architectural context, API docs, changelogs.',
     activation: {
       mode: 'by-task-type',
       workTypes: ['feature', 'refactor', 'documentation', 'infrastructure'],
@@ -325,7 +339,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Code Review & Quality',
     label: 'Code Review',
     category: 'quality-gate',
-    description: 'Multi-axis code review — correctness, readability, architecture, security, performance before merge.',
+    description:
+      'Multi-axis code review — correctness, readability, architecture, security, performance before merge.',
     activation: {
       mode: 'quality-gate',
       stages: ['review'],
@@ -338,7 +353,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Code Simplification',
     label: 'Code Simplification',
     category: 'quality-gate',
-    description: 'Simplifies code for clarity — removes unnecessary complexity, improves readability without behavior change.',
+    description:
+      'Simplifies code for clarity — removes unnecessary complexity, improves readability without behavior change.',
     activation: {
       mode: 'quality-gate',
       stages: ['review'],
@@ -351,7 +367,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Shipping & Launch',
     label: 'Shipping',
     category: 'quality-gate',
-    description: 'Prepares production launches — pre-launch checklist, monitoring, staged rollout, rollback strategy.',
+    description:
+      'Prepares production launches — pre-launch checklist, monitoring, staged rollout, rollback strategy.',
     activation: {
       mode: 'quality-gate',
       stages: ['ship'],
@@ -366,7 +383,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Using Agent Skills',
     label: 'Skill Discovery',
     category: 'always',
-    description: 'Discovers and invokes agent skills — meta-skill that governs how all other skills are found and activated.',
+    description:
+      'Discovers and invokes agent skills — meta-skill that governs how all other skills are found and activated.',
     activation: {
       mode: 'always',
       stages: ['onboard', 'define'],
@@ -377,7 +395,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Code Reviewer',
     label: 'Code Reviewer',
     category: 'specialist',
-    description: 'Senior code reviewer evaluating changes across five dimensions — correctness, readability, architecture, security, performance.',
+    description:
+      'Senior code reviewer evaluating changes across five dimensions — correctness, readability, architecture, security, performance.',
     activation: {
       mode: 'quality-gate',
       stages: ['review'],
@@ -390,7 +409,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Security Auditor',
     label: 'Security Auditor',
     category: 'specialist',
-    description: 'Security engineer focused on vulnerability detection, threat modeling, and secure coding practices.',
+    description:
+      'Security engineer focused on vulnerability detection, threat modeling, and secure coding practices.',
     activation: {
       mode: 'by-context',
       contextSignals: ['touches_auth_or_input', 'high_risk_decision'],
@@ -417,7 +437,8 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
     name: 'Web Performance Auditor',
     label: 'Performance Auditor',
     category: 'specialist',
-    description: 'Web performance engineer focused on Core Web Vitals, loading, rendering, and network optimization.',
+    description:
+      'Web performance engineer focused on Core Web Vitals, loading, rendering, and network optimization.',
     activation: {
       mode: 'by-context',
       contextSignals: ['performance_sensitive', 'touches_ui'],

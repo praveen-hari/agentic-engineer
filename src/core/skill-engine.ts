@@ -1,10 +1,5 @@
 import type { SkillRegistry } from './skill-registry';
-import type {
-  ProcessLevel,
-  RiskAssessment,
-  SkillDefinition,
-  SkillId,
-} from './types';
+import type { ProcessLevel, RiskAssessment, SkillDefinition, SkillId } from './types';
 
 /**
  * Skill activation rule engine (DD-007, DD-010).
@@ -86,7 +81,8 @@ export class SkillEngine {
       if (this.meetsMinProcessLevel(skill, assessment.processLevel)) {
         if (!activeSkills.has(skill.id)) {
           activeSkills.add(skill.id);
-          reasons[skill.id] = `Activated because process level is '${assessment.processLevel}' (specialist review)`;
+          reasons[skill.id] =
+            `Activated because process level is '${assessment.processLevel}' (specialist review)`;
         }
       }
     }

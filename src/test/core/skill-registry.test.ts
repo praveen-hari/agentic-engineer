@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { SkillRegistry } from '../../core/skill-registry';
-import type { SkillId, SkillCategory, LifecycleStage, WorkType, ContextSignal, ProcessLevel } from '../../core/types';
+import type {
+  SkillId,
+  SkillCategory,
+  LifecycleStage,
+  WorkType,
+  ContextSignal,
+  ProcessLevel,
+} from '../../core/types';
 
 describe('SkillRegistry', () => {
   const registry = new SkillRegistry();
@@ -49,7 +56,12 @@ describe('SkillRegistry', () => {
       const skills = registry.getByCategory('always');
       expect(skills).toHaveLength(4);
       expect(skills.map((s) => s.id).sort()).toEqual(
-        ['context-engineering', 'git-workflow-and-versioning', 'incremental-implementation', 'using-agent-skills'].sort(),
+        [
+          'context-engineering',
+          'git-workflow-and-versioning',
+          'incremental-implementation',
+          'using-agent-skills',
+        ].sort(),
       );
     });
 
