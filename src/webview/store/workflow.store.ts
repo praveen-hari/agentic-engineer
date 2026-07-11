@@ -7,7 +7,10 @@
 
 import { signal, computed } from '@preact/signals';
 import type {
+  Artifact,
+  OnboardingStatus,
   ProjectContext,
+  ProjectType,
   RiskAssessment,
   WorkflowDefinition,
   HistoryEntry,
@@ -51,6 +54,17 @@ export const contextStore = signal<ProjectContext | null>(null);
 
 export const historyStore = signal<readonly HistoryEntry[]>([]);
 export const historyHasMore = signal<boolean>(false);
+
+// ─── Onboarding State ─────────────────────────────────────────────────────
+
+export const onboardingStatus = signal<OnboardingStatus>('welcome');
+export const projectType = signal<ProjectType | null>(null);
+export const isOnboarded = computed(() => onboardingStatus.value === 'ready');
+
+// ─── Artifact Generation State ────────────────────────────────────────────
+
+export const generatingStage = signal<string | null>(null);
+export const detectedArtifacts = signal<readonly Artifact[]>([]);
 
 // ─── Capabilities State ───────────────────────────────────────────────────
 

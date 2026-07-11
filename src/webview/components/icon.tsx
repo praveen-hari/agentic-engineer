@@ -47,7 +47,10 @@ export type IconName =
   | 'clock'
   | 'flame'
   | 'snowflake'
-  | 'leaf';
+  | 'leaf'
+  | 'folder-library'
+  | 'circle-slash'
+  | 'pulse';
 
 interface IconProps {
   readonly name: IconName;

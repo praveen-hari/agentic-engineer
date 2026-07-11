@@ -269,7 +269,10 @@ export type MessageToHost =
   | { readonly type: 'executeStage' }
   | { readonly type: 'requestArtifacts' }
   | { readonly type: 'requestGateStatus' }
-  | { readonly type: 'generateArtifact'; readonly stage: LifecycleStage };
+  | { readonly type: 'generateArtifact'; readonly stage: LifecycleStage }
+  | { readonly type: 'setupExistingProject' }
+  | { readonly type: 'setupNewProject'; readonly projectName: string; readonly description: string }
+  | { readonly type: 'requestOnboardingStatus' };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -287,7 +290,8 @@ export type MessageToWebview =
   | { readonly type: 'gateStatus'; readonly gates: readonly QualityGate[] }
   | { readonly type: 'stageResult'; readonly result: StageExecutionResult }
   | { readonly type: 'generatingArtifact'; readonly stage: LifecycleStage; readonly message: string }
-  | { readonly type: 'artifactDetected'; readonly artifact: Artifact };
+  | { readonly type: 'artifactDetected'; readonly artifact: Artifact }
+  | { readonly type: 'onboardingStatus'; readonly status: OnboardingStatus; readonly projectType: ProjectType | null; readonly context: ProjectContext | null };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
 
@@ -366,6 +370,10 @@ export interface WorkspaceConfig {
 
 export type ProjectType = 'greenfield' | 'brownfield';
 
+export type OnboardingStatus = 'welcome' | 'setup-existing' | 'setup-new' | 'scanning' | 'ready';
+
+export type SetupMode = 'existing' | 'new';
+
 export interface OnboardingResult {
   readonly projectType: ProjectType;
   readonly context: ProjectContext;
@@ -373,6 +381,11 @@ export interface OnboardingResult {
   readonly config: WorkspaceConfig;
   readonly isFirstRun: boolean;
   readonly contextStale: boolean;
+}
+
+export interface NewProjectInput {
+  readonly projectName: string;
+  readonly description: string;
 }
 
 // ─── Stage Execution ───────────────────────────────────────────────────────

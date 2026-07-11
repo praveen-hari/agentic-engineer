@@ -8,9 +8,15 @@ import {
   historyStore,
   historyHasMore,
   isAnalyzing,
+  isOnboarded,
+  onboardingStatus,
+  projectType,
+  generatingStage,
+  detectedArtifacts,
   error,
 } from './store/workflow.store';
 import { bridge } from './bridge';
+import { OnboardingView } from './views/onboarding-view';
 import { TasksView } from './views/tasks-view';
 import { CapabilitiesView } from './views/capabilities-view';
 import { KnowledgeView } from './views/knowledge-view';
@@ -20,12 +26,12 @@ import { SettingsView } from './views/settings-view';
 /**
  * Root app component for the editor-panel webview.
  *
+ * Shows onboarding flow first (welcome → setup → ready).
+ * Once onboarded, shows the normal 5-view navigation.
+ *
  * Navigation is driven by the native TreeView in the sidebar.
  * The extension host sends `{ type: 'navigateTo', view }` messages
  * when the user clicks a tree item.
- *
- * All other messages (state, assessment, context, history, error)
- * are dispatched to the signal stores so every view reacts automatically.
  */
 export const App: FunctionalComponent = () => {
   useEffect(() => {
@@ -36,12 +42,11 @@ export const App: FunctionalComponent = () => {
       activeView.value = initialView;
     }
 
-    // Request initial state
+    // Check onboarding status first
+    bridge.send({ type: 'requestOnboardingStatus' });
     bridge.send({ type: 'requestState' });
-    bridge.send({ type: 'requestContext' });
 
     // ─── Message Dispatcher ──────────────────────────────────────
-    // Routes every MessageToWebview to the correct signal store.
     const unsub = bridge.onMessage((msg) => {
       switch (msg.type) {
         case 'navigateTo':
@@ -66,17 +71,41 @@ export const App: FunctionalComponent = () => {
           error.value = msg.message;
           isAnalyzing.value = false;
           break;
+        case 'onboardingStatus':
+          onboardingStatus.value = msg.status;
+          projectType.value = msg.projectType;
+          if (msg.context) {
+            contextStore.value = msg.context;
+          }
+          break;
+        case 'generatingArtifact':
+          generatingStage.value = msg.stage;
+          break;
+        case 'artifactDetected':
+          generatingStage.value = null;
+          detectedArtifacts.value = [...detectedArtifacts.value, msg.artifact];
+          break;
       }
     });
 
     return unsub;
   }, []);
 
+  // ─── Onboarding Gate ───────────────────────────────────────────
+  // Show onboarding until the project is set up
+  if (!isOnboarded.value) {
+    return (
+      <div class="app-panel">
+        <main class="panel-content">
+          <OnboardingView />
+        </main>
+      </div>
+    );
+  }
+
+  // ─── Normal Views ──────────────────────────────────────────────
   const view = activeView.value;
 
-  // Conditional rendering — only the active view is mounted.
-  // Shared state lives in signal stores (workflow.store.ts) so it
-  // survives view switches without keeping all 5 views in the DOM.
   return (
     <div class="app-panel">
       <main class="panel-content">

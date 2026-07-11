@@ -121,6 +121,15 @@ export function handleWebviewMessage(
         case 'generateArtifact':
           await handleGenerateArtifact(deps, reply, msg.stage);
           break;
+        case 'setupExistingProject':
+          await handleSetupExistingProject(deps, reply);
+          break;
+        case 'setupNewProject':
+          await handleSetupNewProject(deps, reply, msg.projectName, msg.description);
+          break;
+        case 'requestOnboardingStatus':
+          await handleRequestOnboardingStatus(deps, reply);
+          break;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -398,4 +407,159 @@ async function handleGenerateArtifact(
   // generate the artifact, and save it to .codestudio/artifacts/.
   // The ArtifactWatcher will detect the new file and notify the webview.
   await deps.agentBridge.sendToChat(prompt);
+}
+
+// ─── Onboarding Handlers ────────────────────────────────────────────────────
+
+async function handleSetupExistingProject(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const root = deps.workspaceService.getWorkspaceRoot();
+  if (!root) {
+    reply({ type: 'error', message: 'No workspace folder open' });
+    return;
+  }
+
+  // Scan workspace and detect project context
+  try {
+    const scanner = new WorkspaceScanner(deps.fileSystem, root);
+    const files = await scanner.scan();
+    const detection = deps.projectDetector.detect(files);
+    const context = deps.projectDetector.toContext(detection, root);
+    deps.contextSignalDetector.detect(context); // detect signals for side effects
+
+    // Cache the context
+    cachedContext = context;
+
+    // Generate context.md
+    const markdown = deps.contextAnalyzer.generateMarkdown(context);
+    const contextPath = `${root}/.codestudio/context.md`;
+    await deps.fileSystem.write(contextPath, markdown);
+
+    // Send prompt to agent to create codestudio-instructions.md
+    // based on the detected project context
+    const instructionsPrompt = `Follow the **context-engineering** skill to set up project context.
+
+The workspace has been scanned. Here's what was detected:
+${formatContextForPrompt(context)}
+
+## Instructions
+1. Read the project context above and scan the workspace for additional patterns.
+2. Create a \`.codestudio/codestudio-instructions.md\` file with:
+   - Project overview (what this project is)
+   - Tech stack details
+   - Code conventions and patterns found in the codebase
+   - Testing conventions
+   - Build and development commands
+   - Boundaries (always do / ask first / never do)
+3. This file will be used by the agent as project-level instructions.
+
+Base everything on the ACTUAL codebase — not generic templates.`;
+
+    await deps.agentBridge.sendToChat(instructionsPrompt);
+
+    // Tell webview the scan is complete
+    const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
+    reply({
+      type: 'onboardingStatus',
+      status: 'setup-existing',
+      projectType: pType,
+      context,
+    });
+    reply({ type: 'context', context });
+  } catch (err) {
+    reply({
+      type: 'error',
+      message: `Failed to scan workspace: ${err instanceof Error ? err.message : 'unknown error'}`,
+    });
+  }
+}
+
+async function handleSetupNewProject(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  projectName: string,
+  description: string,
+): Promise<void> {
+  // For new projects, we send the details to the agent via chat
+  // The agent will use the interview-me skill to gather more details
+  // and then set up the project structure
+  const prompt = `Follow the **interview-me** skill to set up a new project.
+
+## Project Details
+- **Name:** ${projectName}
+${description ? `- **Description:** ${description}` : ''}
+
+## Instructions
+1. Interview me to understand what I want to build (use the interview-me skill).
+2. Based on my answers, help me choose the right tech stack.
+3. Set up the project structure with:
+   - Package manager initialization
+   - Dependencies installation
+   - Folder structure
+   - Configuration files (tsconfig, eslint, prettier, etc.)
+4. Create \`.codestudio/\` directory with:
+   - \`context.md\` — project context
+   - \`codestudio-instructions.md\` — project conventions and instructions
+   - \`config.json\` — extension settings
+5. Initialize git if not already initialized.
+
+Start by asking me clarifying questions about what I want to build.`;
+
+  await deps.agentBridge.sendToChat(prompt);
+
+  // Tell webview we're in setup mode
+  reply({
+    type: 'onboardingStatus',
+    status: 'setup-new',
+    projectType: 'greenfield',
+    context: null,
+  });
+}
+
+async function handleRequestOnboardingStatus(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const root = deps.workspaceService.getWorkspaceRoot();
+  if (!root) {
+    reply({ type: 'onboardingStatus', status: 'welcome', projectType: null, context: null });
+    return;
+  }
+
+  // Check if .codestudio/ exists — if so, project is already set up
+  const codestudioExists = await deps.fileSystem.exists(`${root}/.codestudio/config.json`);
+
+  if (codestudioExists) {
+    // Already onboarded — load context and go to ready state
+    try {
+      const scanner = new WorkspaceScanner(deps.fileSystem, root);
+      const files = await scanner.scan();
+      const detection = deps.projectDetector.detect(files);
+      const context = deps.projectDetector.toContext(detection, root);
+      cachedContext = context;
+
+      const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
+      reply({ type: 'onboardingStatus', status: 'ready', projectType: pType, context });
+      reply({ type: 'context', context });
+    } catch {
+      reply({ type: 'onboardingStatus', status: 'ready', projectType: 'brownfield', context: null });
+    }
+  } else {
+    // Not onboarded yet — show welcome
+    reply({ type: 'onboardingStatus', status: 'welcome', projectType: null, context: null });
+  }
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function formatContextForPrompt(context: ProjectContext): string {
+  const parts: string[] = [];
+  if (context.languages.length > 0) parts.push(`- Languages: ${context.languages.join(', ')}`);
+  if (context.frameworks.length > 0) parts.push(`- Frameworks: ${context.frameworks.join(', ')}`);
+  if (context.testFramework) parts.push(`- Test framework: ${context.testFramework}`);
+  if (context.packageManager) parts.push(`- Package manager: ${context.packageManager}`);
+  if (context.conventions.length > 0) parts.push(`- Conventions: ${context.conventions.join(', ')}`);
+  return parts.length > 0 ? parts.join('\n') : '- No specific context detected';
 }
