@@ -12,10 +12,7 @@ import { SkillEngine } from './core/skill-engine';
 import { WorkflowGenerator } from './core/workflow-generator';
 import { ProjectDetector } from './core/project-detector';
 import { ContextAnalyzer } from './core/context-analyzer';
-import { ContextSignalDetector } from './core/context-signal-detector';
-import { CapabilityRecommender } from './core/capability-recommender';
 import { StageExecutor } from './core/stage-executor';
-import { GateRunner } from './core/gate-runner';
 import { ArtifactManager } from './services/artifact-manager.service';
 import { AgentBridge } from './services/agent-bridge.service';
 import { ArtifactWatcher } from './services/artifact-watcher.service';
@@ -32,7 +29,6 @@ import { ChatParticipantHandler } from './chat/chat-participant';
 import { NavigationTreeProvider } from './views/navigation-tree';
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
-import { WorkspaceScanner } from './services/workspace-scanner.service';
 import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
 
 /**
@@ -67,10 +63,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const workflowGenerator = new WorkflowGenerator(skillEngine);
   const projectDetector = new ProjectDetector();
   const contextAnalyzer = new ContextAnalyzer();
-  const contextSignalDetector = new ContextSignalDetector();
-  const capabilityRecommender = new CapabilityRecommender();
   const stageExecutor = new StageExecutor(skillRegistry);
-  const gateRunner = new GateRunner();
   const artifactManager = new ArtifactManager(fsService, workspaceRoot ?? '/');
   const promptTemplates = new PromptTemplates();
   const agentBridge = new AgentBridge(vscodeApi);
@@ -200,15 +193,8 @@ export function activate(context: vscode.ExtensionContext): void {
     {
       stateManager,
       workflowEngine,
-      riskEngine,
       workflowGenerator,
-      skillEngine,
       stageExecutor,
-      gateRunner,
-      projectDetector,
-      contextAnalyzer,
-      contextSignalDetector,
-      capabilityRecommender,
       notificationService,
       workspaceService,
       fileSystem: fsService,
@@ -247,38 +233,15 @@ export function activate(context: vscode.ExtensionContext): void {
     // This fires when the agent creates config.json, context.md,
     // or codestudio-instructions.md in .codestudio/
     artifactWatcher.onSetupFileDetected(async (fileName) => {
-      // Re-scan context and send updated onboarding status
-      try {
-        const scanner = new WorkspaceScanner(fsService, workspaceRoot);
-        const files = await scanner.scan();
-        const detection = projectDetector.detect(files);
-        const ctx = projectDetector.toContext(detection, workspaceRoot);
-        const pType = WorkspaceScanner.isGreenfield(files)
-          ? ('greenfield' as const)
-          : ('brownfield' as const);
-
-        panelProvider.postMessage({
-          type: 'onboardingStatus',
-          status: 'ready',
-          projectType: pType,
-          context: ctx,
-          hasExistingFiles: true,
-        });
-        panelProvider.postMessage({ type: 'context', context: ctx });
-
-        notificationService.showInfo(
-          `Project setup detected (${fileName}). Ready to start working!`,
-        );
-      } catch {
-        // If re-scan fails, still transition to ready
-        panelProvider.postMessage({
-          type: 'onboardingStatus',
-          status: 'ready',
-          projectType: 'brownfield',
-          context: null,
-          hasExistingFiles: true,
-        });
-      }
+      // Transition webview to ready state — no scanning needed
+      panelProvider.postMessage({
+        type: 'onboardingStatus',
+        status: 'ready',
+        projectType: 'brownfield',
+        context: null,
+        hasExistingFiles: true,
+      });
+      notificationService.showInfo(`Project setup detected (${fileName}). Ready to start working!`);
     });
   }
 
@@ -356,18 +319,12 @@ export function activate(context: vscode.ExtensionContext): void {
   // If .codestudio/ already exists (returning user), we just update
   // the status bar with the detected project type.
   if (workspaceRoot) {
-    void fsService.exists(`${workspaceRoot}/.codestudio/config.json`).then(async (exists) => {
+    void fsService.exists(`${workspaceRoot}/.codestudio/config.json`).then((exists) => {
       if (exists) {
-        // Returning user — detect project type for status bar
-        try {
-          const scanner = new WorkspaceScanner(fsService, workspaceRoot);
-          const files = await scanner.scan();
-          const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
-          const icon = pType === 'greenfield' ? '🌱' : '🏗️';
-          notificationService.updateStatusBar(`${icon} ${pType}`, `Project: ${pType}`);
-        } catch {
-          notificationService.updateStatusBar('🏗️ Engineering Workspace', 'Engineering Workspace');
-        }
+        notificationService.updateStatusBar(
+          '🏗️ Project Ready',
+          'Engineering Workspace — project configured',
+        );
       }
       // If not exists → onboarding will show in webview. No auto-init.
     });

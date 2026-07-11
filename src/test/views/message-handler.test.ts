@@ -40,40 +40,9 @@ function createMockDeps(): MessageHandlerDeps {
       skipStage: vi.fn().mockResolvedValue({ ...SAMPLE_WORKFLOW }),
     } as unknown as MessageHandlerDeps['workflowEngine'],
 
-    riskEngine: {
-      assess: vi.fn().mockReturnValue(SAMPLE_ASSESSMENT),
-    } as unknown as MessageHandlerDeps['riskEngine'],
-
     workflowGenerator: {
       generate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
     } as unknown as MessageHandlerDeps['workflowGenerator'],
-
-    skillEngine: {} as unknown as MessageHandlerDeps['skillEngine'],
-    projectDetector: {
-      detect: vi.fn().mockReturnValue({
-        languages: [],
-        frameworks: [],
-        testFramework: null,
-        packageManager: null,
-        detectedStack: [],
-        conventions: [],
-      }),
-      toContext: vi.fn().mockReturnValue({
-        rootPath: '/project',
-        languages: [],
-        frameworks: [],
-        testFramework: null,
-        packageManager: null,
-        detectedStack: [],
-        conventions: [],
-        generatedAt: new Date().toISOString(),
-      }),
-    } as unknown as MessageHandlerDeps['projectDetector'],
-    contextAnalyzer: {} as unknown as MessageHandlerDeps['contextAnalyzer'],
-    contextSignalDetector: {
-      detect: vi.fn().mockReturnValue([]),
-    } as unknown as MessageHandlerDeps['contextSignalDetector'],
-    capabilityRecommender: {} as unknown as MessageHandlerDeps['capabilityRecommender'],
 
     notificationService: {
       showInfo: vi.fn(),
@@ -105,17 +74,6 @@ function createMockDeps(): MessageHandlerDeps {
       }),
       getStageInstructions: vi.fn().mockReturnValue('No active stage'),
     } as unknown as MessageHandlerDeps['stageExecutor'],
-
-    gateRunner: {
-      evaluateStageGates: vi.fn().mockReturnValue([]),
-      areBlockingGatesPassing: vi.fn().mockReturnValue(true),
-      getPendingGates: vi.fn().mockReturnValue([]),
-      passGate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
-      failGate: vi.fn().mockReturnValue(SAMPLE_WORKFLOW),
-      getSummary: vi
-        .fn()
-        .mockReturnValue({ total: 0, passed: 0, failed: 0, pending: 0, skipped: 0 }),
-    } as unknown as MessageHandlerDeps['gateRunner'],
 
     artifactManager: {
       listAll: vi.fn().mockResolvedValue([]),
@@ -215,17 +173,12 @@ describe('handleWebviewMessage', () => {
   // ─── analyzeObjective ─────────────────────────────────────────
 
   describe('analyzeObjective', () => {
-    it('replies with risk assessment', async () => {
+    it('sends prompt to agent and replies with placeholder assessment', async () => {
       await handler({ type: 'analyzeObjective', objective: 'Add payment processing' });
-      // riskEngine.assess is called with objective + cached context (may be null or ProjectContext)
-      expect(deps.riskEngine.assess).toHaveBeenCalledWith(
-        'Add payment processing',
-        expect.anything(),
-      );
+      // Now sends to agent bridge instead of using RiskEngine
+      expect(deps.agentBridge.sendToChat).toHaveBeenCalled();
       expect(replies).toHaveLength(1);
-      // Assessment may have merged context signals
       expect(replies[0]).toHaveProperty('type', 'assessment');
-      expect((replies[0] as { assessment: unknown }).assessment).toHaveProperty('workType');
     });
   });
 

@@ -1,26 +1,17 @@
 import type { StateManager } from '../core/state-manager';
 import type { WorkflowEngine } from '../core/workflow-engine';
-import type { RiskEngine } from '../core/risk-engine';
 import type { WorkflowGenerator } from '../core/workflow-generator';
-import type { SkillEngine } from '../core/skill-engine';
 import type { StageExecutor } from '../core/stage-executor';
-import type { GateRunner } from '../core/gate-runner';
-import type { ProjectDetector } from '../core/project-detector';
-import type { ContextAnalyzer } from '../core/context-analyzer';
-import type { ContextSignalDetector } from '../core/context-signal-detector';
-import type { CapabilityRecommender } from '../core/capability-recommender';
 import type { PromptTemplates } from '../core/prompt-templates';
 import type { NotificationService } from '../services/notification.service';
 import type { WorkspaceService } from '../services/workspace.service';
 import type { ArtifactManager } from '../services/artifact-manager.service';
 import type { AgentBridge } from '../services/agent-bridge.service';
-import { WorkspaceScanner } from '../services/workspace-scanner.service';
 import type {
   FileIO,
   LifecycleStage,
   MessageToHost,
   MessageToWebview,
-  ProjectContext,
   RiskAssessment,
   WorkflowDefinition,
 } from '../core/types';
@@ -32,19 +23,16 @@ export type ReplyFn = (message: MessageToWebview) => void;
 
 /**
  * Dependencies for the webview message handler.
+ *
+ * Simplified: no RiskEngine, no ProjectDetector, no ContextAnalyzer,
+ * no ContextSignalDetector, no SkillEngine, no GateRunner, no
+ * CapabilityRecommender. The agent handles all intelligence via tools.
  */
 export interface MessageHandlerDeps {
   readonly stateManager: StateManager;
   readonly workflowEngine: WorkflowEngine;
-  readonly riskEngine: RiskEngine;
   readonly workflowGenerator: WorkflowGenerator;
-  readonly skillEngine: SkillEngine;
   readonly stageExecutor: StageExecutor;
-  readonly gateRunner: GateRunner;
-  readonly projectDetector: ProjectDetector;
-  readonly contextAnalyzer: ContextAnalyzer;
-  readonly contextSignalDetector: ContextSignalDetector;
-  readonly capabilityRecommender: CapabilityRecommender;
   readonly notificationService: NotificationService;
   readonly workspaceService: WorkspaceService;
   readonly fileSystem: FileIO;
@@ -52,12 +40,6 @@ export interface MessageHandlerDeps {
   readonly promptTemplates: PromptTemplates;
   readonly agentBridge: AgentBridge;
 }
-
-/**
- * Cached project context — populated on first requestContext,
- * reused by analyzeObjective for merged risk assessment.
- */
-let cachedContext: ProjectContext | null = null;
 
 /**
  * Handle messages from the webview and route them to the appropriate
@@ -152,33 +134,21 @@ async function handleRequestContext(deps: MessageHandlerDeps, reply: ReplyFn): P
     return;
   }
 
-  try {
-    // Scan workspace files and detect project stack
-    const scanner = new WorkspaceScanner(deps.fileSystem, root);
-    const files = await scanner.scan();
-    const detection = deps.projectDetector.detect(files);
-    const context = deps.projectDetector.toContext(detection, root);
-
-    // Cache for use by analyzeObjective
-    cachedContext = context;
-
-    reply({ type: 'context', context });
-  } catch {
-    // Fallback to minimal context on error
-    reply({
-      type: 'context',
-      context: {
-        rootPath: root,
-        languages: [],
-        frameworks: [],
-        testFramework: null,
-        packageManager: null,
-        detectedStack: [],
-        conventions: [],
-        generatedAt: new Date().toISOString(),
-      },
-    });
-  }
+  // Read context from .codestudio/context.md if it exists (agent creates this)
+  // We don't scan — the agent handles all context generation via tools.
+  reply({
+    type: 'context',
+    context: {
+      rootPath: root,
+      languages: [],
+      frameworks: [],
+      testFramework: null,
+      packageManager: null,
+      detectedStack: [],
+      conventions: [],
+      generatedAt: new Date().toISOString(),
+    },
+  });
 }
 
 async function handleAnalyzeObjective(
@@ -186,23 +156,35 @@ async function handleAnalyzeObjective(
   reply: ReplyFn,
   objective: string,
 ): Promise<void> {
-  // Merge workspace context signals into risk assessment
-  // This gives brownfield projects richer risk analysis
-  const contextSignals = cachedContext
-    ? deps.contextSignalDetector.detect(cachedContext, objective)
-    : [];
+  // Send the objective to the agent — the agent will call
+  // engineering_start_workflow with its own assessment.
+  // For the webview, we send a prompt to the agent.
+  const prompt = `The user wants to work on: "${objective}"
 
-  const baseAssessment = deps.riskEngine.assess(objective, cachedContext ?? undefined);
+Call \`engineering_start_workflow\` tool with:
+- objective: "${objective}"
+- workType: your assessment (feature/bugfix/refactor/etc.)
+- complexity: your assessment (trivial/simple/moderate/complex/critical)
+- riskLevel: your assessment (low/medium/high)
+- contextSignals: what the project touches
 
-  // Merge context signals from workspace detection with keyword-based signals
-  const mergedSignals = [...new Set([...baseAssessment.contextSignals, ...contextSignals])];
+Determine the workType, complexity, and riskLevel yourself based on the objective and project context.`;
 
-  const assessment: RiskAssessment = {
-    ...baseAssessment,
-    contextSignals: mergedSignals,
-  };
+  await deps.agentBridge.sendToChat(prompt);
 
-  reply({ type: 'assessment', assessment });
+  // Tell webview we're analyzing (the agent will trigger state updates via tools)
+  reply({
+    type: 'assessment',
+    assessment: {
+      workType: 'feature',
+      complexity: 'moderate',
+      riskLevel: 'medium',
+      processLevel: 'standard',
+      signals: [],
+      contextSignals: [],
+      source: 'llm',
+    },
+  });
 }
 
 async function handleStartWorkflow(
@@ -380,11 +362,11 @@ async function handleGenerateArtifact(
   // Build the prompt for this stage
   const prompt = deps.promptTemplates.getPromptForStage(stage, {
     objective: wf.objective,
-    context: cachedContext,
+    context: null,
     signals: wf.detectedRisks,
     processLevel: wf.processLevel,
     specPath,
-    testCommand: cachedContext?.testFramework ? `npm test` : null,
+    testCommand: null,
     buildCommand: 'npm run build',
   });
 
@@ -520,45 +502,27 @@ async function handleRequestOnboardingStatus(
     return;
   }
 
-  // Check if .codestudio/ exists — if so, project is already set up
+  // Check if .codestudio/config.json exists — if so, project is already set up
   const codestudioExists = await deps.fileSystem.exists(`${root}/.codestudio/config.json`);
 
   if (codestudioExists) {
-    // Already onboarded — load context and go to ready state
-    try {
-      const scanner = new WorkspaceScanner(deps.fileSystem, root);
-      const files = await scanner.scan();
-      const detection = deps.projectDetector.detect(files);
-      const context = deps.projectDetector.toContext(detection, root);
-      cachedContext = context;
-
-      const pType = WorkspaceScanner.isGreenfield(files) ? 'greenfield' : 'brownfield';
-      reply({
-        type: 'onboardingStatus',
-        status: 'ready',
-        projectType: pType,
-        context,
-        hasExistingFiles: true,
-      });
-      reply({ type: 'context', context });
-    } catch {
-      reply({
-        type: 'onboardingStatus',
-        status: 'ready',
-        projectType: 'brownfield',
-        context: null,
-        hasExistingFiles: true,
-      });
-    }
+    // Already onboarded — go to ready state
+    reply({
+      type: 'onboardingStatus',
+      status: 'ready',
+      projectType: 'brownfield',
+      context: null,
+      hasExistingFiles: true,
+    });
   } else {
-    // Not onboarded yet — check if workspace has existing files
+    // Not onboarded — check if workspace has any files (simple readDir, no scanning)
     let hasFiles = false;
     try {
-      const scanner = new WorkspaceScanner(deps.fileSystem, root);
-      const files = await scanner.scan();
-      hasFiles = !WorkspaceScanner.isGreenfield(files);
+      const entries = await deps.fileSystem.readDir(root);
+      // Has files if there's more than just hidden dirs
+      hasFiles = entries.some((e) => !e.startsWith('.'));
     } catch {
-      // If scan fails, assume no files
+      // If readDir fails, assume no files
     }
     reply({
       type: 'onboardingStatus',
@@ -569,5 +533,3 @@ async function handleRequestOnboardingStatus(
     });
   }
 }
-
-// No helpers needed — agent handles all context generation via tools.
