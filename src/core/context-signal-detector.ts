@@ -54,7 +54,15 @@ export class ContextSignalDetector {
     }
 
     // touches_external_services: external service indicators
-    const externalConventions = ['webhook-handler', 'webhook', 'integration', 'external-service', 'stripe', 'sendgrid', 'aws-sdk'];
+    const externalConventions = [
+      'webhook-handler',
+      'webhook',
+      'integration',
+      'external-service',
+      'stripe',
+      'sendgrid',
+      'aws-sdk',
+    ];
     if (conventions.some((c) => externalConventions.some((e) => c.toLowerCase().includes(e)))) {
       signals.add('touches_external_services');
     }
@@ -74,7 +82,13 @@ export class ContextSignalDetector {
     }
 
     // high_risk_decision: database, migration, architecture conventions
-    const highRiskConventions = ['database-migration', 'migration', 'schema-change', 'breaking-change', 'architecture'];
+    const highRiskConventions = [
+      'database-migration',
+      'migration',
+      'schema-change',
+      'breaking-change',
+      'architecture',
+    ];
     if (conventions.some((c) => highRiskConventions.some((h) => c.toLowerCase().includes(h)))) {
       signals.add('high_risk_decision');
     }
@@ -89,7 +103,9 @@ export class ContextSignalDetector {
       const text = objective.toLowerCase();
 
       // touches_ui from objective
-      if (/\bui|page|component|button|form|dashboard|layout|css|style|frontend|screen\b/i.test(text)) {
+      if (
+        /\bui|page|component|button|form|dashboard|layout|css|style|frontend|screen\b/i.test(text)
+      ) {
         signals.add('touches_ui');
       }
 
@@ -104,7 +120,9 @@ export class ContextSignalDetector {
       }
 
       // touches_external_services from objective
-      if (/\bintegrate|integration|stripe|sendgrid|aws|webhook|third.?party|external\b/i.test(text)) {
+      if (
+        /\bintegrate|integration|stripe|sendgrid|aws|webhook|third.?party|external\b/i.test(text)
+      ) {
         signals.add('touches_external_services');
       }
 

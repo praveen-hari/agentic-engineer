@@ -92,7 +92,13 @@ const PACKS: readonly SkillPack[] = [
     category: '.NET',
     repo: 'syncfusion/wpf-ui-controls-skills',
     skillCount: 60,
-    representativeComponents: ['DataGrid', 'Charts', 'Scheduler', 'RichTextEditor', 'DockingManager'],
+    representativeComponents: [
+      'DataGrid',
+      'Charts',
+      'Scheduler',
+      'RichTextEditor',
+      'DockingManager',
+    ],
   },
   {
     id: 'winui-ui-controls',
@@ -101,7 +107,13 @@ const PACKS: readonly SkillPack[] = [
     category: '.NET',
     repo: 'syncfusion/winui-ui-controls-skills',
     skillCount: 60,
-    representativeComponents: ['DataGrid', 'Charts', 'Scheduler', 'RichTextEditor', 'DockingManager'],
+    representativeComponents: [
+      'DataGrid',
+      'Charts',
+      'Scheduler',
+      'RichTextEditor',
+      'DockingManager',
+    ],
   },
   {
     id: 'winforms-ui-controls',
@@ -110,7 +122,13 @@ const PACKS: readonly SkillPack[] = [
     category: '.NET',
     repo: 'syncfusion/winforms-ui-controls-skills',
     skillCount: 60,
-    representativeComponents: ['DataGrid', 'Charts', 'Schedule', 'RichTextEditor', 'DockingManager'],
+    representativeComponents: [
+      'DataGrid',
+      'Charts',
+      'Schedule',
+      'RichTextEditor',
+      'DockingManager',
+    ],
   },
 
   // ─── Document (4) ─────────────────────────────────────────────────
@@ -148,7 +166,13 @@ const PACKS: readonly SkillPack[] = [
     category: 'Document',
     repo: 'syncfusion/spreadsheet-editor-skills',
     skillCount: 60,
-    representativeComponents: ['Spreadsheet', 'Formulas', 'Charts', 'DataImport', 'ConditionalFormatting'],
+    representativeComponents: [
+      'Spreadsheet',
+      'Formulas',
+      'Charts',
+      'DataImport',
+      'ConditionalFormatting',
+    ],
   },
 ];
 

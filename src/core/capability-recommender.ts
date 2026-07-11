@@ -69,7 +69,8 @@ export class CapabilityRecommender {
       recs.push({
         type: 'instruction',
         title: 'Testing Standards',
-        description: 'Define testing conventions, coverage thresholds, and test structure rules for the project.',
+        description:
+          'Define testing conventions, coverage thresholds, and test structure rules for the project.',
         reason: 'No test framework detected — establish testing standards before writing code.',
         action: 'Create .codestudio/instructions/testing-standards.md',
         category: 'recommended',
@@ -93,7 +94,8 @@ export class CapabilityRecommender {
       recs.push({
         type: 'instruction',
         title: 'API Design Conventions',
-        description: 'Define REST/GraphQL endpoint naming, versioning, error handling, and response format rules.',
+        description:
+          'Define REST/GraphQL endpoint naming, versioning, error handling, and response format rules.',
         reason: 'Project has API endpoints — establish consistent API conventions.',
         action: 'Create .codestudio/instructions/api-conventions.md',
         category: 'recommended',
@@ -105,7 +107,8 @@ export class CapabilityRecommender {
       recs.push({
         type: 'instruction',
         title: 'Integration Standards',
-        description: 'Define external service integration patterns, retry logic, error handling, and observability rules.',
+        description:
+          'Define external service integration patterns, retry logic, error handling, and observability rules.',
         reason: 'Project integrates with external services — establish integration standards.',
         action: 'Create .codestudio/instructions/integration-standards.md',
         category: 'recommended',

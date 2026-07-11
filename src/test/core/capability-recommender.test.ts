@@ -59,10 +59,7 @@ describe('CapabilityRecommender', () => {
 
   describe('recommend — instructions', () => {
     it('recommends Testing Standards when no test framework detected', () => {
-      const recs = recommender.recommend(
-        makeContext({ testFramework: null }),
-        [],
-      );
+      const recs = recommender.recommend(makeContext({ testFramework: null }), []);
       const testRec = recs.find((r) => r.title.toLowerCase().includes('test'));
       expect(testRec).toBeDefined();
       expect(testRec!.type).toBe('instruction');
@@ -70,29 +67,20 @@ describe('CapabilityRecommender', () => {
     });
 
     it('does not recommend Testing Standards when test framework exists', () => {
-      const recs = recommender.recommend(
-        makeContext({ testFramework: 'Vitest' }),
-        [],
-      );
+      const recs = recommender.recommend(makeContext({ testFramework: 'Vitest' }), []);
       const testRec = recs.find((r) => r.title.toLowerCase().includes('testing standards'));
       expect(testRec).toBeUndefined();
     });
 
     it('recommends Security Hardening when touches_auth_or_input signal present', () => {
-      const recs = recommender.recommend(
-        makeContext(),
-        ['touches_auth_or_input'],
-      );
+      const recs = recommender.recommend(makeContext(), ['touches_auth_or_input']);
       const secRec = recs.find((r) => r.title.toLowerCase().includes('security'));
       expect(secRec).toBeDefined();
       expect(secRec!.reason).toMatch(/auth|input/i);
     });
 
     it('recommends API Conventions when touches_api signal present', () => {
-      const recs = recommender.recommend(
-        makeContext(),
-        ['touches_api'],
-      );
+      const recs = recommender.recommend(makeContext(), ['touches_api']);
       const apiRec = recs.find((r) => r.title.toLowerCase().includes('api'));
       expect(apiRec).toBeDefined();
     });
