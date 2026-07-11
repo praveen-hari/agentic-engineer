@@ -23,10 +23,9 @@ describe('AgentBridge', () => {
 
       await bridge.sendToChat('Generate a spec for auth');
 
-      expect(vscodeApi.commands.executeCommand).toHaveBeenCalledWith(
-        'workbench.action.chat.open',
-        { query: 'Generate a spec for auth' },
-      );
+      expect(vscodeApi.commands.executeCommand).toHaveBeenCalledWith('workbench.action.chat.open', {
+        query: 'Generate a spec for auth',
+      });
     });
 
     it('falls back to editor when chat command fails', async () => {
@@ -48,10 +47,9 @@ describe('AgentBridge', () => {
 
       await bridge.sendViaParticipant('generate spec');
 
-      expect(vscodeApi.commands.executeCommand).toHaveBeenCalledWith(
-        'workbench.action.chat.open',
-        { query: '@engineering generate spec' },
-      );
+      expect(vscodeApi.commands.executeCommand).toHaveBeenCalledWith('workbench.action.chat.open', {
+        query: '@engineering generate spec',
+      });
     });
   });
 

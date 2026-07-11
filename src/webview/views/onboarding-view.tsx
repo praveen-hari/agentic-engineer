@@ -72,8 +72,8 @@ const WelcomeScreen: FunctionalComponent = () => {
           <div class="onboarding__card-content">
             <div class="onboarding__card-title">Set Up Existing Project</div>
             <div class="onboarding__card-desc">
-              Scan your workspace to detect the tech stack, folder structure, and
-              conventions automatically. Best for projects that already have code.
+              Scan your workspace to detect the tech stack, folder structure, and conventions
+              automatically. Best for projects that already have code.
             </div>
           </div>
           <div class="onboarding__card-arrow">
@@ -93,8 +93,8 @@ const WelcomeScreen: FunctionalComponent = () => {
           <div class="onboarding__card-content">
             <div class="onboarding__card-title">Start New Project</div>
             <div class="onboarding__card-desc">
-              Describe what you want to build and I'll help you choose the right tech
-              stack, set up the project structure, and configure everything.
+              Describe what you want to build and I'll help you choose the right tech stack, set up
+              the project structure, and configure everything.
             </div>
           </div>
           <div class="onboarding__card-arrow">
@@ -158,8 +158,8 @@ const SetupExistingScreen: FunctionalComponent = () => {
         </div>
         <h2 class="onboarding__title">Project Detected</h2>
         <p class="onboarding__subtitle">
-          Here's what I found in your workspace. The agent will use this context
-          to follow your patterns and conventions.
+          Here's what I found in your workspace. The agent will use this context to follow your
+          patterns and conventions.
         </p>
       </div>
 
@@ -220,7 +220,8 @@ const SetupExistingScreen: FunctionalComponent = () => {
       <div class="onboarding__footer">
         Project context saved to <code>.codestudio/context.md</code>
         <br />
-        The agent will also create <code>.codestudio/codestudio-instructions.md</code> with your project conventions.
+        The agent will also create <code>.codestudio/codestudio-instructions.md</code> with your
+        project conventions.
       </div>
     </div>
   );

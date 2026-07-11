@@ -289,9 +289,18 @@ export type MessageToWebview =
   | { readonly type: 'artifacts'; readonly artifacts: readonly Artifact[] }
   | { readonly type: 'gateStatus'; readonly gates: readonly QualityGate[] }
   | { readonly type: 'stageResult'; readonly result: StageExecutionResult }
-  | { readonly type: 'generatingArtifact'; readonly stage: LifecycleStage; readonly message: string }
+  | {
+      readonly type: 'generatingArtifact';
+      readonly stage: LifecycleStage;
+      readonly message: string;
+    }
   | { readonly type: 'artifactDetected'; readonly artifact: Artifact }
-  | { readonly type: 'onboardingStatus'; readonly status: OnboardingStatus; readonly projectType: ProjectType | null; readonly context: ProjectContext | null };
+  | {
+      readonly type: 'onboardingStatus';
+      readonly status: OnboardingStatus;
+      readonly projectType: ProjectType | null;
+      readonly context: ProjectContext | null;
+    };
 
 // ─── Chat Commands ─────────────────────────────────────────────────────────
 

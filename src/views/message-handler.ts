@@ -411,10 +411,7 @@ async function handleGenerateArtifact(
 
 // ─── Onboarding Handlers ────────────────────────────────────────────────────
 
-async function handleSetupExistingProject(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleSetupExistingProject(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const root = deps.workspaceService.getWorkspaceRoot();
   if (!root) {
     reply({ type: 'error', message: 'No workspace folder open' });
@@ -432,10 +429,34 @@ async function handleSetupExistingProject(
     // Cache the context
     cachedContext = context;
 
+    // Ensure .codestudio/ directory exists
+    try {
+      await deps.fileSystem.mkdir(`${root}/.codestudio`);
+    } catch {
+      // Directory may already exist
+    }
+
     // Generate context.md
     const markdown = deps.contextAnalyzer.generateMarkdown(context);
     const contextPath = `${root}/.codestudio/context.md`;
     await deps.fileSystem.write(contextPath, markdown);
+
+    // Create config.json so returning users skip onboarding
+    const configPath = `${root}/.codestudio/config.json`;
+    const configExists = await deps.fileSystem.exists(configPath);
+    if (!configExists) {
+      const defaultConfig = {
+        version: 1,
+        processLevelDefault: 'auto',
+        autoApproveLowRisk: false,
+        reviewTimeoutMinutes: 5,
+        historyHotThreshold: 5,
+        historyWarmThreshold: 20,
+        historyColdAgeDays: 180,
+        autoRefreshContext: true,
+      };
+      await deps.fileSystem.write(configPath, JSON.stringify(defaultConfig, null, 2));
+    }
 
     // Send prompt to agent to create codestudio-instructions.md
     // based on the detected project context
@@ -544,7 +565,12 @@ async function handleRequestOnboardingStatus(
       reply({ type: 'onboardingStatus', status: 'ready', projectType: pType, context });
       reply({ type: 'context', context });
     } catch {
-      reply({ type: 'onboardingStatus', status: 'ready', projectType: 'brownfield', context: null });
+      reply({
+        type: 'onboardingStatus',
+        status: 'ready',
+        projectType: 'brownfield',
+        context: null,
+      });
     }
   } else {
     // Not onboarded yet — show welcome
@@ -560,6 +586,7 @@ function formatContextForPrompt(context: ProjectContext): string {
   if (context.frameworks.length > 0) parts.push(`- Frameworks: ${context.frameworks.join(', ')}`);
   if (context.testFramework) parts.push(`- Test framework: ${context.testFramework}`);
   if (context.packageManager) parts.push(`- Package manager: ${context.packageManager}`);
-  if (context.conventions.length > 0) parts.push(`- Conventions: ${context.conventions.join(', ')}`);
+  if (context.conventions.length > 0)
+    parts.push(`- Conventions: ${context.conventions.join(', ')}`);
   return parts.length > 0 ? parts.join('\n') : '- No specific context detected';
 }

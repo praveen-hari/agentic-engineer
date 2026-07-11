@@ -8,20 +8,26 @@ import { WORKFLOW_DIR, ARTIFACTS_DIR } from '../constants';
 export type ArtifactCallback = (artifact: Artifact) => void;
 
 /**
- * Watches `.codestudio/workflows/current/artifacts/` for file changes.
+ * Callback when a setup file is detected (onboarding completion).
+ */
+export type SetupFileCallback = (fileName: string, filePath: string) => void;
+
+/**
+ * Watches .codestudio/ for file changes:
  *
- * When the agent generates an artifact (spec, plan, review, report)
- * and saves it to the artifacts directory, this watcher detects the
- * new file and notifies the extension so it can:
- * 1. Update the workflow state
- * 2. Notify the webview UI
- * 3. Enable approval/gate flows
+ * 1. Artifact watcher — workflows/current/artifacts/ for .md files.
+ *    Detects specs, plans, reviews, reports from the agent.
+ *
+ * 2. Setup watcher — .codestudio/ root for .md and .json files.
+ *    Detects onboarding completion files (config.json, context.md,
+ *    codestudio-instructions.md) so the UI auto-transitions.
  *
  * @see ARCHITECTURE.md (Agent-Delegated Architecture)
  */
 export class ArtifactWatcher {
   private watchers: Array<{ dispose(): void }> = [];
   private callbacks: Set<ArtifactCallback> = new Set();
+  private setupCallbacks: Set<SetupFileCallback> = new Set();
 
   constructor(
     private readonly vscodeApi: typeof import('vscode'),
@@ -33,21 +39,33 @@ export class ArtifactWatcher {
    * Returns a disposable that stops all watchers.
    */
   start(): { dispose(): void } {
-    const pattern = `${this.rootPath}/${WORKFLOW_DIR}/${ARTIFACTS_DIR}/**/*.md`;
+    // Watch artifacts directory for specs, plans, reviews, reports
+    const artifactPattern = `${this.rootPath}/${WORKFLOW_DIR}/${ARTIFACTS_DIR}/**/*.md`;
+    const artifactWatcher = this.vscodeApi.workspace.createFileSystemWatcher(artifactPattern);
 
-    const watcher = this.vscodeApi.workspace.createFileSystemWatcher(pattern);
-
-    // New file created
-    watcher.onDidCreate((uri) => {
+    artifactWatcher.onDidCreate((uri) => {
       void this.handleFileChange(uri);
     });
-
-    // Existing file changed
-    watcher.onDidChange((uri) => {
+    artifactWatcher.onDidChange((uri) => {
       void this.handleFileChange(uri);
     });
+    this.watchers.push(artifactWatcher);
 
-    this.watchers.push(watcher);
+    // Watch .codestudio/ root for setup files (onboarding completion)
+    const setupMdPattern = `${this.rootPath}/${WORKFLOW_DIR}/*.md`;
+    const setupJsonPattern = `${this.rootPath}/${WORKFLOW_DIR}/*.json`;
+    const instructionPattern = `${this.rootPath}/${WORKFLOW_DIR}/**/*instructions*.md`;
+
+    for (const pattern of [setupMdPattern, setupJsonPattern, instructionPattern]) {
+      const watcher = this.vscodeApi.workspace.createFileSystemWatcher(pattern);
+      watcher.onDidCreate((uri) => {
+        void this.handleSetupFileChange(uri);
+      });
+      watcher.onDidChange((uri) => {
+        void this.handleSetupFileChange(uri);
+      });
+      this.watchers.push(watcher);
+    }
 
     return {
       dispose: () => this.stop(),
@@ -71,6 +89,42 @@ export class ArtifactWatcher {
   onArtifactDetected(callback: ArtifactCallback): () => void {
     this.callbacks.add(callback);
     return () => this.callbacks.delete(callback);
+  }
+
+  /**
+   * Register a callback for setup file detection (onboarding completion).
+   * Fires when config.json, context.md, or *instructions*.md is created/changed.
+   * Returns an unsubscribe function.
+   */
+  onSetupFileDetected(callback: SetupFileCallback): () => void {
+    this.setupCallbacks.add(callback);
+    return () => this.setupCallbacks.delete(callback);
+  }
+
+  /**
+   * Handle a setup file create/change event.
+   * Notifies setup callbacks so onboarding can auto-transition.
+   */
+  private async handleSetupFileChange(uri: { fsPath: string }): Promise<void> {
+    const filePath = uri.fsPath;
+    const fileName = filePath.split('/').pop() ?? '';
+
+    // Only notify for known setup files
+    const isSetupFile =
+      fileName === 'config.json' ||
+      fileName === 'context.md' ||
+      fileName.includes('instructions') ||
+      fileName === 'AGENTS.md';
+
+    if (!isSetupFile) return;
+
+    for (const cb of this.setupCallbacks) {
+      try {
+        cb(fileName, filePath);
+      } catch {
+        // Don't let one callback failure break others
+      }
+    }
   }
 
   /**
@@ -139,12 +193,18 @@ export class ArtifactWatcher {
    */
   private inferStage(type: ArtifactType): LifecycleStage {
     switch (type) {
-      case 'spec': return 'define';
-      case 'plan': return 'plan';
-      case 'review': return 'review';
-      case 'report': return 'verify';
-      case 'adr': return 'define';
-      default: return 'build';
+      case 'spec':
+        return 'define';
+      case 'plan':
+        return 'plan';
+      case 'review':
+        return 'review';
+      case 'report':
+        return 'verify';
+      case 'adr':
+        return 'define';
+      default:
+        return 'build';
     }
   }
 

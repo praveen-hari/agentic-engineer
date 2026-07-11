@@ -14,9 +14,7 @@
  * @see ARCHITECTURE.md (Agent-Delegated Architecture)
  */
 export class AgentBridge {
-  constructor(
-    private readonly vscodeApi: typeof import('vscode'),
-  ) {}
+  constructor(private readonly vscodeApi: typeof import('vscode')) {}
 
   /**
    * Send a prompt to the agent by opening the chat panel
@@ -25,10 +23,7 @@ export class AgentBridge {
    */
   async sendToChat(prompt: string): Promise<void> {
     try {
-      await this.vscodeApi.commands.executeCommand(
-        'workbench.action.chat.open',
-        { query: prompt },
-      );
+      await this.vscodeApi.commands.executeCommand('workbench.action.chat.open', { query: prompt });
     } catch {
       // Chat panel may not be available — fall back to showing in editor
       await this.showPromptInEditor(prompt);
@@ -41,10 +36,9 @@ export class AgentBridge {
    */
   async sendViaParticipant(prompt: string): Promise<void> {
     try {
-      await this.vscodeApi.commands.executeCommand(
-        'workbench.action.chat.open',
-        { query: `@engineering ${prompt}` },
-      );
+      await this.vscodeApi.commands.executeCommand('workbench.action.chat.open', {
+        query: `@engineering ${prompt}`,
+      });
     } catch {
       await this.showPromptInEditor(prompt);
     }
@@ -57,10 +51,10 @@ export class AgentBridge {
   async sendToAgentMode(prompt: string): Promise<void> {
     try {
       // Try agent mode first
-      await this.vscodeApi.commands.executeCommand(
-        'workbench.action.chat.openInSidebar',
-        { query: prompt, isPartialQuery: false },
-      );
+      await this.vscodeApi.commands.executeCommand('workbench.action.chat.openInSidebar', {
+        query: prompt,
+        isPartialQuery: false,
+      });
     } catch {
       // Fall back to regular chat
       await this.sendToChat(prompt);

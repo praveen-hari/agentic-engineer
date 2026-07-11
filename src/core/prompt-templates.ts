@@ -38,9 +38,10 @@ export class PromptTemplates {
     const slug = slugify(objective);
     const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_SPECS_DIR}/${slug}.md`;
     const contextBlock = context ? formatContext(context) : 'No project context available.';
-    const signalBlock = signals.length > 0
-      ? `Risk signals detected: ${signals.map((s) => `${s.signal} (${s.severity})`).join(', ')}`
-      : 'No specific risk signals detected.';
+    const signalBlock =
+      signals.length > 0
+        ? `Risk signals detected: ${signals.map((s) => `${s.signal} (${s.severity})`).join(', ')}`
+        : 'No specific risk signals detected.';
 
     return `Follow the **spec-driven-development** skill to generate a specification.
 
@@ -66,11 +67,7 @@ ${contextBlock}
    * PLAN stage — generate a task breakdown from the spec.
    * References: planning-and-task-breakdown skill
    */
-  getPlanPrompt(
-    objective: string,
-    specPath: string,
-    processLevel: ProcessLevel,
-  ): string {
+  getPlanPrompt(objective: string, specPath: string, processLevel: ProcessLevel): string {
     const slug = slugify(objective);
     const savePath = `${WORKFLOW_DIR}/${ARTIFACTS_PLANS_DIR}/${slug}.md`;
 
@@ -96,11 +93,7 @@ Read the spec at: \`${specPath}\`
    * BUILD stage — instructions shown in UI (not sent to agent).
    * References: incremental-implementation + test-driven-development skills
    */
-  getBuildInstructions(
-    taskDescription: string,
-    taskIndex: number,
-    totalTasks: number,
-  ): string {
+  getBuildInstructions(taskDescription: string, taskIndex: number, totalTasks: number): string {
     return `## Task ${taskIndex + 1} of ${totalTasks}
 
 ${taskDescription}
@@ -210,11 +203,7 @@ ${objective}
           params.processLevel,
         );
       case 'plan':
-        return this.getPlanPrompt(
-          params.objective,
-          params.specPath ?? '',
-          params.processLevel,
-        );
+        return this.getPlanPrompt(params.objective, params.specPath ?? '', params.processLevel);
       case 'build':
         return null; // User-driven, not agent-generated
       case 'verify':

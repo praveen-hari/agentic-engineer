@@ -68,12 +68,14 @@
 **Estimated tests:** 10+
 
 **Description:** Pure TypeScript module that returns prompt strings for each SDLC stage. Each prompt includes:
+
 - The objective
 - Project context summary
 - Stage-specific instructions (what to produce, where to save)
 - File path conventions
 
 **Prompts needed:**
+
 - `getOnboardPrompt()` — not needed (auto-advance)
 - `getDefinePrompt(objective, context, signals)` — generate spec
 - `getPlanPrompt(objective, specPath)` — generate task plan from spec
@@ -83,11 +85,13 @@
 - `getShipPrompt(objective)` — pre-launch checklist
 
 **Key rule:** Every prompt tells the agent WHERE to save the output file:
+
 ```
 Save the spec to: .codestudio/workflows/current/artifacts/specs/{slug}.md
 ```
 
 **Acceptance:**
+
 - [ ] All 6 prompt functions return non-empty strings
 - [ ] Prompts include objective, context, and save path
 - [ ] Prompts are deterministic (no LLM calls)
@@ -108,14 +112,16 @@ Save the spec to: .codestudio/workflows/current/artifacts/specs/{slug}.md
 2. **Send via participant** — `@engineering generate spec for...`
 
 **Interface:**
+
 ```typescript
 class AgentBridge {
-  sendToChat(prompt: string): Promise<void>
-  sendToParticipant(prompt: string): Promise<void>
+  sendToChat(prompt: string): Promise<void>;
+  sendToParticipant(prompt: string): Promise<void>;
 }
 ```
 
 **Acceptance:**
+
 - [ ] `sendToChat` calls `vscode.commands.executeCommand` with correct args
 - [ ] `sendToParticipant` prefixes with `@engineering`
 - [ ] Handles errors gracefully (command not available, etc.)
@@ -138,14 +144,16 @@ class AgentBridge {
 4. Emits event so message handler can notify webview
 
 **Interface:**
+
 ```typescript
 class ArtifactWatcher {
-  start(): vscode.Disposable
-  onArtifactDetected: vscode.Event<Artifact>
+  start(): vscode.Disposable;
+  onArtifactDetected: vscode.Event<Artifact>;
 }
 ```
 
 **Acceptance:**
+
 - [ ] Watches `**/*.md` in artifacts directory
 - [ ] Correctly maps path → artifact type
 - [ ] Emits event with Artifact data on file create/change
@@ -170,12 +178,13 @@ class ArtifactWatcher {
 // MessageToHost
 | { readonly type: 'generateArtifact'; readonly stage: LifecycleStage }
 
-// MessageToWebview  
+// MessageToWebview
 | { readonly type: 'generatingArtifact'; readonly stage: LifecycleStage }
 | { readonly type: 'artifactDetected'; readonly artifact: Artifact }
 ```
 
 Handler flow:
+
 1. Webview sends `{ type: 'generateArtifact', stage: 'define' }`
 2. Handler builds prompt via `PromptTemplates.getDefinePrompt(...)`
 3. Handler sends prompt via `AgentBridge.sendToChat(prompt)`
@@ -183,6 +192,7 @@ Handler flow:
 5. (Later) ArtifactWatcher detects file → handler replies `{ type: 'artifactDetected', artifact }`
 
 **Acceptance:**
+
 - [ ] `generateArtifact` message triggers prompt building + agent bridge call
 - [ ] `generatingArtifact` reply sent immediately (for loading state)
 - [ ] `artifactDetected` reply sent when watcher fires
@@ -197,6 +207,7 @@ Handler flow:
 **Estimated new tests:** 0 (integration)
 
 **Description:**
+
 1. Create `AgentBridge` instance
 2. Create `ArtifactWatcher` instance, start watching
 3. Wire watcher events → message handler → webview notifications
@@ -204,6 +215,7 @@ Handler flow:
 5. Add watcher + bridge to `context.subscriptions` for cleanup
 
 **Acceptance:**
+
 - [ ] ArtifactWatcher starts on activation
 - [ ] Watcher events reach the webview
 - [ ] ONBOARD auto-advances to DEFINE
@@ -218,12 +230,14 @@ Handler flow:
 **Estimated new tests:** 4+
 
 **Description:** Enhance the chat participant to:
+
 1. Handle "generate spec/plan/review" requests
 2. When the agent bridge sends a prompt via participant, the participant can process it
 3. `/status` returns real workflow data (not stubs)
 4. `/analyze` does real risk assessment
 
 **Acceptance:**
+
 - [ ] `/status` returns real workflow state from StateManager
 - [ ] `/analyze` returns real risk assessment from RiskEngine
 - [ ] Natural language "generate spec" triggers artifact generation flow
@@ -239,6 +253,7 @@ Handler flow:
 **Dependencies:** P2-1
 
 **Description:** For each active stage that needs an artifact:
+
 - Show "Generate Spec" / "Generate Plan" / "Generate Review" button
 - On click: `bridge.send({ type: 'generateArtifact', stage: 'define' })`
 - Show "Waiting for agent..." spinner when `generatingArtifact` received
@@ -246,6 +261,7 @@ Handler flow:
 - Show "Approve" / "Reject" buttons for review
 
 **Acceptance:**
+
 - [ ] Active DEFINE stage shows "Generate Spec" button
 - [ ] Active PLAN stage shows "Generate Plan" button
 - [ ] Loading state shown while waiting for agent
@@ -260,11 +276,13 @@ Handler flow:
 **Dependencies:** P2-1
 
 **Description:** Artifacts tab shows real artifacts from ArtifactManager instead of hardcoded placeholders. Each artifact shows:
+
 - Title, type, stage, status
 - "View" button to show content
 - Approval status badge
 
 **Acceptance:**
+
 - [ ] Artifacts tab lists real artifacts from store
 - [ ] Empty state when no artifacts
 - [ ] Artifact content viewable
@@ -274,20 +292,24 @@ Handler flow:
 ## Phase 4: Remaining Views
 
 ### P4-1: Knowledge View
+
 - Show real `context.md` content
 - Show conventions and boundaries from `.codestudio/knowledge/`
 - Link to Capabilities view
 
-### P4-2: Capabilities View  
+### P4-2: Capabilities View
+
 - Real recommendations from `CapabilityRecommender`
 - Deep links to native Agent Customizations panel
 - Syncfusion skill pack marketplace cards
 
 ### P4-3: History View
+
 - Load archived workflows from `.codestudio/archive/`
 - Three-tier display (hot/warm/cold)
 
 ### P4-4: Settings View
+
 - Read/write `config.json`
 - Process defaults, history management
 
@@ -296,19 +318,20 @@ Handler flow:
 ## Phase 5: Polish
 
 ### P5-1: Chat Participant Real Handlers
+
 ### P5-2: Integration Testing — Full Flow
 
 ---
 
 ## Estimated Totals
 
-| Phase | New Files | New Tests | Effort |
-|---|---|---|---|
-| P1 (Foundation) | 3 files + 3 test files | ~26 | Small |
-| P2 (Wiring) | 0 new, 3 modified | ~8 | Small |
-| P3 (UI) | 0 new, 1 modified | 0 (visual) | Medium |
-| P4 (Views) | 0 new, 4 modified | 0 (visual) | Medium |
-| P5 (Polish) | 0 new, 2 modified | ~4 | Small |
-| **Total** | **3 new + 10 modified** | **~38 new** | |
+| Phase           | New Files               | New Tests   | Effort |
+| --------------- | ----------------------- | ----------- | ------ |
+| P1 (Foundation) | 3 files + 3 test files  | ~26         | Small  |
+| P2 (Wiring)     | 0 new, 3 modified       | ~8          | Small  |
+| P3 (UI)         | 0 new, 1 modified       | 0 (visual)  | Medium |
+| P4 (Views)      | 0 new, 4 modified       | 0 (visual)  | Medium |
+| P5 (Polish)     | 0 new, 2 modified       | ~4          | Small  |
+| **Total**       | **3 new + 10 modified** | **~38 new** |        |
 
 **Current: 382 tests → Target: ~420 tests**

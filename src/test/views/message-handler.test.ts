@@ -120,18 +120,16 @@ function createMockDeps(): MessageHandlerDeps {
     artifactManager: {
       listAll: vi.fn().mockResolvedValue([]),
       listByStage: vi.fn().mockResolvedValue([]),
-      save: vi
-        .fn()
-        .mockResolvedValue({
-          id: 'test',
-          type: 'spec',
-          title: 'Test',
-          path: 'specs/test.md',
-          stage: 'define',
-          createdAt: '',
-          updatedAt: '',
-          status: 'draft',
-        }),
+      save: vi.fn().mockResolvedValue({
+        id: 'test',
+        type: 'spec',
+        title: 'Test',
+        path: 'specs/test.md',
+        stage: 'define',
+        createdAt: '',
+        updatedAt: '',
+        status: 'draft',
+      }),
       read: vi.fn().mockResolvedValue(null),
       saveObjective: vi.fn().mockResolvedValue(undefined),
     } as unknown as MessageHandlerDeps['artifactManager'],

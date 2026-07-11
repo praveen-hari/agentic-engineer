@@ -29,6 +29,7 @@ import { NavigationTreeProvider } from './views/navigation-tree';
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
 import { OnboardingService } from './services/onboarding.service';
+import { WorkspaceScanner } from './services/workspace-scanner.service';
 import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
 
 /**
@@ -173,7 +174,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   });
 
-  // ─── Artifact Watcher ─────────────────────────────────────────────
+  // ─── File Watchers ─────────────────────────────────────────────────
   if (workspaceRoot) {
     const artifactWatcher = new ArtifactWatcher(vscodeApi, workspaceRoot);
     const watcherDisposable = artifactWatcher.start();
@@ -182,6 +183,43 @@ export function activate(context: vscode.ExtensionContext): void {
     // When an artifact is detected, notify the webview
     artifactWatcher.onArtifactDetected((artifact) => {
       panelProvider.postMessage({ type: 'artifactDetected', artifact });
+    });
+
+    // When a setup file is detected (onboarding completion),
+    // auto-transition the webview from onboarding to ready state.
+    // This fires when the agent creates config.json, context.md,
+    // or codestudio-instructions.md in .codestudio/
+    artifactWatcher.onSetupFileDetected(async (fileName) => {
+      // Re-scan context and send updated onboarding status
+      try {
+        const scanner = new WorkspaceScanner(fsService, workspaceRoot);
+        const files = await scanner.scan();
+        const detection = projectDetector.detect(files);
+        const ctx = projectDetector.toContext(detection, workspaceRoot);
+        const pType = WorkspaceScanner.isGreenfield(files)
+          ? ('greenfield' as const)
+          : ('brownfield' as const);
+
+        panelProvider.postMessage({
+          type: 'onboardingStatus',
+          status: 'ready',
+          projectType: pType,
+          context: ctx,
+        });
+        panelProvider.postMessage({ type: 'context', context: ctx });
+
+        notificationService.showInfo(
+          `Project setup detected (${fileName}). Ready to start working!`,
+        );
+      } catch {
+        // If re-scan fails, still transition to ready
+        panelProvider.postMessage({
+          type: 'onboardingStatus',
+          status: 'ready',
+          projectType: 'brownfield',
+          context: null,
+        });
+      }
     });
   }
 

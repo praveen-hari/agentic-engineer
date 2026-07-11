@@ -34,7 +34,12 @@ describe('PromptTemplates', () => {
     });
 
     it('includes risk signals', () => {
-      const prompt = templates.getDefinePrompt('Add auth', SAMPLE_CONTEXT, SAMPLE_SIGNALS, 'thorough');
+      const prompt = templates.getDefinePrompt(
+        'Add auth',
+        SAMPLE_CONTEXT,
+        SAMPLE_SIGNALS,
+        'thorough',
+      );
       expect(prompt).toContain('auth');
       expect(prompt).toContain('high');
     });

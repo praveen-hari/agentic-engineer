@@ -161,7 +161,9 @@ describe('ArtifactWatcher', () => {
       const detected: Artifact[] = [];
       watcher.onArtifactDetected((a) => detected.push(a));
 
-      simulateCreate('/workspace/.codestudio/workflows/current/artifacts/specs/add-oauth2-authentication.md');
+      simulateCreate(
+        '/workspace/.codestudio/workflows/current/artifacts/specs/add-oauth2-authentication.md',
+      );
 
       await new Promise((r) => setTimeout(r, 10));
 
@@ -197,6 +199,73 @@ describe('ArtifactWatcher', () => {
       unsub();
 
       simulateCreate('/workspace/.codestudio/workflows/current/artifacts/specs/test.md');
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(detected).toHaveLength(0);
+    });
+  });
+
+  describe('onSetupFileDetected()', () => {
+    it('notifies when config.json is created', async () => {
+      const { vscodeApi, simulateCreate } = createMockVscode();
+      const watcher = new ArtifactWatcher(vscodeApi, '/workspace');
+      watcher.start();
+
+      const detected: Array<{ name: string; path: string }> = [];
+      watcher.onSetupFileDetected((name, path) => detected.push({ name, path }));
+
+      simulateCreate('/workspace/.codestudio/config.json');
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      // In mock, all watchers share handlers so callback may fire multiple times.
+      // In production, only the matching glob pattern's watcher fires.
+      expect(detected.length).toBeGreaterThanOrEqual(1);
+      expect(detected[0].name).toBe('config.json');
+    });
+
+    it('notifies when context.md is created', async () => {
+      const { vscodeApi, simulateCreate } = createMockVscode();
+      const watcher = new ArtifactWatcher(vscodeApi, '/workspace');
+      watcher.start();
+
+      const detected: Array<{ name: string; path: string }> = [];
+      watcher.onSetupFileDetected((name, path) => detected.push({ name, path }));
+
+      simulateCreate('/workspace/.codestudio/context.md');
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(detected.length).toBeGreaterThanOrEqual(1);
+      expect(detected[0].name).toBe('context.md');
+    });
+
+    it('notifies when instructions file is created', async () => {
+      const { vscodeApi, simulateCreate } = createMockVscode();
+      const watcher = new ArtifactWatcher(vscodeApi, '/workspace');
+      watcher.start();
+
+      const detected: Array<{ name: string; path: string }> = [];
+      watcher.onSetupFileDetected((name, path) => detected.push({ name, path }));
+
+      simulateCreate('/workspace/.codestudio/codestudio-instructions.md');
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(detected.length).toBeGreaterThanOrEqual(1);
+      expect(detected[0].name).toBe('codestudio-instructions.md');
+    });
+
+    it('does not notify for unrelated files', async () => {
+      const { vscodeApi, simulateCreate } = createMockVscode();
+      const watcher = new ArtifactWatcher(vscodeApi, '/workspace');
+      watcher.start();
+
+      const detected: Array<{ name: string; path: string }> = [];
+      watcher.onSetupFileDetected((name, path) => detected.push({ name, path }));
+
+      simulateCreate('/workspace/.codestudio/random-file.txt');
 
       await new Promise((r) => setTimeout(r, 10));
 
