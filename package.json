@@ -184,7 +184,7 @@
       {
         "name": "engineering_start_workflow",
         "displayName": "Start Engineering Workflow",
-        "modelDescription": "Starts a structured SDLC workflow for a development task. Analyzes the objective for risk, determines the process level (light/standard/thorough/guarded), creates workflow stages, and activates the first stage. Use when the user describes what they want to build. Returns the current stage and instructions. After calling this tool, follow the stage's skill: DEFINE stage → use spec-driven-development skill then call engineering_save_artifact(type='spec'). PLAN stage → use planning-and-task-breakdown skill then call engineering_save_artifact(type='plan'). BUILD stage → use incremental-implementation + test-driven-development skills. VERIFY stage → run tests then call engineering_save_artifact(type='report'). REVIEW stage → use code-review-and-quality skill then call engineering_save_artifact(type='review'). SHIP stage → use shipping-and-launch skill.",
+        "modelDescription": "Starts a structured SDLC workflow. YOU (the agent) provide the assessment — workType, complexity, riskLevel — based on your understanding of the project and objective. Do NOT rely on keyword matching. Creates workflow stages and activates the first stage. After calling this tool, follow the stage's skill: DEFINE → spec-driven-development skill then engineering_save_artifact(type='spec'). PLAN → planning-and-task-breakdown skill then engineering_save_artifact(type='plan'). BUILD → incremental-implementation + test-driven-development skills. VERIFY → run tests then engineering_save_artifact(type='report'). REVIEW → code-review-and-quality skill then engineering_save_artifact(type='review'). SHIP → shipping-and-launch skill.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "startWorkflow",
         "icon": "$(play)",
@@ -195,9 +195,34 @@
             "objective": {
               "type": "string",
               "description": "What the user wants to build — the work request objective"
+            },
+            "workType": {
+              "type": "string",
+              "enum": ["feature", "bugfix", "refactor", "infrastructure", "documentation", "security"],
+              "description": "Type of work — you determine this based on the objective"
+            },
+            "complexity": {
+              "type": "string",
+              "enum": ["trivial", "simple", "moderate", "complex", "critical"],
+              "description": "Estimated complexity — you determine this based on scope and risk"
+            },
+            "riskLevel": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "Risk level — you determine this based on what the task touches (auth, payments, data, etc.)"
+            },
+            "processLevel": {
+              "type": "string",
+              "enum": ["light", "standard", "thorough", "guarded"],
+              "description": "Optional. Process level override. If not provided, inferred from riskLevel + complexity. light=trivial fixes, standard=normal features, thorough=architecture/security, guarded=migrations/auth changes"
+            },
+            "contextSignals": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Optional. Context signals you detected: touches_ui, touches_api, touches_auth_or_input, touches_external_services, performance_sensitive, high_risk_decision"
             }
           },
-          "required": ["objective"]
+          "required": ["objective", "workType", "complexity", "riskLevel"]
         }
       },
       {

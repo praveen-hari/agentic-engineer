@@ -462,27 +462,32 @@ async function handleSetupExistingProject(deps: MessageHandlerDeps, reply: Reply
     // The extension already called engineering_setup_project internally
     // (created .codestudio/, config.json, context.md). Now the agent
     // just needs to create the instructions file.
-    const instructionsPrompt = `The Engineering Workspace has been initialized for this project.
+    const instructionsPrompt = `The Engineering Workspace has been initialized for this existing project.
 
 ## Project Context (auto-detected)
 ${formatContextForPrompt(context)}
 
-## Steps — use these tools in order:
+## Steps — follow these in order:
 
-### Step 1: Create \`.codestudio/codestudio-instructions.md\`
-Follow the **context-engineering** skill. Scan the workspace and write:
-- Project overview
-- Tech stack details  
-- Code conventions and patterns found in the codebase
-- Testing conventions
-- Build and development commands
-- Boundaries (always do / ask first / never do)
+### Step 1: Create project context files in .codestudio/
+Scan the workspace thoroughly and create these files based on the ACTUAL codebase:
+- \`context.md\` — Project overview, purpose, what this project does
+- \`architecture.md\` — Architecture patterns, module boundaries, data flow
+- \`conventions.md\` — Coding conventions, naming, formatting, patterns found
+- \`stack.md\` — Detailed tech stack: languages, frameworks, deps with versions
+- \`boundaries.md\` — Always do / Ask first / Never do rules
+- \`codestudio-instructions.md\` — Combined agent instructions for this project
 
 Base everything on the ACTUAL codebase — not generic templates.
 
-### Step 2: Done
-The project is now set up. The user can describe what they want to build,
-and you should call \`engineering_start_workflow\` tool to begin the SDLC workflow.`;
+### Step 2: Ready
+The project is now set up. When the user describes what they want to build,
+call \`engineering_start_workflow\` tool with:
+- \`objective\`: what the user wants
+- \`workType\`: your assessment (feature/bugfix/refactor/etc.)
+- \`complexity\`: your assessment (trivial/simple/moderate/complex/critical)
+- \`riskLevel\`: your assessment (low/medium/high)
+- \`contextSignals\`: what the project touches`;
 
     await deps.agentBridge.sendToChat(instructionsPrompt);
 
@@ -510,41 +515,46 @@ async function handleSetupNewProject(
   projectName: string,
   description: string,
 ): Promise<void> {
-  // The agent should:
-  // 1. Call engineering_setup_project tool → creates .codestudio/
-  // 2. Call engineering_start_workflow tool → starts SDLC workflow
-  // 3. Follow the DEFINE stage skill → generate spec
-  // No scaffolding — the SDLC workflow handles everything.
   const objective = description || `Build ${projectName}`;
 
-  const prompt = `Start the SDLC engineering workflow for this project.
+  const prompt = `Start the engineering workflow for: **${projectName}**
 
-## Project: ${projectName}
-## Objective: ${objective}
+## Objective
+${objective}
 
-## Steps — use these tools in order:
+## Steps — follow these in order:
 
 ### Step 1: Call \`engineering_setup_project\` tool
-- This initializes .codestudio/ with project context
+Creates .codestudio/ directory structure and config.json.
 
-### Step 2: Create \`.codestudio/codestudio-instructions.md\`
-- Scan the workspace and write project coding conventions
+### Step 2: Use the **interview-me** skill
+Ask the user clarifying questions to understand:
+- What exactly they want to build
+- Target users and use cases
+- Technical preferences (if any)
+- Constraints and requirements
 
-### Step 3: Call \`engineering_start_workflow\` tool
-- Pass objective: "${objective}"
-- This creates the SDLC workflow (DEFINE → PLAN → BUILD → VERIFY → REVIEW → SHIP)
+### Step 3: Create project context files in .codestudio/
+Based on the interview and workspace scan, create these files:
+- \`context.md\` — Project overview, purpose, target users
+- \`architecture.md\` — Architecture decisions, module boundaries, data flow
+- \`conventions.md\` — Coding conventions, naming, formatting, patterns
+- \`stack.md\` — Tech stack details: languages, frameworks, deps, versions
+- \`boundaries.md\` — Always do / Ask first / Never do rules
+- \`codestudio-instructions.md\` — Combined agent instructions
 
-### Step 4: Follow the current stage instructions
-- The start_workflow tool returns which stage is active and which skill to follow
-- For DEFINE stage: follow the **spec-driven-development** skill
-- Generate the spec, then call \`engineering_save_artifact\` tool with type "spec"
+### Step 4: Call \`engineering_start_workflow\` tool
+YOU determine and provide these arguments based on the interview:
+- \`objective\`: the refined objective from the interview
+- \`workType\`: "feature", "bugfix", "refactor", etc.
+- \`complexity\`: "trivial", "simple", "moderate", "complex", "critical"
+- \`riskLevel\`: "low", "medium", "high"
+- \`contextSignals\`: what the project touches (e.g., ["touches_ui", "touches_api"])
 
-### Step 5: Continue through stages
-- After each artifact is saved and approved, call \`engineering_advance_stage\` tool
-- Follow the skill for each new stage
-- Repeat until all stages are complete
-
-Do NOT skip any tools. Do NOT implement features directly. Follow the SDLC workflow.`;
+### Step 5: Follow the SDLC stages
+The start_workflow tool returns which stage is active and which skill to use.
+Follow each skill, save artifacts with \`engineering_save_artifact\`, and advance
+with \`engineering_advance_stage\`.`;
 
   await deps.agentBridge.sendToChat(prompt);
 }

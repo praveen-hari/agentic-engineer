@@ -127,9 +127,6 @@ export function activate(context: vscode.ExtensionContext): void {
   // These tools are invoked by the agent in agent mode automatically.
   // Each tool is registered with the name matching package.json.
 
-  // Shared context getter for tools
-  let toolCachedContext: import('./core/types').ProjectContext | null = null;
-
   // Existing tools (read-only)
   const analyzeWorkRequestTool = new AnalyzeWorkRequestTool(aiRiskAnalyzer, workflowGenerator);
   const getWorkflowStatusTool = new GetWorkflowStatusTool(stateManager);
@@ -139,31 +136,24 @@ export function activate(context: vscode.ExtensionContext): void {
   const setupProjectTool = new SetupProjectTool(
     fsService,
     workspaceRoot ?? '/',
-    projectDetector,
-    contextAnalyzer,
-    contextSignalDetector,
-    (ctx) => {
-      toolCachedContext = ctx;
+    () => {
+      // Notify webview that .codestudio/ was created
       panelProvider.postMessage({
         type: 'onboardingStatus',
         status: 'ready',
         projectType: 'brownfield',
-        context: ctx,
+        context: null,
         hasExistingFiles: true,
       });
-      panelProvider.postMessage({ type: 'context', context: ctx });
     },
   );
 
   const startWorkflowTool = new StartWorkflowTool(
-    riskEngine,
     workflowGenerator,
     workflowEngine,
     stateManager,
     stageExecutor,
-    contextSignalDetector,
     artifactManager,
-    () => toolCachedContext,
     (wf) => {
       panelProvider.postMessage({ type: 'state', workflow: wf });
     },

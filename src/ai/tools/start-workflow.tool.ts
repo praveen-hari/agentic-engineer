@@ -1,40 +1,47 @@
 import type * as vscode from 'vscode';
-import type { RiskEngine } from '../../core/risk-engine';
 import type { WorkflowGenerator } from '../../core/workflow-generator';
 import type { WorkflowEngine } from '../../core/workflow-engine';
 import type { StateManager } from '../../core/state-manager';
 import type { StageExecutor } from '../../core/stage-executor';
-import type { ContextSignalDetector } from '../../core/context-signal-detector';
-import type { ProjectContext, WorkflowDefinition } from '../../core/types';
+import type {
+  Complexity,
+  ContextSignal,
+  ProcessLevel,
+  RiskLevel,
+  WorkflowDefinition,
+  WorkType,
+} from '../../core/types';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
 
 /**
  * Input for the engineering_start_workflow tool.
+ *
+ * The AGENT provides all assessment fields — no keyword matching.
+ * The agent has full context from the interview and workspace scan.
  */
 export interface StartWorkflowInput {
   readonly objective: string;
+  readonly workType: WorkType;
+  readonly complexity: Complexity;
+  readonly riskLevel: RiskLevel;
+  readonly processLevel?: ProcessLevel;
+  readonly contextSignals?: readonly string[];
 }
 
 /**
  * Language Model Tool: engineering_start_workflow
  *
- * Analyzes the objective → creates workflow → starts first stage.
- * Returns the workflow state and instructions for the current stage.
- *
- * The agent should call this when the user describes what they want
- * to build. After this tool returns, the agent should follow the
- * stage instructions (e.g., generate a spec for the DEFINE stage).
+ * Creates a structured SDLC workflow from the agent's assessment.
+ * The agent determines workType, complexity, riskLevel — NOT the
+ * extension's keyword-based risk engine.
  */
 export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflowInput> {
   constructor(
-    private readonly riskEngine: RiskEngine,
     private readonly workflowGenerator: WorkflowGenerator,
     private readonly workflowEngine: WorkflowEngine,
     private readonly stateManager: StateManager,
     private readonly stageExecutor: StageExecutor,
-    private readonly contextSignalDetector: ContextSignalDetector,
     private readonly artifactManager: ArtifactManager,
-    private readonly getContext: () => ProjectContext | null,
     private readonly onWorkflowStarted: (wf: WorkflowDefinition) => void,
   ) {}
 
@@ -42,12 +49,19 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     options: vscode.LanguageModelToolInvocationPrepareOptions<StartWorkflowInput>,
     _token: vscode.CancellationToken,
   ) {
+    const { objective, workType, riskLevel } = options.input;
     return {
-      invocationMessage: `Starting workflow: "${options.input.objective.slice(0, 60)}..."`,
+      invocationMessage: `Starting ${workType} workflow (${riskLevel} risk): "${objective.slice(0, 50)}..."`,
       confirmationMessages: {
         title: 'Start Engineering Workflow',
         message: new (await import('vscode')).MarkdownString(
-          `Start an engineering workflow for:\n\n> ${options.input.objective}\n\nThis will analyze the request, determine the process level, and create a staged workflow.`,
+          `Start an engineering workflow?\n\n` +
+          `> **Objective:** ${objective}\n\n` +
+          `| Field | Value |\n|---|---|\n` +
+          `| Work Type | ${workType} |\n` +
+          `| Complexity | ${options.input.complexity} |\n` +
+          `| Risk Level | ${riskLevel} |\n` +
+          `| Process Level | ${options.input.processLevel ?? 'auto'} |`,
         ),
       },
     };
@@ -58,47 +72,52 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     _token: vscode.CancellationToken,
   ) {
     const vscodeModule = await import('vscode');
-    const { objective } = options.input;
+    const { objective, workType, complexity, riskLevel, contextSignals } = options.input;
 
-    // 1. Assess risk with project context
-    const context = this.getContext();
-    const contextSignals = context
-      ? this.contextSignalDetector.detect(context, objective)
-      : [];
-    const assessment = this.riskEngine.assess(objective, context ?? undefined);
-    const mergedAssessment = {
-      ...assessment,
-      contextSignals: [...new Set([...assessment.contextSignals, ...contextSignals])],
+    // Map risk level to process level if not provided
+    const processLevel: ProcessLevel = options.input.processLevel
+      ?? this.inferProcessLevel(riskLevel, complexity);
+
+    // Build assessment from agent's input (NOT from keyword matching)
+    const assessment = {
+      workType,
+      complexity,
+      riskLevel,
+      processLevel,
+      signals: [],
+      contextSignals: (contextSignals ?? []) as ContextSignal[],
+      source: 'llm' as const,
     };
 
-    // 2. Generate workflow
+    // Generate workflow
     const wf = this.workflowGenerator.generate(
       `wf-${Date.now()}`,
       objective,
-      mergedAssessment as never,
+      assessment as never,
     );
 
-    // 3. Start workflow (activates first stage)
+    // Start workflow (activates first stage)
     const started = await this.workflowEngine.start(wf);
 
-    // 4. Save state
+    // Save state
     await this.stateManager.save(started);
     await this.artifactManager.saveObjective(objective);
 
-    // 5. Get stage instructions
+    // Get stage instructions
     const stageAction = this.stageExecutor.getStageAction(started);
     const instructions = this.stageExecutor.getStageInstructions(started);
 
-    // 6. Notify extension (triggers UI update)
+    // Notify extension
     this.onWorkflowStarted(started);
 
     return new vscodeModule.LanguageModelToolResult([
       new vscodeModule.LanguageModelTextPart(JSON.stringify({
         workflowId: started.id,
         objective,
+        workType,
+        complexity,
+        riskLevel,
         processLevel: started.processLevel,
-        riskLevel: mergedAssessment.riskLevel,
-        workType: mergedAssessment.workType,
         activeSkills: started.activeSkills,
         currentStage: started.state.currentStage,
         totalStages: started.stages.length,
@@ -108,18 +127,36 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
           description: stageAction.description,
           requiredArtifacts: stageAction.requiredArtifacts,
           requiredGates: stageAction.requiredGates,
+          skills: stageAction.skills,
         } : null,
         instructions,
-        message: `Workflow started. Process level: ${started.processLevel}. Current stage: ${started.state.currentStage}.`,
-        nextSteps: [
-          `Follow the skill instructions for the ${started.state.currentStage} stage.`,
-          started.state.currentStage === 'onboard'
-            ? 'This stage auto-advances. Call engineering_advance_stage to proceed.'
-            : started.state.currentStage === 'define'
-              ? 'Follow the spec-driven-development skill to generate a specification. Then call engineering_save_artifact with type "spec" to save it.'
-              : `Complete the ${started.state.currentStage} stage work, then call engineering_save_artifact to save the output.`,
-        ],
+        nextSteps: this.getNextSteps(started),
       }, null, 2)),
     ]);
+  }
+
+  private inferProcessLevel(riskLevel: RiskLevel, complexity: Complexity): ProcessLevel {
+    if (riskLevel === 'high' || complexity === 'critical') return 'guarded';
+    if (riskLevel === 'medium' || complexity === 'complex') return 'thorough';
+    if (complexity === 'moderate') return 'standard';
+    if (complexity === 'trivial') return 'light';
+    return 'standard';
+  }
+
+  private getNextSteps(wf: WorkflowDefinition): string[] {
+    const stage = wf.state.currentStage;
+    if (!stage) return ['Workflow has no active stage.'];
+
+    const stageSkillMap: Record<string, string> = {
+      onboard: 'Call engineering_advance_stage — this stage auto-advances.',
+      define: 'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
+      plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
+      build: 'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD.',
+      verify: 'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
+      review: 'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
+      ship: 'Follow the shipping-and-launch skill. Complete the pre-launch checklist. Then call engineering_save_artifact with type="report".',
+    };
+
+    return [stageSkillMap[stage] ?? `Complete the ${stage} stage.`];
   }
 }

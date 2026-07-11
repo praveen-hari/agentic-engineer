@@ -15,6 +15,11 @@ export const WORKFLOW_DIR = '.codestudio';
 
 export const CONTEXT_FILE = 'context.md';
 export const CONFIG_FILE = 'config.json';
+export const ARCHITECTURE_FILE = 'architecture.md';
+export const CONVENTIONS_FILE_ROOT = 'conventions.md';
+export const STACK_FILE = 'stack.md';
+export const BOUNDARIES_FILE_ROOT = 'boundaries.md';
+export const INSTRUCTIONS_FILE = 'codestudio-instructions.md';
 
 // ─── Workflows (DD-002, DD-009: branch-scoped) ─────────────────────────────
 
