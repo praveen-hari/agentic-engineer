@@ -446,7 +446,7 @@
 - [ ] `capabilities-view.tsx` renders 3 zones: (1) Recommended for This Project — context-aware suggestions with Why explanations, (2) Current Setup — summary counts with deep links that open native Agent Customizations panel, (3) Syncfusion Skill Pack Marketplace — 14 packs filterable by Web/.NET/Document (DD-022–DD-026)
 - [ ] `knowledge-view.tsx` renders: Project Context, ADRs, Conventions, Boundaries, Capabilities link card (DD-021, DD-022)
 - [ ] `history-view.tsx` renders: three-tier history (hot/warm/cold) with pagination (DD-006, DD-007)
-- [ ] `settings-view.tsx` renders: process level override, approval policy, history retention, agent mode toggle
+- [ ] `settings-view.tsx` renders 2 sections: (1) Process Defaults — process level, auto-approve, review timeout, (2) History Management — storage usage, hot/warm/cold tier settings, git recovery footnote (DD-027)
 - [ ] Signal stores: `workflow.store.ts`, `ui.store.ts`, `capabilities.store.ts`
 - [ ] CSS uses VS Code theme tokens (`--vscode-*` custom properties)
 - [ ] BEM naming convention for all CSS classes

@@ -1149,6 +1149,48 @@ Each row shows: icon, name, description, count, chevron-right. Clicking opens th
 
 ---
 
+## DD-027: Settings View — Only What Our Extension Uniquely Configures
+
+**Date:** 11 July 2026  
+**Status:** Accepted  
+**Context:** The Settings view had 4 sections: Process Defaults, History Management, Agent Configuration, and Git Recovery. The Agent Configuration section showed built-in specialist agents (Code Reviewer, Security Auditor, Performance Auditor, Test Engineer) with toggle switches. This is the same anti-pattern fixed in Capabilities (DD-023/DD-026): built-in agents are invisible plumbing (DD-007), and custom agent management belongs in the native Agent Customizations panel (DD-026).
+
+The Git Recovery section was a full card with a code block of git commands. While useful, it doesn't need to be a prominent top-level section — it's reference information, not a daily configuration task.
+
+**Decision:** Reduce Settings to 2 sections — only what our extension uniquely configures:
+
+### Keep: Process Defaults
+- Default Process Level (Auto-detect / Light / Standard / Thorough / Guarded)
+- Auto-Approve Low-Risk Items toggle
+- Review Timeout (minutes)
+
+This is our extension's core configuration — not available in Code Studio's native settings or the Agent Customizations panel.
+
+### Keep: History Management
+- Storage usage indicator (hot/warm/cold breakdown)
+- Hot Tier retention count
+- Warm Tier auto-compact toggle
+- Cold Tier archive age (days)
+
+Our three-tier history system (DD-004/DD-005) is unique to this extension.
+
+### Remove: Agent Configuration
+Built-in specialist agents are activated automatically by the skill engine based on task type, context signals, and process level (DD-007). Users should never toggle them. Custom agent management belongs in the native Agent Customizations panel (DD-026).
+
+### Collapse: Git Recovery → footnote
+Moved from a full card to a collapsible `<details>` element at the bottom of History Management. The git commands are still available but don't occupy visual real estate for a task users rarely do.
+
+**Result:** 4 sections → 2 sections. Cleaner, focused, no redundancy with native panels.
+
+**Rationale:**
+- Respects DD-007: built-in agents are invisible — no toggles in settings
+- Respects DD-026: custom agent management delegates to native panel
+- Git recovery is reference info, not daily config — collapses to footnote
+- Only show what only our extension can configure — everything else lives elsewhere
+- Reduces implementation scope — no agent toggle UI, no agent state management in settings
+
+---
+
 ## Decision Index
 
 | ID | Decision | Status |
@@ -1179,3 +1221,4 @@ Each row shows: icon, name, description, count, chevron-right. Clicking opens th
 | DD-024 | Capabilities View is a Recommendation Engine (context-aware + Syncfusion marketplace) | Accepted (revised by DD-025) |
 | DD-025 | Skill Packs, Not Individual Skills — Plugin Marketplace Model (14 packs, 700+ skills) | Accepted |
 | DD-026 | Capabilities is a Smart Launcher, Not a Parallel UI (delegate to native Agent Customizations) | Accepted |
+| DD-027 | Settings View — Only What Our Extension Uniquely Configures (4→2 sections) | Accepted |

@@ -965,7 +965,7 @@ export const progress = computed(() => {
 | 24 | Tasks view Approvals tab shows pending items with approve/reject (DD-020) | Visual check |
 | 25 | Capabilities view shows context-aware recommendations, deep links to native Agent Customizations, and Skill Pack Marketplace (DD-022–DD-026) | Visual check |
 | 26 | History view shows archived workflows with inline expansion | Visual check |
-| 27 | Settings view allows configuration changes (incl. skill visibility in advanced mode) | Visual check |
+| 27 | Settings view allows process defaults + history management configuration (DD-027) | Visual check |
 | 28 | Chat participant handles natural language queries beyond slash commands | Chat test |
 | 29 | `get_project_context` tool returns enriched context | Agent mode check |
 
@@ -1022,7 +1022,7 @@ export const progress = computed(() => {
 - Capabilities view: smart launcher — recommendations + deep links to native Agent Customizations + Skill Pack Marketplace (DD-022–DD-026)
 - Knowledge view: project context, ADRs, conventions, boundaries (DD-021)
 - History view with inline expansion
-- Settings view with configuration
+- Settings view: process defaults + history management (DD-027)
 - Enhanced chat participant (natural language beyond slash commands)
 - Webview ↔ Extension host message protocol (full)
 
