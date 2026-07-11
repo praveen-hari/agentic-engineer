@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+node_modules/**
+coverage/**
+.designs/**
+tasks/**
+*.md
+!README.md
+.gitignore
+.eslintrc.json
+.prettierrc
+tsconfig*.json
+vitest.config.ts
+esbuild.config.mjs
