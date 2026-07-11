@@ -338,6 +338,32 @@ export interface HistoryIndex {
   readonly hasMore: boolean;
 }
 
+// ─── Workspace Config (DD-027) ─────────────────────────────────────────────
+
+export interface WorkspaceConfig {
+  readonly version: number;
+  readonly processLevelDefault: ProcessLevel | 'auto';
+  readonly autoApproveLowRisk: boolean;
+  readonly reviewTimeoutMinutes: number;
+  readonly historyHotThreshold: number;
+  readonly historyWarmThreshold: number;
+  readonly historyColdAgeDays: number;
+  readonly autoRefreshContext: boolean;
+}
+
+// ─── Onboarding State ──────────────────────────────────────────────────────
+
+export type ProjectType = 'greenfield' | 'brownfield';
+
+export interface OnboardingResult {
+  readonly projectType: ProjectType;
+  readonly context: ProjectContext;
+  readonly signals: readonly ContextSignal[];
+  readonly config: WorkspaceConfig;
+  readonly isFirstRun: boolean;
+  readonly contextStale: boolean;
+}
+
 // ─── File I/O Interface (for testability — DD-008) ─────────────────────────
 
 export interface FileIO {

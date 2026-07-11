@@ -9,10 +9,13 @@ import type { ContextSignalDetector } from '../core/context-signal-detector';
 import type { CapabilityRecommender } from '../core/capability-recommender';
 import type { NotificationService } from '../services/notification.service';
 import type { WorkspaceService } from '../services/workspace.service';
+import { WorkspaceScanner } from '../services/workspace-scanner.service';
 import type {
+  FileIO,
   LifecycleStage,
   MessageToHost,
   MessageToWebview,
+  ProjectContext,
   RiskAssessment,
   WorkflowDefinition,
 } from '../core/types';
@@ -37,7 +40,14 @@ export interface MessageHandlerDeps {
   readonly capabilityRecommender: CapabilityRecommender;
   readonly notificationService: NotificationService;
   readonly workspaceService: WorkspaceService;
+  readonly fileSystem: FileIO;
 }
+
+/**
+ * Cached project context — populated on first requestContext,
+ * reused by analyzeObjective for merged risk assessment.
+ */
+let cachedContext: ProjectContext | null = null;
 
 /**
  * Handle messages from the webview and route them to the appropriate
@@ -108,22 +118,33 @@ async function handleRequestContext(deps: MessageHandlerDeps, reply: ReplyFn): P
     return;
   }
 
-  // ProjectDetector.detect() requires FileEntry[] — in production this
-  // would list workspace files via FileSystemService. For now, return
-  // a minimal context so the webview has something to display.
-  reply({
-    type: 'context',
-    context: {
-      rootPath: root,
-      languages: [],
-      frameworks: [],
-      testFramework: null,
-      packageManager: null,
-      detectedStack: [],
-      conventions: [],
-      generatedAt: new Date().toISOString(),
-    },
-  });
+  try {
+    // Scan workspace files and detect project stack
+    const scanner = new WorkspaceScanner(deps.fileSystem, root);
+    const files = await scanner.scan();
+    const detection = deps.projectDetector.detect(files);
+    const context = deps.projectDetector.toContext(detection, root);
+
+    // Cache for use by analyzeObjective
+    cachedContext = context;
+
+    reply({ type: 'context', context });
+  } catch {
+    // Fallback to minimal context on error
+    reply({
+      type: 'context',
+      context: {
+        rootPath: root,
+        languages: [],
+        frameworks: [],
+        testFramework: null,
+        packageManager: null,
+        detectedStack: [],
+        conventions: [],
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  }
 }
 
 async function handleAnalyzeObjective(
@@ -131,7 +152,22 @@ async function handleAnalyzeObjective(
   reply: ReplyFn,
   objective: string,
 ): Promise<void> {
-  const assessment = deps.riskEngine.assess(objective);
+  // Merge workspace context signals into risk assessment
+  // This gives brownfield projects richer risk analysis
+  const contextSignals = cachedContext
+    ? deps.contextSignalDetector.detect(cachedContext, objective)
+    : [];
+
+  const baseAssessment = deps.riskEngine.assess(objective, cachedContext ?? undefined);
+
+  // Merge context signals from workspace detection with keyword-based signals
+  const mergedSignals = [...new Set([...baseAssessment.contextSignals, ...contextSignals])];
+
+  const assessment: RiskAssessment = {
+    ...baseAssessment,
+    contextSignals: mergedSignals,
+  };
+
   reply({ type: 'assessment', assessment });
 }
 

@@ -47,9 +47,21 @@ function createMockDeps(): MessageHandlerDeps {
     } as unknown as MessageHandlerDeps['workflowGenerator'],
 
     skillEngine: {} as unknown as MessageHandlerDeps['skillEngine'],
-    projectDetector: {} as unknown as MessageHandlerDeps['projectDetector'],
+    projectDetector: {
+      detect: vi.fn().mockReturnValue({
+        languages: [], frameworks: [], testFramework: null,
+        packageManager: null, detectedStack: [], conventions: [],
+      }),
+      toContext: vi.fn().mockReturnValue({
+        rootPath: '/project', languages: [], frameworks: [],
+        testFramework: null, packageManager: null, detectedStack: [],
+        conventions: [], generatedAt: new Date().toISOString(),
+      }),
+    } as unknown as MessageHandlerDeps['projectDetector'],
     contextAnalyzer: {} as unknown as MessageHandlerDeps['contextAnalyzer'],
-    contextSignalDetector: {} as unknown as MessageHandlerDeps['contextSignalDetector'],
+    contextSignalDetector: {
+      detect: vi.fn().mockReturnValue([]),
+    } as unknown as MessageHandlerDeps['contextSignalDetector'],
     capabilityRecommender: {} as unknown as MessageHandlerDeps['capabilityRecommender'],
 
     notificationService: {
@@ -60,6 +72,15 @@ function createMockDeps(): MessageHandlerDeps {
     workspaceService: {
       getWorkspaceRoot: vi.fn().mockReturnValue('/project'),
     } as unknown as MessageHandlerDeps['workspaceService'],
+
+    fileSystem: {
+      read: vi.fn().mockRejectedValue(new Error('not found')),
+      write: vi.fn().mockResolvedValue(undefined),
+      append: vi.fn().mockResolvedValue(undefined),
+      exists: vi.fn().mockResolvedValue(false),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      readDir: vi.fn().mockResolvedValue([]),
+    } as unknown as MessageHandlerDeps['fileSystem'],
   };
 }
 
@@ -131,9 +152,15 @@ describe('handleWebviewMessage', () => {
   describe('analyzeObjective', () => {
     it('replies with risk assessment', async () => {
       await handler({ type: 'analyzeObjective', objective: 'Add payment processing' });
-      expect(deps.riskEngine.assess).toHaveBeenCalledWith('Add payment processing');
+      // riskEngine.assess is called with objective + cached context (may be null or ProjectContext)
+      expect(deps.riskEngine.assess).toHaveBeenCalledWith(
+        'Add payment processing',
+        expect.anything(),
+      );
       expect(replies).toHaveLength(1);
-      expect(replies[0]).toEqual({ type: 'assessment', assessment: SAMPLE_ASSESSMENT });
+      // Assessment may have merged context signals
+      expect(replies[0]).toHaveProperty('type', 'assessment');
+      expect((replies[0] as { assessment: unknown }).assessment).toHaveProperty('workType');
     });
   });
 

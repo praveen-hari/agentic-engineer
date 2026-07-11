@@ -22,7 +22,8 @@ import { ChatParticipantHandler } from './chat/chat-participant';
 import { NavigationTreeProvider } from './views/navigation-tree';
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
-import { WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
+import { OnboardingService } from './services/onboarding.service';
+import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE, EVENTS_FILE } from './constants';
 
 /**
  * Extension entry point — Engineering Workspace.
@@ -41,9 +42,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // ─── Core Engine ──────────────────────────────────────────────────
   const workspaceRoot = workspaceService.getWorkspaceRoot();
-  const codestudioDir = workspaceRoot ? `${workspaceRoot}/${WORKFLOW_DIR}` : `/${WORKFLOW_DIR}`;
-  const workflowPath = `${codestudioDir}/${WORKFLOW_FILE}`;
-  const eventsPath = `${codestudioDir}/${EVENTS_FILE}`;
+  const workflowBase = workspaceRoot
+    ? `${workspaceRoot}/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}`
+    : `/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}`;
+  const workflowPath = `${workflowBase}/${WORKFLOW_FILE}`;
+  const eventsPath = `${workflowBase}/${EVENTS_FILE}`;
 
   const eventStream = new EventStream(fsService, eventsPath);
   const stateManager = new StateManager(fsService, workflowPath);
@@ -137,6 +140,7 @@ export function activate(context: vscode.ExtensionContext): void {
       capabilityRecommender,
       notificationService,
       workspaceService,
+      fileSystem: fsService,
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),
@@ -218,43 +222,36 @@ export function activate(context: vscode.ExtensionContext): void {
   // ─── Status Bar ───────────────────────────────────────────────────
   notificationService.updateStatusBar('🏗️ Engineering Workspace', 'Engineering Workspace');
 
-  // ─── Initialize .codestudio directory ────────────────────────────
-  void fsService.ensureDirectory(codestudioDir).then(() => {
-    // Auto-generate project context on first activation
-    void maybeGenerateContext(
+  // ─── Onboarding: Initialize .codestudio/ & detect project ────────
+  if (workspaceRoot) {
+    const onboardingService = new OnboardingService(
       fsService,
+      workspaceRoot,
       projectDetector,
       contextAnalyzer,
-      workspaceRoot,
-      codestudioDir,
+      contextSignalDetector,
     );
-  });
+
+    void onboardingService.initialize().then((result) => {
+      const icon = result.projectType === 'greenfield' ? '🌱' : '🏗️';
+      const label = result.isFirstRun
+        ? `${icon} ${result.projectType} — initialized`
+        : `${icon} ${result.projectType}`;
+      notificationService.updateStatusBar(label, `Project: ${result.projectType}`);
+
+      // Send context to webview if it's already open
+      panelProvider.postMessage({
+        type: 'context',
+        context: result.context,
+      });
+    });
+  }
 
   void gitService.getCurrentBranch().then((branch) => {
     if (branch) {
       notificationService.updateStatusBar(`🏗️ ${branch}`, `Branch: ${branch}`);
     }
   });
-}
-
-/**
- * Generate project context if it doesn't exist yet.
- */
-async function maybeGenerateContext(
-  fs: FileSystemService,
-  _detector: ProjectDetector,
-  _analyzer: ContextAnalyzer,
-  workspaceRoot: string | null,
-  codestudioDir: string,
-): Promise<void> {
-  if (!workspaceRoot) return;
-
-  const contextPath = `${codestudioDir}/context.md`;
-  if (await fs.exists(contextPath)) return; // Already exists
-
-  // In a real implementation, we'd scan the workspace files here.
-  // For now, this is a placeholder — the full file scanning happens
-  // when the get_project_context tool is invoked.
 }
 
 export function deactivate(): void {
