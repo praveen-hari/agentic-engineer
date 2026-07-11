@@ -21,11 +21,35 @@ const WORKFLOW_WITH_GATES: WorkflowDefinition = {
   processLevel: 'standard',
   detectedRisks: [],
   stages: [
-    { id: 'define', name: 'Define', status: 'active', skippable: false, entryConditions: [], exitConditions: [], artifacts: [] },
-    { id: 'plan', name: 'Plan', status: 'pending', skippable: false, entryConditions: [], exitConditions: [], artifacts: [] },
+    {
+      id: 'define',
+      name: 'Define',
+      status: 'active',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+    },
+    {
+      id: 'plan',
+      name: 'Plan',
+      status: 'pending',
+      skippable: false,
+      entryConditions: [],
+      exitConditions: [],
+      artifacts: [],
+    },
   ],
   qualityGates: [
-    { id: 'spec-approved', name: 'Spec Approved', type: 'approval', status: 'pending', stage: 'define', blocking: true, conditional: false },
+    {
+      id: 'spec-approved',
+      name: 'Spec Approved',
+      type: 'approval',
+      status: 'pending',
+      stage: 'define',
+      blocking: true,
+      conditional: false,
+    },
   ],
   approvals: [
     { id: 'apr-1', level: 'explicit', artifact: 'spec', status: 'pending', reason: 'Spec review' },
@@ -50,29 +74,84 @@ function createMockDeps(approvalMode: 'user' | 'agent' = 'user'): MessageHandler
     stateManager: {
       load: vi.fn().mockResolvedValue(WORKFLOW_WITH_GATES),
       save: vi.fn().mockResolvedValue(undefined),
-      update: vi.fn().mockImplementation(async (fn: (wf: WorkflowDefinition) => WorkflowDefinition) => {
-        const transformed = fn(WORKFLOW_WITH_GATES);
-        return { ...transformed, version: WORKFLOW_WITH_GATES.version + 1, state: { ...transformed.state, lastActivityAt: new Date().toISOString() } };
-      }),
+      update: vi
+        .fn()
+        .mockImplementation(async (fn: (wf: WorkflowDefinition) => WorkflowDefinition) => {
+          const transformed = fn(WORKFLOW_WITH_GATES);
+          return {
+            ...transformed,
+            version: WORKFLOW_WITH_GATES.version + 1,
+            state: { ...transformed.state, lastActivityAt: new Date().toISOString() },
+          };
+        }),
     } as unknown as MessageHandlerDeps['stateManager'],
     workflowEngine: {
-      start: vi.fn().mockReturnValue({ ...WORKFLOW_WITH_GATES, state: { ...WORKFLOW_WITH_GATES.state, status: 'active' } }),
-      advanceStage: vi.fn().mockReturnValue({ ...WORKFLOW_WITH_GATES, state: { ...WORKFLOW_WITH_GATES.state, currentStage: 'plan' } }),
+      start: vi
+        .fn()
+        .mockReturnValue({
+          ...WORKFLOW_WITH_GATES,
+          state: { ...WORKFLOW_WITH_GATES.state, status: 'active' },
+        }),
+      advanceStage: vi
+        .fn()
+        .mockReturnValue({
+          ...WORKFLOW_WITH_GATES,
+          state: { ...WORKFLOW_WITH_GATES.state, currentStage: 'plan' },
+        }),
       skipStage: vi.fn().mockReturnValue(WORKFLOW_WITH_GATES),
     } as unknown as MessageHandlerDeps['workflowEngine'],
-    workflowGenerator: { generate: vi.fn().mockReturnValue(WORKFLOW_WITH_GATES) } as unknown as MessageHandlerDeps['workflowGenerator'],
+    workflowGenerator: {
+      generate: vi.fn().mockReturnValue(WORKFLOW_WITH_GATES),
+    } as unknown as MessageHandlerDeps['workflowGenerator'],
     stageExecutor: {
       getStageAction: vi.fn().mockReturnValue(null),
-      evaluateStageCompletion: vi.fn().mockReturnValue({ stage: 'define', status: 'completed', artifacts: [], pendingGates: [], pendingApprovals: [], message: 'Ready' }),
+      evaluateStageCompletion: vi
+        .fn()
+        .mockReturnValue({
+          stage: 'define',
+          status: 'completed',
+          artifacts: [],
+          pendingGates: [],
+          pendingApprovals: [],
+          message: 'Ready',
+        }),
       getStageInstructions: vi.fn().mockReturnValue(''),
     } as unknown as MessageHandlerDeps['stageExecutor'],
-    notificationService: { showInfo: vi.fn(), showError: vi.fn() } as unknown as MessageHandlerDeps['notificationService'],
-    workspaceService: { getWorkspaceRoot: vi.fn().mockReturnValue('/project') } as unknown as MessageHandlerDeps['workspaceService'],
-    fileSystem: { read: vi.fn().mockRejectedValue(new Error('not found')), write: vi.fn().mockResolvedValue(undefined), append: vi.fn().mockResolvedValue(undefined), exists: vi.fn().mockResolvedValue(false), mkdir: vi.fn().mockResolvedValue(undefined), readDir: vi.fn().mockResolvedValue([]) } as unknown as MessageHandlerDeps['fileSystem'],
-    artifactManager: { listAll: vi.fn().mockResolvedValue([]), save: vi.fn(), read: vi.fn(), saveObjective: vi.fn() } as unknown as MessageHandlerDeps['artifactManager'],
-    promptTemplates: { getPromptForStage: vi.fn().mockReturnValue('prompt') } as unknown as MessageHandlerDeps['promptTemplates'],
-    agentBridge: { sendToChat: vi.fn().mockResolvedValue(undefined), sendViaParticipant: vi.fn(), sendToAgentMode: vi.fn() } as unknown as MessageHandlerDeps['agentBridge'],
-    historyManager: { loadHistory: vi.fn().mockResolvedValue([]), loadMeta: vi.fn().mockResolvedValue({ years: [], totalWorkflows: 0 }), archiveWorkflow: vi.fn(), loadArchivedWorkflow: vi.fn() } as unknown as MessageHandlerDeps['historyManager'],
+    notificationService: {
+      showInfo: vi.fn(),
+      showError: vi.fn(),
+    } as unknown as MessageHandlerDeps['notificationService'],
+    workspaceService: {
+      getWorkspaceRoot: vi.fn().mockReturnValue('/project'),
+    } as unknown as MessageHandlerDeps['workspaceService'],
+    fileSystem: {
+      read: vi.fn().mockRejectedValue(new Error('not found')),
+      write: vi.fn().mockResolvedValue(undefined),
+      append: vi.fn().mockResolvedValue(undefined),
+      exists: vi.fn().mockResolvedValue(false),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      readDir: vi.fn().mockResolvedValue([]),
+    } as unknown as MessageHandlerDeps['fileSystem'],
+    artifactManager: {
+      listAll: vi.fn().mockResolvedValue([]),
+      save: vi.fn(),
+      read: vi.fn(),
+      saveObjective: vi.fn(),
+    } as unknown as MessageHandlerDeps['artifactManager'],
+    promptTemplates: {
+      getPromptForStage: vi.fn().mockReturnValue('prompt'),
+    } as unknown as MessageHandlerDeps['promptTemplates'],
+    agentBridge: {
+      sendToChat: vi.fn().mockResolvedValue(undefined),
+      sendViaParticipant: vi.fn(),
+      sendToAgentMode: vi.fn(),
+    } as unknown as MessageHandlerDeps['agentBridge'],
+    historyManager: {
+      loadHistory: vi.fn().mockResolvedValue([]),
+      loadMeta: vi.fn().mockResolvedValue({ years: [], totalWorkflows: 0 }),
+      archiveWorkflow: vi.fn(),
+      loadArchivedWorkflow: vi.fn(),
+    } as unknown as MessageHandlerDeps['historyManager'],
     approvalMode: approvalMode,
   } as MessageHandlerDeps;
 }
@@ -115,7 +194,9 @@ describe('Phase 6: Approval Mode', () => {
     it('updateSettings message persists approvalMode to config', async () => {
       const deps = createMockDeps('user');
       vi.mocked(deps.fileSystem.exists).mockResolvedValue(true);
-      vi.mocked(deps.fileSystem.read).mockResolvedValue(JSON.stringify({ version: 1, approvalMode: 'user' }));
+      vi.mocked(deps.fileSystem.read).mockResolvedValue(
+        JSON.stringify({ version: 1, approvalMode: 'user' }),
+      );
 
       const replies: MessageToWebview[] = [];
       const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));

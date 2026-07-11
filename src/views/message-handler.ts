@@ -106,7 +106,7 @@ export function handleWebviewMessage(
           await handleRequestGateStatus(deps, reply);
           break;
         case 'generateArtifact':
-          await handleGenerateArtifact(deps, reply, msg.stage);
+          await handleSendToAgent(deps, reply, msg.stage);
           break;
         case 'setupExistingProject':
           await handleSetupExistingProject(deps, reply);
@@ -131,6 +131,9 @@ export function handleWebviewMessage(
           break;
         case 'openArtifact':
           await handleOpenArtifact(deps, reply, msg.artifactId);
+          break;
+        case 'cancelWorkflow':
+          await handleCancelWorkflow(deps, reply);
           break;
         case 'updateSettings':
           await handleUpdateSettings(deps, reply, msg.settings);
@@ -206,6 +209,12 @@ async function handleStartWorkflow(
   objective: string,
   assessment: RiskAssessment,
 ): Promise<void> {
+  // 0. Archive previous completed workflow if one exists
+  const existing = await deps.stateManager.load();
+  if (existing && existing.state.status === 'completed') {
+    await deps.historyManager.archiveWorkflow(existing);
+  }
+
   // 1. Generate workflow definition (stages, gates, skills, approvals)
   const wf = deps.workflowGenerator.generate(`wf-${Date.now()}`, objective, assessment as never);
 
@@ -323,6 +332,24 @@ async function handleUpdateSettings(
   // Merge new settings
   const updated = { ...existing, ...settings };
   await deps.fileSystem.write(configPath, JSON.stringify(updated, null, 2));
+
+  reply({ type: 'settingsUpdated' as MessageToWebview['type'] });
+}
+
+// ─── Cancel Workflow Handler ────────────────────────────────────────────────
+
+async function handleCancelWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  const wf = await deps.stateManager.load();
+  if (!wf) {
+    reply({ type: 'error', message: 'No active workflow to cancel' });
+    return;
+  }
+
+  // Archive the workflow (even if incomplete — preserves history)
+  await deps.historyManager.archiveWorkflow(wf);
+
+  // Reply with null workflow — webview shows empty state
+  reply({ type: 'state', workflow: null });
 }
 
 // ─── Stage Execution Handlers ───────────────────────────────────────────────
@@ -372,6 +399,12 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
     if (result.status === 'completed') {
       // Step 3: Advance to next stage (separate update for version safety)
       const advanced = await deps.stateManager.update((wf) => deps.workflowEngine.advanceStage(wf));
+
+      // Step 4: Archive if workflow is now completed (last stage advanced)
+      if (advanced.state.status === 'completed') {
+        await deps.historyManager.archiveWorkflow(advanced);
+      }
+
       reply({ type: 'state', workflow: advanced });
     } else {
       reply({ type: 'stageResult', result });
@@ -393,17 +426,6 @@ async function handleRequestGateStatus(deps: MessageHandlerDeps, reply: ReplyFn)
     return;
   }
   reply({ type: 'gateStatus', gates: wf.qualityGates });
-}
-
-// ─── Artifact Generation (Agent-Delegated) ──────────────────────────────────
-
-async function handleGenerateArtifact(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-  stage: LifecycleStage,
-): Promise<void> {
-  // Delegate to handleSendToAgent — same logic, single code path.
-  await handleSendToAgent(deps, reply, stage);
 }
 
 // ─── Onboarding Handlers ────────────────────────────────────────────────────

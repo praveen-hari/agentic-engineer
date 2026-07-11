@@ -248,6 +248,7 @@ export type MessageToHost =
   | { readonly type: 'sendToAgent'; readonly stage: LifecycleStage }
   | { readonly type: 'notifyArtifactDetected'; readonly artifact: Artifact }
   | { readonly type: 'openArtifact'; readonly artifactId: string }
+  | { readonly type: 'cancelWorkflow' }
   | { readonly type: 'updateSettings'; readonly settings: Partial<WorkspaceConfig> };
 
 export type MessageToWebview =
@@ -296,7 +297,8 @@ export type MessageToWebview =
       readonly status: AgentActivityStatus;
       readonly stage?: LifecycleStage;
       readonly message?: string;
-    };
+    }
+  | { readonly type: 'settingsUpdated' };
 
 // ─── Agent Activity ────────────────────────────────────────────────────────
 
