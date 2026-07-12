@@ -26,7 +26,6 @@ import {
   stageDetailStore,
   agentStatus as agentStatusSignal,
   agentStatusMessage,
-  actions,
 } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';

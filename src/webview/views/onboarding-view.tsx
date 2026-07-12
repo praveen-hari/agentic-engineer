@@ -5,7 +5,6 @@ import {
   onboardingStatus,
   hasExistingFiles,
   actions,
-  error,
   agentStatusMessage,
 } from '../store/workflow.store';
 import { bridge } from '../bridge';

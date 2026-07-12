@@ -324,10 +324,25 @@ async function handleAnalyzeObjective(
   // For the webview, we send a prompt to the agent.
   const prompt = `The user wants to work on: "${objective}"
 
-Call \`engineering_update_status\` to report progress as you work (e.g., "Analyzing objective...", "Scanning workspace...").
+Call \`engineering_update_status\` to report progress as you work.
+
+## Step 1: Evaluate clarity
+
+First, assess whether the objective is clear enough to start work:
+- Is it specific enough to understand what needs to be built or changed?
+- Does it make sense in the context of this project?
+- Are there obvious ambiguities that would lead to wrong implementation?
+
+**If the objective is vague, unclear, or nonsensical:**
+Ask the user 1-3 clarifying questions to understand what they actually want. Use the **interview-me** skill approach — ask one question at a time. Do NOT start the workflow until you understand the requirement.
+
+**If the objective is clear enough to proceed:**
+Go to Step 2.
+
+## Step 2: Start the workflow
 
 Call \`engineering_start_workflow\` tool with:
-- objective: "${objective}"
+- objective: the clarified objective (use the user's original if it was already clear)
 - workType: your assessment (feature/bugfix/refactor/infrastructure/documentation/security)
 - complexity: your assessment (trivial/simple/moderate/complex/critical)
 - riskLevel: your assessment (low/medium/high)
