@@ -59,22 +59,6 @@ describe('ArtifactWatcher — Edge Cases', () => {
       expect(detected.some((d) => d.name === 'config.json')).toBe(true);
     });
 
-    it('detects context.md creation', async () => {
-      const { vscodeApi, simulateCreate } = createMockVscode();
-      const watcher = new ArtifactWatcher(vscodeApi, '/workspace');
-      watcher.start();
-
-      const detected: Array<{ name: string; path: string }> = [];
-      watcher.onSetupFileDetected((name, path) => detected.push({ name, path }));
-
-      simulateCreate('/workspace/.codestudio/context.md');
-      await new Promise((r) => setTimeout(r, 10));
-
-      // context.md is not a known setup file (not config.json, not instructions)
-      // It may or may not be detected depending on watcher patterns
-      // The key is it doesn't crash
-    });
-
     it('detects codestudio-instructions.md creation', async () => {
       const { vscodeApi, simulateCreate } = createMockVscode();
       const watcher = new ArtifactWatcher(vscodeApi, '/workspace');

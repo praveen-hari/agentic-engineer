@@ -94,7 +94,6 @@ describe('SetupProjectTool', () => {
       const parsed = JSON.parse(text);
       const stepsText = parsed.nextSteps.join(' ');
 
-      expect(stepsText).toContain('context.md');
       expect(stepsText).toContain('architecture.md');
       expect(stepsText).toContain('conventions.md');
       expect(stepsText).toContain('stack.md');

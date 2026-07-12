@@ -20,7 +20,6 @@ import {
   WORKFLOW_DIR,
   STACK_FILE,
   CONVENTIONS_FILE,
-  CONTEXT_FILE,
   ARCHITECTURE_FILE,
   BOUNDARIES_FILE,
   INSTRUCTIONS_FILE,
@@ -522,7 +521,6 @@ async function handleUpdateSettings(
 
 /** All knowledge files with their display info. */
 const KNOWLEDGE_FILES = [
-  { name: 'context.md', path: CONTEXT_FILE, icon: '📄' },
   { name: 'architecture.md', path: ARCHITECTURE_FILE, icon: '🏗️' },
   { name: 'conventions.md', path: CONVENTIONS_FILE, icon: '📐' },
   { name: 'stack.md', path: STACK_FILE, icon: '🔧' },
@@ -586,7 +584,6 @@ async function handleRefreshKnowledge(
 2. Compare what you find with the existing knowledge files in .codestudio/knowledge/.
 3. Update ONLY the files that have drifted from reality. Do NOT overwrite user-added notes.
 4. For each file, read the existing content first, then update only what changed:
-   - \`knowledge/context.md\` — Project overview, purpose, target users
    - \`knowledge/architecture.md\` — Architecture, module boundaries, patterns, data flow
    - \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
    - \`knowledge/stack.md\` — Tech stack: languages, frameworks, deps with versions
@@ -744,7 +741,6 @@ This creates the .codestudio/ directory structure and config.json.
 Read the codebase thoroughly — package.json, source files, config files, tests, README, etc.
 Then create these files in .codestudio/ based on what you ACTUALLY find:
 
-- \`knowledge/context.md\` — Project overview: what this project is, its purpose, target users
 - \`knowledge/architecture.md\` — Architecture: module boundaries, patterns, data flow, key abstractions
 - \`knowledge/conventions.md\` — Coding conventions: naming, formatting, file organization, patterns used
 - \`knowledge/stack.md\` — Tech stack: languages, frameworks, dependencies with versions, build tools
@@ -800,7 +796,6 @@ Ask the user clarifying questions to understand:
 
 ### Step 3: Create project context files in .codestudio/
 Based on the interview and workspace scan, create these files in .codestudio/:
-- \`knowledge/context.md\` — Project overview, purpose, target users
 - \`knowledge/architecture.md\` — Architecture decisions, module boundaries, data flow
 - \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
 - \`knowledge/stack.md\` — Tech stack details: languages, frameworks, deps, versions

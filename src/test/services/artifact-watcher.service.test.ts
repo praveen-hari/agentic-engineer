@@ -225,22 +225,6 @@ describe('ArtifactWatcher', () => {
       expect(detected[0].name).toBe('config.json');
     });
 
-    it('notifies when context.md is created', async () => {
-      const { vscodeApi, simulateCreate } = createMockVscode();
-      const watcher = new ArtifactWatcher(vscodeApi, '/workspace');
-      watcher.start();
-
-      const detected: Array<{ name: string; path: string }> = [];
-      watcher.onSetupFileDetected((name, path) => detected.push({ name, path }));
-
-      simulateCreate('/workspace/.codestudio/context.md');
-
-      await new Promise((r) => setTimeout(r, 10));
-
-      expect(detected.length).toBeGreaterThanOrEqual(1);
-      expect(detected[0].name).toBe('context.md');
-    });
-
     it('notifies when instructions file is created', async () => {
       const { vscodeApi, simulateCreate } = createMockVscode();
       const watcher = new ArtifactWatcher(vscodeApi, '/workspace');

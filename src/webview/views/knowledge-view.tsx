@@ -64,7 +64,6 @@ export const KnowledgeView: FunctionalComponent = () => {
         <div class="knowledge-file-list-hint">
           <div class="knowledge-hint-label">Knowledge files help the agent understand:</div>
           <ul class="knowledge-hint-list">
-            <li><strong>context.md</strong> — What this project is</li>
             <li><strong>architecture.md</strong> — How it's structured</li>
             <li><strong>stack.md</strong> — What tech it uses</li>
             <li><strong>conventions.md</strong> — How code should be written</li>

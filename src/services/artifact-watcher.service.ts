@@ -19,7 +19,7 @@ export type SetupFileCallback = (fileName: string, filePath: string) => void;
  *    Detects specs, plans, reviews, reports from the agent.
  *
  * 2. Setup watcher — .codestudio/ root for .md and .json files.
- *    Detects onboarding completion files (config.json, context.md,
+ *    Detects onboarding completion files (config.json,
  *    codestudio-instructions.md) so the UI auto-transitions.
  *
  * @see ARCHITECTURE.md (Agent-Delegated Architecture)
@@ -94,7 +94,7 @@ export class ArtifactWatcher {
 
   /**
    * Register a callback for setup file detection (onboarding completion).
-   * Fires when config.json, context.md, or *instructions*.md is created/changed.
+   * Fires when config.json or *instructions*.md is created/changed.
    * Returns an unsubscribe function.
    */
   onSetupFileDetected(callback: SetupFileCallback): () => void {
@@ -113,7 +113,7 @@ export class ArtifactWatcher {
     // Only notify for known setup files
     const isSetupFile =
       fileName === 'config.json' ||
-      fileName === 'context.md' ||
+
       fileName.includes('instructions') ||
       fileName === 'AGENTS.md';
 

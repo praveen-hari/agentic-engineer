@@ -16,7 +16,7 @@ export interface SetupProjectInput {
  * That's ALL it does — no scanning, no context generation.
  *
  * After this tool runs, the agent should:
- * 1. Create project context files (context.md, architecture.md,
+ * 1. Create project knowledge files (architecture.md,
  *    conventions.md, stack.md, boundaries.md)
  * 2. Create codestudio-instructions.md
  * 3. Call engineering_start_workflow to begin the SDLC
@@ -85,7 +85,6 @@ export class SetupProjectTool implements vscode.LanguageModelTool<SetupProjectIn
               ],
               nextSteps: [
                 'Scan the workspace and create these project context files in .codestudio/:',
-                '  - knowledge/context.md — Project overview, what this project is, who it is for',
                 '  - knowledge/architecture.md — Architecture decisions, module boundaries, data flow',
                 '  - knowledge/conventions.md — Coding conventions, naming rules, formatting, patterns',
                 '  - knowledge/stack.md — Detailed tech stack: languages, frameworks, deps with versions',

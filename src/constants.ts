@@ -18,7 +18,6 @@ export const INSTRUCTIONS_FILE = 'codestudio-instructions.md';
 
 // ─── Knowledge Files (project context, inside knowledge/) ───────────────────
 
-export const CONTEXT_FILE = 'knowledge/context.md';
 export const ARCHITECTURE_FILE = 'knowledge/architecture.md';
 export const STACK_FILE = 'knowledge/stack.md';
 

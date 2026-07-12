@@ -192,7 +192,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // When a setup file is detected (onboarding completion),
     // auto-transition the webview from onboarding to ready state.
-    // This fires when the agent creates config.json, context.md,
+    // This fires when the agent creates config.json,
     // or codestudio-instructions.md in .codestudio/
     artifactWatcher.onSetupFileDetected(async (fileName) => {
       // Transition webview to ready state — no scanning needed
