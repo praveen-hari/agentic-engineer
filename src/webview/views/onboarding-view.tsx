@@ -287,7 +287,7 @@ const SetupNewScreen: FunctionalComponent = () => {
             });
           }}
         >
-          <Icon name="rocket" size={14} /> Start in Chat
+          <Icon name="rocket" size={14} /> Create Project
         </button>
         <button
           class="btn btn-secondary"
