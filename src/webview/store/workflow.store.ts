@@ -19,6 +19,7 @@ import type {
   StageExecutionResult,
   WorkflowDefinition,
   HistoryEntry,
+  ArtifactManifestEntry,
 } from '../../core/types';
 
 // ─── Workflow State ────────────────────────────────────────────────────────
@@ -58,6 +59,19 @@ export const contextStore = signal<ProjectContext | null>(null);
 // ─── History State ─────────────────────────────────────────────────────────
 
 export const historyStore = signal<readonly HistoryEntry[]>([]);
+export const historySearch = signal<string>('');
+export const historyDetailEntry = signal<HistoryEntry | null>(null);
+export const historyDetailWorkflow = signal<WorkflowDefinition | null>(null);
+export const historyDetailArtifacts = signal<readonly ArtifactManifestEntry[]>([]);
+export const filteredHistory = computed(() => {
+  const search = historySearch.value.toLowerCase().trim();
+  if (!search) return historyStore.value;
+  return historyStore.value.filter(
+    (e) =>
+      e.objective.toLowerCase().includes(search) ||
+      e.processLevel.toLowerCase().includes(search),
+  );
+});
 
 // ─── Knowledge State ──────────────────────────────────────────────────────
 

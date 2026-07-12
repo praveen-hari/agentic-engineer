@@ -157,6 +157,9 @@ export function handleWebviewMessage(
         case 'openKnowledgeFile':
           await handleOpenKnowledgeFile(deps, msg.fileName);
           break;
+        case 'requestHistoryDetail':
+          await handleRequestHistoryDetail(deps, reply, msg.archivePath);
+          break;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -198,6 +201,7 @@ const VALID_MESSAGE_TYPES = new Set<string>([
   'requestKnowledge',
   'refreshKnowledge',
   'openKnowledgeFile',
+  'requestHistoryDetail',
 ]);
 
 /**
@@ -528,10 +532,7 @@ const KNOWLEDGE_FILES = [
   { name: 'codestudio-instructions.md', path: INSTRUCTIONS_FILE, icon: '📋' },
 ] as const;
 
-async function handleRequestKnowledge(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleRequestKnowledge(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const root = deps.workspaceService.getWorkspaceRoot();
   if (!root) {
     reply({ type: 'knowledgeFiles', files: [] });
@@ -573,10 +574,7 @@ async function handleRequestKnowledge(
   reply({ type: 'knowledgeFiles', files });
 }
 
-async function handleRefreshKnowledge(
-  deps: MessageHandlerDeps,
-  reply: ReplyFn,
-): Promise<void> {
+async function handleRefreshKnowledge(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const prompt = `Refresh the project knowledge files in .codestudio/knowledge/.
 
 ## Instructions
@@ -604,10 +602,7 @@ After updating, summarize what changed.`;
   });
 }
 
-async function handleOpenKnowledgeFile(
-  deps: MessageHandlerDeps,
-  fileName: string,
-): Promise<void> {
+async function handleOpenKnowledgeFile(deps: MessageHandlerDeps, fileName: string): Promise<void> {
   const root = deps.workspaceService.getWorkspaceRoot();
   if (!root) return;
 
@@ -619,6 +614,35 @@ async function handleOpenKnowledgeFile(
   } catch {
     // File doesn't exist or can't be opened
   }
+}
+
+// ─── History Detail Handler ─────────────────────────────────────────────────
+
+async function handleRequestHistoryDetail(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  archivePath: string,
+): Promise<void> {
+  const archive = await deps.historyManager.loadArchivedWorkflow(archivePath);
+  if (!archive) {
+    reply({ type: 'error', message: 'Archived workflow not found' });
+    return;
+  }
+
+  // Find the matching history entry
+  const entries = await deps.historyManager.loadHistory();
+  const entry = entries.find((e) => e.archivePath === archivePath);
+  if (!entry) {
+    reply({ type: 'error', message: 'History entry not found' });
+    return;
+  }
+
+  reply({
+    type: 'historyDetail',
+    entry,
+    workflow: archive.workflow,
+    artifacts: archive.artifacts,
+  });
 }
 
 // ─── Cancel Workflow Handler ────────────────────────────────────────────────
@@ -697,8 +721,14 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
         await deps.historyManager.archiveWorkflow(advanced);
         await deps.stateManager.clear();
 
-        // Knowledge refresh is handled by the Done screen UI
-        // (KnowledgeRefreshCard) — user clicks "Update Knowledge" or "Skip"
+        // Step 5: Prompt agent to check if knowledge needs updating
+        // In user mode: agent asks user before updating
+        // In agent mode: agent updates directly
+        const knowledgePrompt =
+          deps.approvalMode === 'agent'
+            ? 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, update the relevant knowledge files in .codestudio/knowledge/ directly.'
+            : 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, tell the user which knowledge files may need updating and ask if they want you to refresh them.';
+        void deps.agentBridge.sendToChat(knowledgePrompt);
       }
 
       reply({ type: 'state', workflow: advanced });

@@ -21,6 +21,9 @@ import {
   actions,
   knowledgeStore,
   knowledgeRefreshing,
+  historyDetailEntry,
+  historyDetailWorkflow,
+  historyDetailArtifacts,
 } from './store/workflow.store';
 import { bridge } from './bridge';
 import { OnboardingView } from './views/onboarding-view';
@@ -135,6 +138,11 @@ export const App: FunctionalComponent = () => {
         case 'knowledgeFiles':
           knowledgeStore.value = msg.files;
           knowledgeRefreshing.value = false;
+          break;
+        case 'historyDetail':
+          historyDetailEntry.value = msg.entry;
+          historyDetailWorkflow.value = msg.workflow;
+          historyDetailArtifacts.value = msg.artifacts;
           break;
       }
     });

@@ -63,7 +63,12 @@ export class ArtifactWatcher {
     const knowledgeMdPattern = `${this.rootPath}/${WORKFLOW_DIR}/knowledge/*.md`;
     const instructionPattern = `${this.rootPath}/${WORKFLOW_DIR}/**/*instructions*.md`;
 
-    for (const pattern of [setupMdPattern, setupJsonPattern, knowledgeMdPattern, instructionPattern]) {
+    for (const pattern of [
+      setupMdPattern,
+      setupJsonPattern,
+      knowledgeMdPattern,
+      instructionPattern,
+    ]) {
       const watcher = this.vscodeApi.workspace.createFileSystemWatcher(pattern);
       watcher.onDidCreate((uri) => {
         void this.handleSetupFileChange(uri);
@@ -127,15 +132,11 @@ export class ArtifactWatcher {
 
     // Only notify for known setup files
     const isSetupFile =
-      fileName === 'config.json' ||
-
-      fileName.includes('instructions') ||
-      fileName === 'AGENTS.md';
+      fileName === 'config.json' || fileName.includes('instructions') || fileName === 'AGENTS.md';
 
     // Notify knowledge callbacks for knowledge files
     const isKnowledgeFile =
-      filePath.includes('/knowledge/') ||
-      fileName === 'codestudio-instructions.md';
+      filePath.includes('/knowledge/') || fileName === 'codestudio-instructions.md';
 
     if (isKnowledgeFile) {
       for (const cb of this.knowledgeCallbacks) {

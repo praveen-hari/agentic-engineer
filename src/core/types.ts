@@ -263,7 +263,8 @@ export type MessageToHost =
   | { readonly type: 'updateSettings'; readonly settings: Partial<WorkspaceConfig> }
   | { readonly type: 'requestKnowledge' }
   | { readonly type: 'refreshKnowledge' }
-  | { readonly type: 'openKnowledgeFile'; readonly fileName: string };
+  | { readonly type: 'openKnowledgeFile'; readonly fileName: string }
+  | { readonly type: 'requestHistoryDetail'; readonly archivePath: string };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -315,6 +316,12 @@ export type MessageToWebview =
   | {
       readonly type: 'knowledgeFiles';
       readonly files: readonly KnowledgeFileInfo[];
+    }
+  | {
+      readonly type: 'historyDetail';
+      readonly entry: HistoryEntry;
+      readonly workflow: WorkflowDefinition;
+      readonly artifacts: readonly ArtifactManifestEntry[];
     }
   | {
       readonly type: 'settingsLoaded';

@@ -39,8 +39,8 @@ export const KnowledgeView: FunctionalComponent = () => {
           </div>
           <div class="empty-state-title">No Knowledge Yet</div>
           <div class="empty-state-description">
-            Set up your project or run a workflow to generate knowledge files.
-            These help the agent understand your project.
+            Set up your project or run a workflow to generate knowledge files. These help the agent
+            understand your project.
           </div>
           <button
             class="btn btn-primary"
@@ -65,10 +65,18 @@ export const KnowledgeView: FunctionalComponent = () => {
         <div class="knowledge-file-list-hint">
           <div class="knowledge-hint-label">Knowledge files help the agent understand:</div>
           <ul class="knowledge-hint-list">
-            <li><strong>architecture.md</strong> — How it's structured</li>
-            <li><strong>stack.md</strong> — What tech it uses</li>
-            <li><strong>conventions.md</strong> — How code should be written</li>
-            <li><strong>boundaries.md</strong> — What the agent should/shouldn't do</li>
+            <li>
+              <strong>architecture.md</strong> — How it's structured
+            </li>
+            <li>
+              <strong>stack.md</strong> — What tech it uses
+            </li>
+            <li>
+              <strong>conventions.md</strong> — How code should be written
+            </li>
+            <li>
+              <strong>boundaries.md</strong> — What the agent should/shouldn't do
+            </li>
           </ul>
         </div>
       </div>
@@ -138,9 +146,7 @@ const KnowledgeFileCard: FunctionalComponent<{ file: KnowledgeFileInfo }> = ({ f
         <Icon name={iconName} size={16} />
         <span class="knowledge-file-name">{file.name}</span>
       </div>
-      {file.preview && (
-        <div class="knowledge-file-preview">{file.preview}</div>
-      )}
+      {file.preview && <div class="knowledge-file-preview">{file.preview}</div>}
       <div class="knowledge-file-actions">
         <button
           class="btn btn-secondary btn-sm"
