@@ -36,6 +36,7 @@ export class NotificationService {
       );
     }
     this.statusBarItem.text = text;
+    this.statusBarItem.command = 'engineeringWorkspace.openView';
     if (tooltip) {
       this.statusBarItem.tooltip = tooltip;
     }
