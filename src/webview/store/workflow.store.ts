@@ -170,6 +170,8 @@ export const actions = {
     detectedArtifacts.value = [];
     artifactContents.value = {};
     assessmentStore.value = null;
+    objectiveInput.value = '';
+    isAnalyzing.value = false;
   },
 
   /** Navigate onboarding to a specific step. */

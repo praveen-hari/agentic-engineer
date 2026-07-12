@@ -275,6 +275,68 @@ describe('StartWorkflowTool', () => {
       const parsed = JSON.parse(text);
       expect(parsed.processLevel).toBe('thorough');
     });
+
+    it('config setting overrides both agent and inference', async () => {
+      // Create a tool with config reader that returns 'guarded'
+      const guardedTool = new StartWorkflowTool(
+        workflowGenerator,
+        workflowEngine,
+        stateManager,
+        stageExecutor,
+        artifactManager,
+        onWorkflowStarted,
+        async () => 'guarded',
+      );
+
+      const result = await guardedTool.invoke(
+        {
+          input: {
+            objective: 'Fix typo',
+            workType: 'documentation',
+            complexity: 'trivial',
+            riskLevel: 'low',
+            processLevel: 'light', // Agent says light
+          },
+        } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+      // Config says guarded — overrides agent's 'light'
+      expect(parsed.processLevel).toBe('guarded');
+    });
+
+    it('config "auto" lets agent decide', async () => {
+      // Create a tool with config reader that returns 'auto'
+      const autoTool = new StartWorkflowTool(
+        workflowGenerator,
+        workflowEngine,
+        stateManager,
+        stageExecutor,
+        artifactManager,
+        onWorkflowStarted,
+        async () => 'auto',
+      );
+
+      const result = await autoTool.invoke(
+        {
+          input: {
+            objective: 'Fix typo',
+            workType: 'documentation',
+            complexity: 'trivial',
+            riskLevel: 'low',
+            processLevel: 'light', // Agent says light
+          },
+        } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      const text = (result as unknown as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+      // Config is 'auto' — agent's choice wins
+      expect(parsed.processLevel).toBe('light');
+    });
   });
 
   // ─── All Work Types ───────────────────────────────────────────────

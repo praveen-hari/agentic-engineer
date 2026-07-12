@@ -230,26 +230,33 @@ describe('PromptTemplates — Edge Cases', () => {
   // ─── Verify Prompt Edge Cases ─────────────────────────────────────
 
   describe('verify prompt edge cases', () => {
-    it('uses custom test command when provided', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', 'yarn test --coverage', null);
-      expect(prompt).toContain('yarn test --coverage');
+    it('references project context files for command discovery', () => {
+      const prompt = templates.getVerifyPrompt('Add auth');
+      expect(prompt).toContain('stack.md');
+      expect(prompt).toContain('conventions.md');
     });
 
-    it('uses custom build command when provided', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', null, 'yarn build');
-      expect(prompt).toContain('yarn build');
+    it('lists multiple build config file types for discovery', () => {
+      const prompt = templates.getVerifyPrompt('Add auth');
+      expect(prompt).toContain('package.json');
+      expect(prompt).toContain('Cargo.toml');
+      expect(prompt).toContain('.csproj');
+      expect(prompt).toContain('pyproject.toml');
     });
 
-    it('uses both custom commands', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', 'pnpm test', 'pnpm build');
-      expect(prompt).toContain('pnpm test');
-      expect(prompt).toContain('pnpm build');
+    it('instructs agent to run tests, build, typecheck, and lint', () => {
+      const prompt = templates.getVerifyPrompt('Add auth');
+      expect(prompt).toContain('test suite');
+      expect(prompt).toContain('build');
+      expect(prompt).toContain('type checker');
+      expect(prompt).toContain('linter');
     });
 
-    it('includes typecheck and lint instructions', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', null, null);
-      expect(prompt).toContain('typecheck');
-      expect(prompt).toContain('lint');
+    it('does not hardcode any specific package manager commands', () => {
+      const prompt = templates.getVerifyPrompt('Add auth');
+      expect(prompt).not.toContain('`npm ');
+      expect(prompt).not.toContain('`yarn ');
+      expect(prompt).not.toContain('`pnpm ');
     });
   });
 
@@ -284,10 +291,6 @@ describe('PromptTemplates — Edge Cases', () => {
       signals: [] as RiskSignal[],
       processLevel: 'standard' as ProcessLevel,
     };
-
-    it('returns null for onboard', () => {
-      expect(templates.getPromptForStage('onboard', baseParams)).toBeNull();
-    });
 
     it('returns prompt for build', () => {
       const prompt = templates.getPromptForStage('build', baseParams);
@@ -325,14 +328,13 @@ describe('PromptTemplates — Edge Cases', () => {
       expect(typeof prompt).toBe('string');
     });
 
-    it('verify prompt uses custom test/build commands', () => {
-      const prompt = templates.getPromptForStage('verify', {
-        ...baseParams,
-        testCommand: 'pnpm test',
-        buildCommand: 'pnpm build',
-      });
-      expect(prompt).toContain('pnpm test');
-      expect(prompt).toContain('pnpm build');
+    it('verify prompt references project context files instead of hardcoded commands', () => {
+      const prompt = templates.getPromptForStage('verify', baseParams);
+      expect(prompt).toContain('stack.md');
+      expect(prompt).toContain('Discover the correct commands');
+      // Should NOT contain hardcoded npm commands
+      expect(prompt).not.toContain('`npm test`');
+      expect(prompt).not.toContain('`npm run build`');
     });
 
     it('all returned prompts reference a skill', () => {

@@ -41,7 +41,6 @@ function makeWorkflow(overrides: Partial<WorkflowDefinition> = {}): WorkflowDefi
     processLevel: 'standard',
     detectedRisks: [],
     stages: [
-      makeStage('onboard', 'completed'),
       makeStage('define', 'active'),
       makeStage('plan', 'pending'),
       makeStage('build', 'pending'),
@@ -98,15 +97,7 @@ describe('StageExecutor — Edge Cases', () => {
   // ─── getStageAction for Every Stage ─────────────────────────────
 
   describe('getStageAction for every stage type', () => {
-    const stages: LifecycleStage[] = [
-      'onboard',
-      'define',
-      'plan',
-      'build',
-      'verify',
-      'review',
-      'ship',
-    ];
+    const stages: LifecycleStage[] = ['define', 'plan', 'build', 'verify', 'review', 'ship'];
 
     for (const stageId of stages) {
       it(`returns action for ${stageId} stage`, () => {
@@ -122,15 +113,6 @@ describe('StageExecutor — Edge Cases', () => {
         expect(action!.description.length).toBeGreaterThan(0);
       });
     }
-
-    it('onboard stage has autoAdvance=true', () => {
-      const wf = makeWorkflow({
-        stages: [makeStage('onboard', 'active')],
-        state: { ...makeWorkflow().state, currentStage: 'onboard' },
-      });
-      const action = executor.getStageAction(wf);
-      expect(action!.autoAdvance).toBe(true);
-    });
 
     it('define stage requires spec artifact at standard level', () => {
       const wf = makeWorkflow({
@@ -341,16 +323,6 @@ describe('StageExecutor — Edge Cases', () => {
         processLevel: 'standard',
         stages: [makeStage('build', 'active')],
         state: { ...makeWorkflow().state, currentStage: 'build' },
-      });
-      const result = executor.evaluateStageCompletion(wf, []);
-      expect(result.status).toBe('completed');
-    });
-
-    it('onboard stage with no requirements completes immediately', () => {
-      const wf = makeWorkflow({
-        processLevel: 'standard',
-        stages: [makeStage('onboard', 'active')],
-        state: { ...makeWorkflow().state, currentStage: 'onboard' },
       });
       const result = executor.evaluateStageCompletion(wf, []);
       expect(result.status).toBe('completed');

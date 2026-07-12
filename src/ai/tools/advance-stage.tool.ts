@@ -158,7 +158,6 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
 // ─── Shared stage → next-step mapping ───────────────────────────────────────
 
 const STAGE_NEXT_STEPS: Readonly<Record<string, string>> = {
-  onboard: 'Call engineering_advance_stage — this stage auto-advances.',
   define:
     'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
   plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',

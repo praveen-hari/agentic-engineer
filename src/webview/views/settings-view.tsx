@@ -4,9 +4,10 @@ import { useEffect, useCallback } from 'preact/hooks';
 import { historyStore } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
+import type { ProcessLevel } from '../../core/types';
 
 export const SettingsView: FunctionalComponent = () => {
-  const processLevel = useSignal('standard');
+  const processLevel = useSignal<ProcessLevel | 'auto'>('auto');
   const autoApprove = useSignal(false);
   const reviewTimeout = useSignal(30);
   const saveStatus = useSignal<'idle' | 'saving' | 'saved'>('idle');
@@ -21,11 +22,17 @@ export const SettingsView: FunctionalComponent = () => {
           saveStatus.value = 'idle';
         }, 2000);
       }
+      if (msg.type === 'settingsLoaded') {
+        processLevel.value = msg.settings.processLevelDefault as ProcessLevel | 'auto';
+        autoApprove.value = msg.settings.autoApproveLowRisk;
+        reviewTimeout.value = msg.settings.reviewTimeoutMinutes;
+        loaded.value = true;
+      }
     });
 
-    // Request history to get real counts
+    // Request saved settings and history
+    bridge.send({ type: 'requestSettings' });
     bridge.send({ type: 'requestHistory' });
-    loaded.value = true;
 
     return unsub;
   }, []);
@@ -37,9 +44,9 @@ export const SettingsView: FunctionalComponent = () => {
     bridge.send({
       type: 'updateSettings',
       settings: {
-        processLevel: processLevel.value,
-        autoApprove: autoApprove.value,
-        reviewTimeout: reviewTimeout.value,
+        processLevelDefault: processLevel.value,
+        autoApproveLowRisk: autoApprove.value,
+        reviewTimeoutMinutes: reviewTimeout.value,
       },
     });
   }, []);
@@ -70,14 +77,19 @@ export const SettingsView: FunctionalComponent = () => {
               class="input"
               value={processLevel.value}
               onChange={(e: Event) => {
-                processLevel.value = (e.target as HTMLSelectElement).value;
+                processLevel.value = (e.target as HTMLSelectElement).value as ProcessLevel | 'auto';
                 saveSettings();
               }}
             >
-              <option value="light">Light — typo fixes, docs, config changes</option>
-              <option value="standard">Standard — features, bugfixes, refactors</option>
-              <option value="thorough">Thorough — architecture, API design, major features</option>
-              <option value="guarded">Guarded — DB migrations, auth changes, deployments</option>
+              <option value="auto">Auto — agent decides based on each task (recommended)</option>
+              <option value="light">Light — typo fixes, docs, config changes (3 stages)</option>
+              <option value="standard">Standard — features, bugfixes, refactors (4 stages)</option>
+              <option value="thorough">
+                Thorough — architecture, API design, major features (6 stages)
+              </option>
+              <option value="guarded">
+                Guarded — DB migrations, auth changes, deployments (6 stages + gates)
+              </option>
             </select>
           </div>
 

@@ -38,7 +38,7 @@ function createMockDeps(): MessageHandlerDeps {
     workflowEngine: {
       start: vi.fn().mockResolvedValue({
         ...SAMPLE_WORKFLOW,
-        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'define' },
       }),
       advanceStage: vi.fn().mockResolvedValue({
         ...SAMPLE_WORKFLOW,
@@ -278,7 +278,7 @@ describe('handleWebviewMessage — Edge Cases', () => {
 
     it('returns error when stage has no prompt', async () => {
       vi.mocked(deps.promptTemplates.getPromptForStage).mockReturnValue(null);
-      await handler({ type: 'generateArtifact', stage: 'onboard' });
+      await handler({ type: 'generateArtifact', stage: 'build' });
       expect(replies[0].type).toBe('error');
     });
 
@@ -372,6 +372,110 @@ describe('handleWebviewMessage — Edge Cases', () => {
     });
   });
 
+  // ─── Bug Fix: Active Workflow Guard (#20) ──────────────────────────
+
+  describe('active workflow guard', () => {
+    it('blocks startWorkflow when an active workflow exists', async () => {
+      // stateManager.load returns an active workflow by default
+      await handler({
+        type: 'startWorkflow',
+        objective: 'New task',
+        assessment: {
+          workType: 'feature',
+          complexity: 'moderate',
+          riskLevel: 'medium',
+          processLevel: 'standard',
+          signals: [],
+          contextSignals: [],
+          source: 'llm',
+        },
+      });
+
+      expect(replies[0].type).toBe('error');
+      expect((replies[0] as { message: string }).message).toContain('already active');
+      // Should NOT have called generate
+      expect(deps.workflowGenerator.generate).not.toHaveBeenCalled();
+    });
+
+    it('allows startWorkflow when no workflow exists', async () => {
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
+      await handler({
+        type: 'startWorkflow',
+        objective: 'New task',
+        assessment: {
+          workType: 'feature',
+          complexity: 'moderate',
+          riskLevel: 'medium',
+          processLevel: 'standard',
+          signals: [],
+          contextSignals: [],
+          source: 'llm',
+        },
+      });
+
+      expect(deps.workflowGenerator.generate).toHaveBeenCalled();
+      expect(replies[0].type).toBe('state');
+    });
+
+    it('archives completed workflow before starting new one', async () => {
+      vi.mocked(deps.stateManager.load).mockResolvedValue({
+        ...SAMPLE_WORKFLOW,
+        state: { ...SAMPLE_WORKFLOW.state, status: 'completed' },
+      } as WorkflowDefinition);
+
+      await handler({
+        type: 'startWorkflow',
+        objective: 'New task',
+        assessment: {
+          workType: 'feature',
+          complexity: 'moderate',
+          riskLevel: 'medium',
+          processLevel: 'standard',
+          signals: [],
+          contextSignals: [],
+          source: 'llm',
+        },
+      });
+
+      expect(deps.historyManager.archiveWorkflow).toHaveBeenCalled();
+      expect(deps.stateManager.clear).toHaveBeenCalled();
+      expect(deps.workflowGenerator.generate).toHaveBeenCalled();
+    });
+  });
+
+  // ─── Bug Fix: Settings Loading (#24) ──────────────────────────────
+
+  describe('requestSettings', () => {
+    it('returns saved settings from config.json', async () => {
+      vi.mocked(deps.fileSystem.exists).mockResolvedValue(true);
+      vi.mocked(deps.fileSystem.read).mockResolvedValue(
+        JSON.stringify({
+          processLevelDefault: 'thorough',
+          autoApproveLowRisk: true,
+          reviewTimeoutMinutes: 15,
+        }),
+      );
+
+      await handler({ type: 'requestSettings' });
+
+      expect(replies[0].type).toBe('settingsLoaded');
+      const msg = replies[0] as { type: string; settings: Record<string, unknown> };
+      expect(msg.settings.processLevelDefault).toBe('thorough');
+      expect(msg.settings.autoApproveLowRisk).toBe(true);
+      expect(msg.settings.reviewTimeoutMinutes).toBe(15);
+    });
+
+    it('returns defaults when config.json does not exist', async () => {
+      vi.mocked(deps.fileSystem.exists).mockResolvedValue(false);
+
+      await handler({ type: 'requestSettings' });
+
+      expect(replies[0].type).toBe('settingsLoaded');
+      const msg = replies[0] as { type: string; settings: Record<string, unknown> };
+      expect(msg.settings.processLevelDefault).toBe('auto');
+    });
+  });
+
   // ─── Error Propagation ────────────────────────────────────────────
 
   describe('error propagation from all paths', () => {
@@ -390,6 +494,8 @@ describe('handleWebviewMessage — Edge Cases', () => {
     });
 
     it('catches stateManager.save errors', async () => {
+      // No existing workflow so the active-workflow guard doesn't block
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
       vi.mocked(deps.stateManager.save).mockRejectedValue(new Error('Disk full'));
       await handler({
         type: 'startWorkflow',

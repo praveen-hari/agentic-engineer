@@ -59,13 +59,16 @@ ${contextBlock}
    * References: planning-and-task-breakdown skill
    */
   getPlanPrompt(objective: string, specPath: string, processLevel: ProcessLevel): string {
+    const specSection = specPath
+      ? `## Specification\nRead the spec at: \`${specPath}\``
+      : `## Specification\nNo spec artifact exists yet. Scan the workspace and the objective to understand what needs to be built.`;
+
     return `Follow the **planning-and-task-breakdown** skill to create an implementation plan.
 
 ## Objective
 ${objective}
 
-## Specification
-Read the spec at: \`${specPath}\`
+${specSection}
 
 ## Instructions
 1. Read the specification first.
@@ -121,26 +124,23 @@ Follow the **test-driven-development** and **incremental-implementation** skills
    * VERIFY stage — run verification checks.
    * References: test-driven-development skill
    */
-  getVerifyPrompt(
-    objective: string,
-    testCommand: string | null,
-    buildCommand: string | null,
-  ): string {
-    const testCmd = testCommand ?? 'npm test';
-    const buildCmd = buildCommand ?? 'npm run build';
-
+  getVerifyPrompt(objective: string): string {
     return `Run verification checks for the completed implementation.
 
 ## Objective
 ${objective}
 
+## Project Context
+Read the project details from \`.codestudio/stack.md\` and \`.codestudio/conventions.md\` to understand the tech stack, build tools, test framework, and commands used in this project.
+
 ## Instructions
-1. Run the test suite: \`${testCmd}\`
-2. Run the build: \`${buildCmd}\`
-3. Run the type checker if applicable: \`npm run typecheck\`
-4. Run the linter if applicable: \`npm run lint\`
-5. Compile a verification report with results for each check.
-6. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="report" and the full content.
+1. **Discover the correct commands** — read \`package.json\`, \`Makefile\`, \`Cargo.toml\`, \`*.csproj\`, \`pyproject.toml\`, or whatever build config exists in this project.
+2. **Run the test suite** using the project's actual test command.
+3. **Run the build** using the project's actual build command.
+4. **Run the type checker** if the project has one configured.
+5. **Run the linter** if the project has one configured.
+6. Compile a verification report with results for each check.
+7. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="report" and the full content.
 
 Report results honestly — if tests fail, document which ones and why.`;
   }
@@ -191,13 +191,9 @@ ${objective}
       signals: readonly RiskSignal[];
       processLevel: ProcessLevel;
       specPath?: string;
-      testCommand?: string | null;
-      buildCommand?: string | null;
     },
   ): string | null {
     switch (stage) {
-      case 'onboard':
-        return null; // Auto-advance
       case 'define':
         return this.getDefinePrompt(
           params.objective,
@@ -210,11 +206,7 @@ ${objective}
       case 'build':
         return this.getBuildPrompt(params.objective, params.specPath ?? '');
       case 'verify':
-        return this.getVerifyPrompt(
-          params.objective,
-          params.testCommand ?? null,
-          params.buildCommand ?? null,
-        );
+        return this.getVerifyPrompt(params.objective);
       case 'review':
         return this.getReviewPrompt(params.objective);
       case 'ship':
@@ -230,7 +222,6 @@ ${objective}
    */
   getSkillForStage(stage: LifecycleStage): string | null {
     const mapping: Record<LifecycleStage, string | null> = {
-      onboard: 'context-engineering',
       define: 'spec-driven-development',
       plan: 'planning-and-task-breakdown',
       build: 'incremental-implementation',

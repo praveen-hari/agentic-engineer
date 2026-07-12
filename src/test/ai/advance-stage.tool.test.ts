@@ -31,9 +31,9 @@ vi.mock('vscode', () => ({
 
 const STANDARD_ASSESSMENT: RiskAssessment = {
   workType: 'feature',
-  complexity: 'moderate',
-  riskLevel: 'medium',
-  processLevel: 'standard',
+  complexity: 'trivial',
+  riskLevel: 'low',
+  processLevel: 'light',
   signals: [],
   contextSignals: [],
   source: 'llm',
@@ -171,6 +171,9 @@ describe('AdvanceStageTool', () => {
         current = await workflowEngine.advanceStage(current);
       }
       await stateManager.save(current);
+
+      // Save a report artifact so the verify stage isn't blocked
+      await artifactManager.save('report', 'Verification Report', 'All tests pass.', 'verify');
 
       const result = await tool.invoke(
         { input: {} } as never,

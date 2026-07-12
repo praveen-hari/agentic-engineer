@@ -43,7 +43,7 @@ function createMockDeps(): MessageHandlerDeps {
     workflowEngine: {
       start: vi.fn().mockResolvedValue({
         ...SAMPLE_WORKFLOW,
-        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'define' },
       }),
       advanceStage: vi.fn().mockResolvedValue({
         ...SAMPLE_WORKFLOW,
@@ -207,10 +207,12 @@ describe('handleWebviewMessage', () => {
 
   describe('startWorkflow', () => {
     it('generates, starts, saves workflow and objective', async () => {
+      // No existing workflow — so the active-workflow guard doesn't block
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
       // workflowEngine.start returns the started workflow
       vi.mocked(deps.workflowEngine.start).mockResolvedValue({
         ...SAMPLE_WORKFLOW,
-        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'onboard' },
+        state: { ...SAMPLE_WORKFLOW.state, status: 'active', currentStage: 'define' },
       });
 
       await handler({

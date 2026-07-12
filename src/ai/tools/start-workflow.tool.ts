@@ -14,17 +14,24 @@ import type {
 import type { ArtifactManager } from '../../services/artifact-manager.service';
 
 /**
+ * Reads the processLevelDefault from .codestudio/config.json.
+ * Returns 'auto' if not set or file doesn't exist.
+ */
+export type ConfigReader = () => Promise<ProcessLevel | 'auto'>;
+
+/**
  * Input for the engineering_start_workflow tool.
  *
- * The AGENT provides all assessment fields — no keyword matching.
- * The agent has full context from the interview and workspace scan.
+ * The AGENT provides all assessment fields including processLevel.
+ * The agent has full context from the interview and workspace scan
+ * and is best positioned to choose the right process level.
  */
 export interface StartWorkflowInput {
   readonly objective: string;
   readonly workType: WorkType;
   readonly complexity: Complexity;
   readonly riskLevel: RiskLevel;
-  readonly processLevel?: ProcessLevel;
+  readonly processLevel: ProcessLevel;
   readonly contextSignals?: readonly string[];
 }
 
@@ -43,6 +50,7 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     private readonly stageExecutor: StageExecutor,
     private readonly artifactManager: ArtifactManager,
     private readonly onWorkflowStarted: (wf: WorkflowDefinition) => void,
+    private readonly readConfigLevel: ConfigReader = async () => 'auto',
   ) {}
 
   async prepareInvocation(
@@ -74,9 +82,15 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     const vscodeModule = await import('vscode');
     const { objective, workType, complexity, riskLevel, contextSignals } = options.input;
 
-    // Map risk level to process level if not provided
+    // Determine process level:
+    // 1. If user set an explicit level in settings (not 'auto'), use that
+    // 2. Otherwise trust the agent's choice (agent always provides processLevel)
+    // 3. Fallback: infer from riskLevel + complexity (safety net)
+    const configLevel = await this.readConfigLevel();
     const processLevel: ProcessLevel =
-      options.input.processLevel ?? this.inferProcessLevel(riskLevel, complexity);
+      configLevel !== 'auto'
+        ? configLevel
+        : (options.input.processLevel ?? this.inferProcessLevel(riskLevel, complexity));
 
     // Build assessment from agent's input (NOT from keyword matching)
     const assessment = {
@@ -139,6 +153,11 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     ]);
   }
 
+  /**
+   * Safety-net fallback — only runs if the agent somehow doesn't provide
+   * processLevel AND the user hasn't set an explicit default in settings.
+   * In normal operation, the agent always provides processLevel.
+   */
   private inferProcessLevel(riskLevel: RiskLevel, complexity: Complexity): ProcessLevel {
     if (riskLevel === 'high' || complexity === 'critical') return 'guarded';
     if (riskLevel === 'medium' || complexity === 'complex') return 'thorough';
@@ -152,7 +171,6 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
     if (!stage) return ['Workflow has no active stage.'];
 
     const stageSkillMap: Record<string, string> = {
-      onboard: 'Call engineering_advance_stage — this stage auto-advances.',
       define:
         'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
       plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',

@@ -98,6 +98,20 @@ describe('PromptTemplates', () => {
       expect(prompt).toContain('1-3 tasks');
     });
 
+    it('handles empty specPath gracefully (#7)', () => {
+      const prompt = templates.getPlanPrompt('Fix typo', '', 'standard');
+      // Should NOT contain an empty backtick path like "Read the spec at: ``"
+      expect(prompt).not.toContain('Read the spec at: ``');
+      // Should contain a fallback message
+      expect(prompt).toContain('No spec artifact exists yet');
+    });
+
+    it('includes spec path when provided', () => {
+      const prompt = templates.getPlanPrompt('Add auth', 'specs/auth.md', 'standard');
+      expect(prompt).toContain('Read the spec at: `specs/auth.md`');
+      expect(prompt).not.toContain('No spec artifact exists yet');
+    });
+
     it('adjusts detail level for thorough process', () => {
       const prompt = templates.getPlanPrompt('Add payment', '', 'thorough');
       expect(prompt).toContain('thorough');
@@ -120,20 +134,23 @@ describe('PromptTemplates', () => {
   });
 
   describe('getVerifyPrompt()', () => {
-    it('includes test and build commands', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', 'npm test', 'npm run build');
-      expect(prompt).toContain('npm test');
-      expect(prompt).toContain('npm run build');
+    it('references project context files for command discovery', () => {
+      const prompt = templates.getVerifyPrompt('Add auth');
+      expect(prompt).toContain('stack.md');
+      expect(prompt).toContain('conventions.md');
+      expect(prompt).toContain('Discover the correct commands');
     });
 
-    it('uses defaults when commands are null', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', null, null);
-      expect(prompt).toContain('npm test');
-      expect(prompt).toContain('npm run build');
+    it('does not hardcode any specific build tool commands', () => {
+      const prompt = templates.getVerifyPrompt('Add auth');
+      expect(prompt).not.toContain('`npm test`');
+      expect(prompt).not.toContain('`npm run build`');
+      expect(prompt).not.toContain('`npm run typecheck`');
+      expect(prompt).not.toContain('`npm run lint`');
     });
 
     it('instructs agent to use save_artifact tool for report', () => {
-      const prompt = templates.getVerifyPrompt('Add auth', null, null);
+      const prompt = templates.getVerifyPrompt('Add auth');
       expect(prompt).toContain('engineering_save_artifact');
       expect(prompt).toContain('type="report"');
     });
@@ -179,10 +196,6 @@ describe('PromptTemplates', () => {
       signals: [] as RiskSignal[],
       processLevel: 'standard' as const,
     };
-
-    it('returns null for onboard (auto-advance)', () => {
-      expect(templates.getPromptForStage('onboard', params)).toBeNull();
-    });
 
     it('returns prompt for build (agent implements the plan)', () => {
       const prompt = templates.getPromptForStage('build', params);

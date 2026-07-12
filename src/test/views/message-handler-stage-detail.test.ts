@@ -299,7 +299,7 @@ describe('handleWebviewMessage — Stage Detail Messages', () => {
     it('returns error when stage has no prompt template', async () => {
       vi.mocked(deps.promptTemplates.getPromptForStage).mockReturnValue(null);
 
-      await handler({ type: 'sendToAgent', stage: 'onboard' });
+      await handler({ type: 'sendToAgent', stage: 'build' });
 
       expect(replies[0].type).toBe('error');
     });

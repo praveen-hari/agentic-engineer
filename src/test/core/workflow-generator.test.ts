@@ -94,14 +94,14 @@ describe('WorkflowGenerator', () => {
   });
 
   describe('standard process', () => {
-    it('generates 7 stages: onboard, define, plan, build, verify, review, ship', () => {
+    it('generates 4 stages: plan, build, verify, review', () => {
       const wf = generator.generate(
         'wf-001',
         'Add feature',
         makeAssessment({ processLevel: 'standard' }),
       );
       const stageIds = wf.stages.map((s) => s.id);
-      expect(stageIds).toEqual(['onboard', 'define', 'plan', 'build', 'verify', 'review', 'ship']);
+      expect(stageIds).toEqual(['plan', 'build', 'verify', 'review']);
     });
 
     it('has at least 2 approvals (spec + review)', () => {
@@ -145,13 +145,13 @@ describe('WorkflowGenerator', () => {
   });
 
   describe('thorough process', () => {
-    it('generates 7 stages (same as standard, more gates)', () => {
+    it('generates 6 stages: define, plan, build, verify, review, ship', () => {
       const wf = generator.generate(
         'wf-001',
         'Add feature',
         makeAssessment({ processLevel: 'thorough' }),
       );
-      expect(wf.stages).toHaveLength(7);
+      expect(wf.stages).toHaveLength(6);
     });
 
     it('has more quality gates than standard', () => {
@@ -179,13 +179,13 @@ describe('WorkflowGenerator', () => {
   });
 
   describe('guarded process', () => {
-    it('generates 7 stages with none skippable', () => {
+    it('generates 6 stages with none skippable', () => {
       const wf = generator.generate(
         'wf-001',
         'Migrate DB',
         makeAssessment({ processLevel: 'guarded' }),
       );
-      expect(wf.stages).toHaveLength(7);
+      expect(wf.stages).toHaveLength(6);
       expect(wf.stages.every((s) => !s.skippable)).toBe(true);
     });
 

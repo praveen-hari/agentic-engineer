@@ -110,10 +110,11 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
   const stageGates = gates.filter((g) => g.stage === stage.id);
   const stageApprovals = approvals.filter((a) => a.status === 'pending');
   const stageArtifacts = artifacts.filter((a) => a.stage === stage.id);
-  // "Approve & Continue" is enabled when artifacts exist — clicking it
-  // auto-approves all pending approvals and advances the stage.
-  const hasArtifacts = stageArtifacts.length > 0;
-  const isCompleteReady = completion?.status === 'completed' || hasArtifacts;
+  // "Approve & Continue" is enabled when non-rejected artifacts exist.
+  const hasValidArtifacts = stageArtifacts.some((a) => a.status !== 'rejected');
+  // Guard: prevent rapid clicks while an action is in progress
+  const isActionInProgress = useSignal(false);
+  const isAgentBusy = agentSt === 'working' || agentSt === 'waiting-approval';
 
   return (
     <div class={`stage-accordion stage-accordion--${stage.status}`}>
@@ -245,30 +246,72 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
           {/* Action Buttons */}
           {isActive && (
             <div class="stage-actions-bar">
-              {onSendToAgent && (!agentSt || agentSt === 'idle') && stageArtifacts.length === 0 && (
-                <button class="btn btn-primary btn-sm" onClick={onSendToAgent}>
+              {onSendToAgent && !isAgentBusy && stageArtifacts.length === 0 && (
+                <button
+                  class="btn btn-primary btn-sm"
+                  disabled={isActionInProgress.value}
+                  onClick={() => {
+                    if (isActionInProgress.value) return;
+                    isActionInProgress.value = true;
+                    onSendToAgent();
+                    // Reset after a short delay to prevent double-clicks
+                    setTimeout(() => {
+                      isActionInProgress.value = false;
+                    }, 2000);
+                  }}
+                >
                   <Icon name="sparkle" size={12} /> Send to Agent
                 </button>
               )}
-              {onSendToAgent && (!agentSt || agentSt === 'idle') && stageArtifacts.length > 0 && (
-                <button class="btn btn-secondary btn-sm" onClick={onSendToAgent}>
+              {onSendToAgent && !isAgentBusy && stageArtifacts.length > 0 && (
+                <button
+                  class="btn btn-secondary btn-sm"
+                  disabled={isActionInProgress.value}
+                  onClick={() => {
+                    if (isActionInProgress.value) return;
+                    isActionInProgress.value = true;
+                    onSendToAgent();
+                    setTimeout(() => {
+                      isActionInProgress.value = false;
+                    }, 2000);
+                  }}
+                >
                   <Icon name="refresh" size={12} /> Regenerate
                 </button>
               )}
               {onCompleteStage && (
                 <button
-                  class={`btn btn-sm ${hasArtifacts ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={onCompleteStage}
-                  disabled={!hasArtifacts && completion?.status !== 'completed'}
+                  class={`btn btn-sm ${hasValidArtifacts ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => {
+                    if (isActionInProgress.value || isAgentBusy) return;
+                    isActionInProgress.value = true;
+                    onCompleteStage();
+                    setTimeout(() => {
+                      isActionInProgress.value = false;
+                    }, 2000);
+                  }}
+                  disabled={
+                    isActionInProgress.value ||
+                    isAgentBusy ||
+                    (!hasValidArtifacts && completion?.status !== 'completed')
+                  }
                   title={
-                    hasArtifacts ? 'Approve and move to next stage' : 'Generate the document first'
+                    isAgentBusy
+                      ? 'Wait for the agent to finish'
+                      : hasValidArtifacts
+                        ? 'Approve and move to next stage'
+                        : 'Generate the document first'
                   }
                 >
                   <Icon name="pass" size={12} /> Approve &amp; Continue
                 </button>
               )}
               {onSkipStage && stage.skippable && (
-                <button class="btn btn-secondary btn-sm" onClick={onSkipStage}>
+                <button
+                  class="btn btn-secondary btn-sm"
+                  disabled={isActionInProgress.value || isAgentBusy}
+                  onClick={onSkipStage}
+                >
                   Skip
                 </button>
               )}

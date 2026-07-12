@@ -92,14 +92,13 @@ export const MIN_APPROVALS: Readonly<Record<ProcessLevel, number>> = {
 /** Process level → base stages (DD-014). */
 export const BASE_STAGES: Readonly<Record<ProcessLevel, readonly LifecycleStage[]>> = {
   light: ['plan', 'build', 'verify'],
-  standard: ['onboard', 'define', 'plan', 'build', 'verify', 'review', 'ship'],
-  thorough: ['onboard', 'define', 'plan', 'build', 'verify', 'review', 'ship'],
-  guarded: ['onboard', 'define', 'plan', 'build', 'verify', 'review', 'ship'],
+  standard: ['plan', 'build', 'verify', 'review'],
+  thorough: ['define', 'plan', 'build', 'verify', 'review', 'ship'],
+  guarded: ['define', 'plan', 'build', 'verify', 'review', 'ship'],
 };
 
 /** Stage display names. */
 export const STAGE_NAMES: Readonly<Record<LifecycleStage, string>> = {
-  onboard: 'Onboard',
   define: 'Define',
   plan: 'Plan',
   build: 'Build',

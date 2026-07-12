@@ -304,7 +304,6 @@ interface ArtifactsTabProps {
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  onboard: 'Onboard',
   define: 'Define',
   plan: 'Plan',
   build: 'Build',
@@ -468,7 +467,7 @@ const CompleteState: FunctionalComponent = () => {
             bridge.send({ type: 'cancelWorkflow' });
           }}
         >
-          <Icon name="add" size={14} /> Archive &amp; Start New
+          <Icon name="add" size={14} /> Start New
         </button>
       </div>
     </div>

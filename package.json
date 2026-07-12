@@ -184,7 +184,7 @@
       {
         "name": "engineering_start_workflow",
         "displayName": "Start Engineering Workflow",
-        "modelDescription": "Starts a structured SDLC workflow. YOU (the agent) provide the assessment — workType, complexity, riskLevel — based on your understanding of the project and objective. Do NOT rely on keyword matching. Creates workflow stages and activates the first stage. After calling this tool, follow the stage's skill: DEFINE → spec-driven-development skill then engineering_save_artifact(type='spec'). PLAN → planning-and-task-breakdown skill then engineering_save_artifact(type='plan'). BUILD → incremental-implementation + test-driven-development skills. VERIFY → run tests then engineering_save_artifact(type='report'). REVIEW → code-review-and-quality skill then engineering_save_artifact(type='review'). SHIP → shipping-and-launch skill.",
+        "modelDescription": "Starts a structured SDLC workflow. YOU (the agent) provide the full assessment including processLevel. Choose processLevel based on your analysis of the task: light (3 stages: plan→build→verify) for typo fixes, docs, config changes, simple bug fixes with obvious solutions. standard (4 stages: plan→build→verify→review) for normal bug fixes, small features, refactors, anything needing code review. thorough (6 stages: define→plan→build→verify→review→ship) for complex features, architecture changes, API design, security work. guarded (6 stages + extra gates) for DB migrations, auth/payment changes, breaking changes, production deployments. The user's settings may override your choice. After calling this tool, follow the stage's skill: DEFINE → spec-driven-development skill then engineering_save_artifact(type='spec'). PLAN → planning-and-task-breakdown skill then engineering_save_artifact(type='plan'). BUILD → incremental-implementation + test-driven-development skills. VERIFY → run tests then engineering_save_artifact(type='report'). REVIEW → code-review-and-quality skill then engineering_save_artifact(type='review'). SHIP → shipping-and-launch skill.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "startWorkflow",
         "icon": "$(play)",
@@ -236,7 +236,7 @@
                 "thorough",
                 "guarded"
               ],
-              "description": "Optional. Process level override. If not provided, inferred from riskLevel + complexity. light=trivial fixes, standard=normal features, thorough=architecture/security, guarded=migrations/auth changes"
+              "description": "YOU must choose this based on your analysis. light (3 stages) = typo fixes, docs, simple bugs. standard (4 stages) = normal bugs, small features, refactors. thorough (6 stages) = complex features, architecture, security. guarded (6 stages + extra gates) = DB migrations, auth/payment, breaking changes."
             },
             "contextSignals": {
               "type": "array",
@@ -248,6 +248,7 @@
           },
           "required": [
             "objective",
+            "processLevel",
             "workType",
             "complexity",
             "riskLevel"

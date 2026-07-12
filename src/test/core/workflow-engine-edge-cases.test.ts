@@ -68,20 +68,20 @@ describe('WorkflowEngine — Edge Cases', () => {
       expect(stageIds).toEqual(['plan', 'build', 'verify']);
     });
 
-    it('standard process generates all 7 stages', () => {
+    it('standard process generates 4 stages', () => {
       const wf = engine.create('wf-1', 'Add feature', ASSESSMENTS.standard);
       const stageIds = wf.stages.map((s) => s.id);
-      expect(stageIds).toEqual(['onboard', 'define', 'plan', 'build', 'verify', 'review', 'ship']);
+      expect(stageIds).toEqual(['plan', 'build', 'verify', 'review']);
     });
 
-    it('thorough process generates all 7 stages', () => {
+    it('thorough process generates 6 stages', () => {
       const wf = engine.create('wf-1', 'Add auth', ASSESSMENTS.thorough);
-      expect(wf.stages).toHaveLength(7);
+      expect(wf.stages).toHaveLength(6);
     });
 
-    it('guarded process generates all 7 stages', () => {
+    it('guarded process generates 6 stages', () => {
       const wf = engine.create('wf-1', 'Add payment', ASSESSMENTS.guarded);
-      expect(wf.stages).toHaveLength(7);
+      expect(wf.stages).toHaveLength(6);
     });
   });
 
@@ -99,10 +99,10 @@ describe('WorkflowEngine — Edge Cases', () => {
       }
     });
 
-    it('standard: onboard and review are skippable', () => {
+    it('standard: only review is skippable', () => {
       const wf = engine.create('wf-1', 'Add feature', ASSESSMENTS.standard);
       for (const stage of wf.stages) {
-        if (stage.id === 'onboard' || stage.id === 'review') {
+        if (stage.id === 'review') {
           expect(stage.skippable).toBe(true);
         } else {
           expect(stage.skippable).toBe(false);
@@ -121,38 +121,33 @@ describe('WorkflowEngine — Edge Cases', () => {
   // ─── Skip + Advance Sequences ───────────────────────────────────────
 
   describe('skip then advance sequences', () => {
-    it('skipping first stage activates second stage', () => {
+    it('skipping review stage activates next stage', () => {
       const wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
-      expect(wf.stages[0].id).toBe('onboard');
-      expect(wf.stages[0].skippable).toBe(true);
-
-      const skipped = engine.skipStage(wf, 'onboard');
-      expect(skipped.stages[0].status).toBe('skipped');
-      expect(skipped.stages[1].status).toBe('active');
-      expect(skipped.state.currentStage).toBe('define');
+      // Advance through plan, build, verify to get to review
+      let current = wf;
+      while (current.state.currentStage !== 'review' && current.state.status === 'active') {
+        current = engine.advanceStage(current);
+      }
+      expect(current.state.currentStage).toBe('review');
+      const reviewStage = current.stages.find((s) => s.id === 'review')!;
+      expect(reviewStage.skippable).toBe(true);
     });
 
-    it('skip → advance → advance works correctly', () => {
+    it('advance → advance works correctly through standard stages', () => {
       const wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
-      const afterSkip = engine.skipStage(wf, 'onboard');
-      expect(afterSkip.state.currentStage).toBe('define');
+      expect(wf.state.currentStage).toBe('plan');
 
-      const afterAdvance1 = engine.advanceStage(afterSkip);
-      expect(afterAdvance1.state.currentStage).toBe('plan');
+      const afterAdvance1 = engine.advanceStage(wf);
+      expect(afterAdvance1.state.currentStage).toBe('build');
 
       const afterAdvance2 = engine.advanceStage(afterAdvance1);
-      expect(afterAdvance2.state.currentStage).toBe('build');
+      expect(afterAdvance2.state.currentStage).toBe('verify');
     });
 
     it('advancing through all stages completes the workflow', () => {
       let wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
       while (wf.state.status === 'active') {
-        const stage = wf.stages.find((s) => s.status === 'active')!;
-        if (stage.skippable && stage.id === 'onboard') {
-          wf = engine.skipStage(wf, stage.id);
-        } else {
-          wf = engine.advanceStage(wf);
-        }
+        wf = engine.advanceStage(wf);
       }
       expect(wf.state.status).toBe('completed');
       expect(wf.state.currentStage).toBeNull();
@@ -178,7 +173,8 @@ describe('WorkflowEngine — Edge Cases', () => {
 
     it('throws when skipping a pending (non-active) stage', () => {
       const wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
-      expect(() => engine.skipStage(wf, 'define')).toThrow(/not active/i);
+      // review is the only skippable stage in standard, but it's pending (not active)
+      expect(() => engine.skipStage(wf, 'review')).toThrow(/not active/i);
     });
 
     it('throws when skipping a non-skippable stage in guarded mode', () => {
@@ -227,10 +223,14 @@ describe('WorkflowEngine — Edge Cases', () => {
     });
 
     it('skip sets completedAt on skipped stage', () => {
-      const wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
-      const skipped = engine.skipStage(wf, 'onboard');
-
-      expect(skipped.stages[0].completedAt).toBeDefined();
+      // Advance to review (which is skippable in standard)
+      let wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
+      while (wf.state.currentStage !== 'review' && wf.state.status === 'active') {
+        wf = engine.advanceStage(wf);
+      }
+      const skipped = engine.skipStage(wf, 'review');
+      const reviewStage = skipped.stages.find((s) => s.id === 'review')!;
+      expect(reviewStage.completedAt).toBeDefined();
     });
 
     it('lastActivityAt updates on every state change', () => {
@@ -263,11 +263,17 @@ describe('WorkflowEngine — Edge Cases', () => {
     });
 
     it('skip returns a new object', () => {
-      const wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
-      const skipped = engine.skipStage(wf, 'onboard');
+      // Advance to review (which is skippable in standard)
+      let wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
+      while (wf.state.currentStage !== 'review' && wf.state.status === 'active') {
+        wf = engine.advanceStage(wf);
+      }
+      const reviewStage = wf.stages.find((s) => s.id === 'review')!;
+      const skipped = engine.skipStage(wf, 'review');
+      const skippedReview = skipped.stages.find((s) => s.id === 'review')!;
 
-      expect(wf.stages[0].status).toBe('active');
-      expect(skipped.stages[0].status).toBe('skipped');
+      expect(reviewStage.status).toBe('active');
+      expect(skippedReview.status).toBe('skipped');
     });
   });
 
@@ -292,7 +298,7 @@ describe('WorkflowEngine — Edge Cases', () => {
 
       while (wf.state.status === 'active') {
         const active = wf.stages.find((s) => s.status === 'active')!;
-        if (active.skippable && active.id === 'onboard') {
+        if (active.skippable && active.id === 'review') {
           wf = engine.skipStage(wf, active.id);
         } else {
           wf = engine.advanceStage(wf);

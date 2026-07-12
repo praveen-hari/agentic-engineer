@@ -65,7 +65,7 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
       'Optimizes agent context setup — rules files, context configuration, and project context for AI sessions.',
     activation: {
       mode: 'always',
-      stages: ['onboard', 'define', 'plan', 'build'],
+      stages: ['define', 'plan', 'build'],
     },
   },
   {
@@ -387,7 +387,7 @@ const SKILL_DEFINITIONS: readonly SkillDefinition[] = [
       'Discovers and invokes agent skills — meta-skill that governs how all other skills are found and activated.',
     activation: {
       mode: 'always',
-      stages: ['onboard', 'define'],
+      stages: ['define', 'plan'],
     },
   },
   {

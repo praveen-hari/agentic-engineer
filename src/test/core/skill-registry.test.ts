@@ -116,10 +116,10 @@ describe('SkillRegistry', () => {
       expect(skills.map((s) => s.id)).toContain('shipping-and-launch');
     });
 
-    it('returns empty array for a stage with no skills', () => {
-      const skills = registry.getByStage('onboard');
-      // onboard may have skills or not — just verify it doesn't crash
+    it('returns skills for define stage', () => {
+      const skills = registry.getByStage('define');
       expect(Array.isArray(skills)).toBe(true);
+      expect(skills.length).toBeGreaterThan(0);
     });
   });
 

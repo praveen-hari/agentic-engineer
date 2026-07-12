@@ -330,7 +330,7 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       expect(replies.some((r) => r.type === 'state' && r.workflow === null)).toBe(true);
     });
 
-    it('replies with error when no workflow exists', async () => {
+    it('gracefully resets UI when no workflow exists (already archived)', async () => {
       const deps = createMockDeps();
       vi.mocked(deps.stateManager.load).mockResolvedValue(null);
       const replies: MessageToWebview[] = [];
@@ -338,7 +338,9 @@ describe('Phase 7: Presentation Layer Fixes', () => {
 
       await handler({ type: 'cancelWorkflow' });
 
-      expect(replies[0].type).toBe('error');
+      // Should reset UI to empty state, not show an error
+      expect(replies[0].type).toBe('state');
+      expect((replies[0] as { workflow: null }).workflow).toBeNull();
     });
   });
 

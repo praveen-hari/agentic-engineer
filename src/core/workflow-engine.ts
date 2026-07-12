@@ -222,7 +222,7 @@ export class WorkflowEngine {
       return stage === 'review';
     }
 
-    // Standard/Thorough: onboard and review are skippable
-    return stage === 'onboard' || stage === 'review';
+    // Standard/Thorough: review is skippable
+    return stage === 'review';
   }
 }

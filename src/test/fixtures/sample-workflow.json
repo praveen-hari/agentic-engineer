@@ -13,17 +13,6 @@
   ],
   "stages": [
     {
-      "id": "onboard",
-      "name": "Onboard",
-      "status": "completed",
-      "skippable": false,
-      "entryConditions": [],
-      "exitConditions": [],
-      "artifacts": ["context.md"],
-      "startedAt": "2026-07-11T10:00:00Z",
-      "completedAt": "2026-07-11T10:05:00Z"
-    },
-    {
       "id": "define",
       "name": "Define",
       "status": "active",

@@ -17,6 +17,7 @@ import { BranchWatcher } from './services/branch-watcher.service';
 import { PromptTemplates } from './core/prompt-templates';
 import { SetupProjectTool } from './ai/tools/setup-project.tool';
 import { StartWorkflowTool } from './ai/tools/start-workflow.tool';
+import type { ProcessLevel } from './core/types';
 import { SaveArtifactTool } from './ai/tools/save-artifact.tool';
 import { AdvanceStageTool } from './ai/tools/advance-stage.tool';
 import { ChatParticipantHandler } from './chat/chat-participant';
@@ -74,6 +75,31 @@ export function activate(context: vscode.ExtensionContext): void {
     });
   });
 
+  // Config reader: reads processLevelDefault from .codestudio/config.json
+  const configPath = workspaceRoot
+    ? `${workspaceRoot}/${WORKFLOW_DIR}/config.json`
+    : `/${WORKFLOW_DIR}/config.json`;
+  const readConfigLevel = async (): Promise<ProcessLevel | 'auto'> => {
+    try {
+      if (await fsService.exists(configPath)) {
+        const raw = await fsService.read(configPath);
+        const config = JSON.parse(raw) as Record<string, unknown>;
+        const level = config.processLevelDefault ?? config.processLevel;
+        if (
+          level === 'light' ||
+          level === 'standard' ||
+          level === 'thorough' ||
+          level === 'guarded'
+        ) {
+          return level;
+        }
+      }
+    } catch {
+      // Corrupt or missing config — fall through to 'auto'
+    }
+    return 'auto';
+  };
+
   const startWorkflowTool = new StartWorkflowTool(
     workflowGenerator,
     workflowEngine,
@@ -83,6 +109,7 @@ export function activate(context: vscode.ExtensionContext): void {
     (wf) => {
       panelProvider.postMessage({ type: 'state', workflow: wf });
     },
+    readConfigLevel,
   );
 
   const saveArtifactTool = new SaveArtifactTool(artifactManager, (_artifact) => {

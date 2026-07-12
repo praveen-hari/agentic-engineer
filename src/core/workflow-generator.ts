@@ -78,7 +78,7 @@ export class WorkflowGenerator {
   private isStageSkippable(stage: string, processLevel: ProcessLevel): boolean {
     if (processLevel === 'guarded') return false;
     if (processLevel === 'light') return stage === 'review';
-    return stage === 'onboard' || stage === 'review';
+    return stage === 'review';
   }
 
   // ─── Quality Gate Generation ───────────────────────────────────────────

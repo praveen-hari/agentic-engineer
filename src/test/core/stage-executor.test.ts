@@ -25,7 +25,6 @@ function makeWorkflow(overrides: Partial<WorkflowDefinition> = {}): WorkflowDefi
     processLevel: 'standard',
     detectedRisks: [],
     stages: [
-      makeStage('onboard', 'completed'),
       makeStage('define', 'active'),
       makeStage('plan', 'pending'),
       makeStage('build', 'pending'),
@@ -106,7 +105,7 @@ describe('StageExecutor', () => {
   describe('getStageAction()', () => {
     it('returns null when no stage is active', () => {
       const wf = makeWorkflow({
-        stages: [makeStage('onboard', 'completed'), makeStage('define', 'completed')],
+        stages: [makeStage('define', 'completed'), makeStage('plan', 'completed')],
         state: { ...makeWorkflow().state, currentStage: null },
       });
       expect(executor.getStageAction(wf)).toBeNull();
@@ -130,15 +129,15 @@ describe('StageExecutor', () => {
       expect(action!.skills).toContain('spec-driven-development');
     });
 
-    it('onboard stage has no required artifacts', () => {
+    it('build stage has no required artifacts or gates', () => {
       const wf = makeWorkflow({
-        stages: [makeStage('onboard', 'active'), makeStage('define', 'pending')],
-        state: { ...makeWorkflow().state, currentStage: 'onboard' },
+        stages: [makeStage('build', 'active'), makeStage('verify', 'pending')],
+        state: { ...makeWorkflow().state, currentStage: 'build' },
       });
       const action = executor.getStageAction(wf);
 
       expect(action!.requiredArtifacts).toEqual([]);
-      expect(action!.autoAdvance).toBe(true);
+      expect(action!.autoAdvance).toBe(false);
     });
 
     it('light process does not require spec artifact', () => {
@@ -157,10 +156,9 @@ describe('StageExecutor', () => {
       expect(action!.requiredArtifacts).not.toContain('plan');
     });
 
-    it('build stage has no required artifacts', () => {
+    it('build stage after completed stages has no required artifacts', () => {
       const wf = makeWorkflow({
         stages: [
-          makeStage('onboard', 'completed'),
           makeStage('define', 'completed'),
           makeStage('plan', 'completed'),
           makeStage('build', 'active'),
@@ -178,8 +176,8 @@ describe('StageExecutor', () => {
       const wf = makeWorkflow({
         qualityGates: [],
         approvals: [],
-        stages: [makeStage('onboard', 'active')],
-        state: { ...makeWorkflow().state, currentStage: 'onboard' },
+        stages: [makeStage('build', 'active')],
+        state: { ...makeWorkflow().state, currentStage: 'build' },
       });
 
       const result = executor.evaluateStageCompletion(wf, []);
@@ -226,7 +224,7 @@ describe('StageExecutor', () => {
 
     it('returns completed when no active stage', () => {
       const wf = makeWorkflow({
-        stages: [makeStage('onboard', 'completed')],
+        stages: [makeStage('plan', 'completed')],
         state: { ...makeWorkflow().state, currentStage: null },
       });
       const result = executor.evaluateStageCompletion(wf, []);
@@ -245,7 +243,7 @@ describe('StageExecutor', () => {
 
     it('returns fallback when no active stage', () => {
       const wf = makeWorkflow({
-        stages: [makeStage('onboard', 'completed')],
+        stages: [makeStage('plan', 'completed')],
         state: { ...makeWorkflow().state, currentStage: null },
       });
       const instructions = executor.getStageInstructions(wf);

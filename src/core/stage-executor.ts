@@ -53,7 +53,7 @@ export class StageExecutor {
     const activeStage = workflow.stages.find((s) => s.status === 'active');
     if (!activeStage) {
       return {
-        stage: workflow.state.currentStage ?? 'onboard',
+        stage: workflow.state.currentStage ?? 'plan',
         status: 'completed',
         artifacts: [],
         pendingGates: [],
@@ -249,12 +249,6 @@ interface StageConfig {
 }
 
 const STAGE_CONFIG: Readonly<Record<LifecycleStage, StageConfig>> = {
-  onboard: {
-    description: 'Onboard — Analyze workspace and establish project context',
-    artifacts: [],
-    gates: [],
-    autoAdvance: true,
-  },
   define: {
     description: 'Define — Capture objective and produce specification',
     artifacts: ['spec'],
@@ -301,16 +295,6 @@ interface StageInstructionDef {
 }
 
 const STAGE_INSTRUCTIONS: Readonly<Record<LifecycleStage, StageInstructionDef>> = {
-  onboard: {
-    description:
-      'Analyze the workspace, detect the tech stack, and establish project context. This stage runs automatically on first activation.',
-    steps: [
-      'Scan workspace files and detect languages, frameworks, and conventions',
-      'Generate project context document (.codestudio/context.md)',
-      'Configure agent skills based on detected stack',
-      'Detect existing CI/CD, testing, and deployment configuration',
-    ],
-  },
   define: {
     description:
       "Capture the user's objective and produce a structured specification. The spec is the shared source of truth — it defines what we're building, why, and how we'll know it's done.",

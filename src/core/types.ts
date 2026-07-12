@@ -22,7 +22,7 @@ export type Complexity = 'trivial' | 'simple' | 'moderate' | 'complex' | 'critic
 
 export type RiskLevel = 'low' | 'medium' | 'high';
 
-export type LifecycleStage = 'onboard' | 'define' | 'plan' | 'build' | 'verify' | 'review' | 'ship';
+export type LifecycleStage = 'define' | 'plan' | 'build' | 'verify' | 'review' | 'ship';
 
 export type SkillCategory =
   'always' | 'by-task-type' | 'by-context' | 'interactive' | 'quality-gate' | 'specialist';
@@ -249,6 +249,7 @@ export type MessageToHost =
   | { readonly type: 'notifyArtifactDetected'; readonly artifact: Artifact }
   | { readonly type: 'openArtifact'; readonly artifactId: string }
   | { readonly type: 'cancelWorkflow' }
+  | { readonly type: 'requestSettings' }
   | { readonly type: 'updateSettings'; readonly settings: Partial<WorkspaceConfig> };
 
 export type MessageToWebview =
@@ -297,7 +298,15 @@ export type MessageToWebview =
       readonly stage?: LifecycleStage;
       readonly message?: string;
     }
-  | { readonly type: 'settingsUpdated' };
+  | { readonly type: 'settingsUpdated' }
+  | {
+      readonly type: 'settingsLoaded';
+      readonly settings: {
+        readonly processLevelDefault: string;
+        readonly autoApproveLowRisk: boolean;
+        readonly reviewTimeoutMinutes: number;
+      };
+    };
 
 // ─── Agent Activity ────────────────────────────────────────────────────────
 

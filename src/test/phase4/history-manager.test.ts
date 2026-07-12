@@ -25,17 +25,6 @@ const COMPLETED_WORKFLOW: WorkflowDefinition = {
   detectedRisks: [],
   stages: [
     {
-      id: 'onboard',
-      name: 'Onboard',
-      status: 'completed',
-      skippable: true,
-      entryConditions: [],
-      exitConditions: [],
-      artifacts: [],
-      startedAt: '2026-07-11T10:00:00Z',
-      completedAt: '2026-07-11T10:01:00Z',
-    },
-    {
       id: 'define',
       name: 'Define',
       status: 'completed',
@@ -222,7 +211,7 @@ describe('Phase 4: HistoryManager', () => {
 
       const entries = await historyManager.loadHistory(2026);
       expect(entries[0].stats).toBeDefined();
-      expect(entries[0].stats!.stagesCompleted).toBe(6); // 6 completed
+      expect(entries[0].stats!.stagesCompleted).toBe(5); // 5 completed
       expect(entries[0].stats!.stagesSkipped).toBe(1); // 1 skipped (review)
       expect(entries[0].stats!.approvalsGranted).toBe(2);
     });

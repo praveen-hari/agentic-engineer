@@ -58,10 +58,17 @@ export const App: FunctionalComponent = () => {
           activeView.value = msg.view;
           break;
         case 'state':
-          workflowStore.value = msg.workflow;
+          if (msg.workflow === null) {
+            // Workflow cancelled/cleared — reset all related state
+            actions.resetWorkflowState();
+          } else {
+            workflowStore.value = msg.workflow;
+          }
           isAnalyzing.value = false;
           // Auto-refresh stage detail when workflow state changes
-          bridge.send({ type: 'requestStageDetail' });
+          if (msg.workflow) {
+            bridge.send({ type: 'requestStageDetail' });
+          }
           break;
         case 'stageResult':
           // Stage is blocked — refresh stage detail to show what's missing

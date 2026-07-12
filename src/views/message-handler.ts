@@ -134,6 +134,9 @@ export function handleWebviewMessage(
         case 'cancelWorkflow':
           await handleCancelWorkflow(deps, reply);
           break;
+        case 'requestSettings':
+          await handleRequestSettings(deps, reply);
+          break;
         case 'updateSettings':
           await handleUpdateSettings(deps, reply, msg.settings);
           break;
@@ -173,6 +176,7 @@ const VALID_MESSAGE_TYPES = new Set<string>([
   'notifyArtifactDetected',
   'openArtifact',
   'cancelWorkflow',
+  'requestSettings',
   'updateSettings',
 ]);
 
@@ -295,12 +299,17 @@ async function handleAnalyzeObjective(
 
 Call \`engineering_start_workflow\` tool with:
 - objective: "${objective}"
-- workType: your assessment (feature/bugfix/refactor/etc.)
+- workType: your assessment (feature/bugfix/refactor/infrastructure/documentation/security)
 - complexity: your assessment (trivial/simple/moderate/complex/critical)
 - riskLevel: your assessment (low/medium/high)
+- processLevel: your assessment — choose based on the task:
+  • **light** (3 stages: plan→build→verify) — typo fixes, docs, config changes, simple bug fixes
+  • **standard** (4 stages: plan→build→verify→review) — normal bugs, small features, refactors
+  • **thorough** (6 stages: define→plan→build→verify→review→ship) — complex features, architecture, security
+  • **guarded** (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
 - contextSignals: what the project touches
 
-Determine the workType, complexity, and riskLevel yourself based on the objective and project context.`;
+Determine ALL fields yourself based on the objective and project context. Be realistic — don't over-assess simple tasks.`;
 
   await deps.agentBridge.sendToChat(prompt);
 
@@ -315,11 +324,22 @@ async function handleStartWorkflow(
   objective: string,
   assessment: RiskAssessment,
 ): Promise<void> {
-  // 0. Archive previous workflow if one exists (completed or failed)
+  // 0. Handle existing workflow
   const existing = await deps.stateManager.load();
-  if (existing && (existing.state.status === 'completed' || existing.state.status === 'failed')) {
-    await deps.historyManager.archiveWorkflow(existing);
-    await deps.stateManager.clear();
+  if (existing) {
+    if (existing.state.status === 'active') {
+      // Block: don't silently overwrite an active workflow
+      reply({
+        type: 'error',
+        message: 'A workflow is already active. Cancel or complete it before starting a new one.',
+      });
+      return;
+    }
+    // Archive completed/failed workflows
+    if (existing.state.status === 'completed' || existing.state.status === 'failed') {
+      await deps.historyManager.archiveWorkflow(existing);
+      await deps.stateManager.clear();
+    }
   }
 
   // 1. Generate workflow definition (stages, gates, skills, approvals)
@@ -408,6 +428,44 @@ async function handleRequestHistory(deps: MessageHandlerDeps, reply: ReplyFn): P
 
 // ─── Settings Handler ───────────────────────────────────────────────────────
 
+async function handleRequestSettings(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  const root = deps.workspaceService.getWorkspaceRoot();
+  if (!root) {
+    reply({
+      type: 'settingsLoaded',
+      settings: {
+        processLevelDefault: 'auto',
+        autoApproveLowRisk: false,
+        reviewTimeoutMinutes: 30,
+      },
+    });
+    return;
+  }
+
+  const configPath = `${root}/${WORKFLOW_DIR}/config.json`;
+  try {
+    if (await deps.fileSystem.exists(configPath)) {
+      const content = await deps.fileSystem.read(configPath);
+      const config = JSON.parse(content) as Record<string, unknown>;
+      reply({
+        type: 'settingsLoaded',
+        settings: {
+          processLevelDefault: (config.processLevelDefault as string) ?? 'auto',
+          autoApproveLowRisk: (config.autoApproveLowRisk as boolean) ?? false,
+          reviewTimeoutMinutes: (config.reviewTimeoutMinutes as number) ?? 30,
+        },
+      });
+      return;
+    }
+  } catch {
+    // Corrupt config — return defaults
+  }
+  reply({
+    type: 'settingsLoaded',
+    settings: { processLevelDefault: 'auto', autoApproveLowRisk: false, reviewTimeoutMinutes: 30 },
+  });
+}
+
 async function handleUpdateSettings(
   deps: MessageHandlerDeps,
   reply: ReplyFn,
@@ -443,18 +501,15 @@ async function handleUpdateSettings(
 
 async function handleCancelWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const wf = await deps.stateManager.load();
-  if (!wf) {
-    reply({ type: 'error', message: 'No active workflow to cancel' });
-    return;
+
+  if (wf) {
+    // Archive the workflow (even if incomplete — preserves history)
+    await deps.historyManager.archiveWorkflow(wf);
+    // Clear the on-disk state so requestState doesn't reload the old workflow
+    await deps.stateManager.clear();
   }
 
-  // Archive the workflow (even if incomplete — preserves history)
-  await deps.historyManager.archiveWorkflow(wf);
-
-  // Clear the on-disk state so requestState doesn't reload the old workflow
-  await deps.stateManager.clear();
-
-  // Reply with null workflow — webview shows empty state
+  // Always reset the UI — even if workflow was already archived/cleared
   reply({ type: 'state', workflow: null });
 }
 
@@ -513,9 +568,10 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
       // Step 3: Advance to next stage (separate update for version safety)
       const advanced = await deps.stateManager.update((wf) => deps.workflowEngine.advanceStage(wf));
 
-      // Step 4: Archive if workflow is now completed (last stage advanced)
+      // Step 4: Archive and clear if workflow is now completed (last stage advanced)
       if (advanced.state.status === 'completed') {
         await deps.historyManager.archiveWorkflow(advanced);
+        await deps.stateManager.clear();
       }
 
       reply({ type: 'state', workflow: advanced });
@@ -579,6 +635,11 @@ When they respond, call \`engineering_start_workflow\` tool with:
 - \`workType\`: your assessment — "feature", "bugfix", "refactor", "infrastructure", "documentation", or "security"
 - \`complexity\`: your assessment — "trivial", "simple", "moderate", "complex", or "critical"
 - \`riskLevel\`: your assessment — "low", "medium", or "high"
+- \`processLevel\`: your assessment — choose the right level for the task:
+  • "light" (3 stages) — typo fixes, docs, config changes, simple bug fixes
+  • "standard" (4 stages) — normal bugs, small features, refactors
+  • "thorough" (6 stages) — complex features, architecture, security
+  • "guarded" (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
 - \`contextSignals\`: what the project touches — e.g. ["touches_ui", "touches_api", "touches_auth_or_input"]
 
 Then follow the SDLC stages using the skills and tools as instructed by the start_workflow response.`;
@@ -623,9 +684,14 @@ Based on the interview and workspace scan, create these files:
 ### Step 4: Call \`engineering_start_workflow\` tool
 YOU determine and provide these arguments based on the interview:
 - \`objective\`: the refined objective from the interview
-- \`workType\`: "feature", "bugfix", "refactor", etc.
+- \`workType\`: "feature", "bugfix", "refactor", "infrastructure", "documentation", or "security"
 - \`complexity\`: "trivial", "simple", "moderate", "complex", "critical"
 - \`riskLevel\`: "low", "medium", "high"
+- \`processLevel\`: choose the right level for the task:
+  • "light" (3 stages) — typo fixes, docs, config changes, simple bug fixes
+  • "standard" (4 stages) — normal bugs, small features, refactors
+  • "thorough" (6 stages) — complex features, architecture, security
+  • "guarded" (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
 - \`contextSignals\`: what the project touches (e.g., ["touches_ui", "touches_api"])
 
 ### Step 5: Follow the SDLC stages
@@ -699,7 +765,7 @@ async function handleRequestStageDetail(deps: MessageHandlerDeps, reply: ReplyFn
       stage: null,
       action: null,
       completion: {
-        stage: 'onboard',
+        stage: 'plan',
         status: 'completed',
         artifacts: [],
         pendingGates: [],
@@ -782,8 +848,6 @@ async function handleSendToAgent(
     signals: wf.detectedRisks,
     processLevel: wf.processLevel,
     specPath,
-    testCommand: null,
-    buildCommand: 'npm run build',
   });
 
   if (!prompt) {
