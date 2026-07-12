@@ -174,7 +174,7 @@ const ScanningScreen: FunctionalComponent = () => {
     <div class="onboarding">
       <div class="onboarding__hero">
         <div class="onboarding__icon">
-          <Icon name="loading" size={32} spin />
+          <Icon name="gear" size={32} />
         </div>
         <h2 class="onboarding__title">Setting Up Project...</h2>
         <p class="onboarding__subtitle">
