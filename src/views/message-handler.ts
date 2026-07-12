@@ -705,6 +705,7 @@ async function handlePauseWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Pr
   try {
     const updated = await deps.stateManager.update((wf) => deps.workflowEngine.pause(wf));
     await handleCancelAgent(); // Stop the agent
+    reply({ type: 'agentStatus', status: 'idle' }); // Reset agent status
     reply({ type: 'state', workflow: updated });
   } catch (err) {
     reply({ type: 'error', message: err instanceof Error ? err.message : 'Cannot pause workflow' });
@@ -715,6 +716,27 @@ async function handleResumeWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): P
   try {
     const updated = await deps.stateManager.update((wf) => deps.workflowEngine.resume(wf));
     reply({ type: 'state', workflow: updated });
+
+    // Send the agent back to work on the current stage
+    const stage = updated.state.currentStage;
+    if (stage) {
+      const prompt = deps.promptTemplates.getPromptForStage(stage, {
+        objective: updated.objective,
+        context: null,
+        signals: updated.detectedRisks,
+        processLevel: updated.processLevel,
+        specPath: undefined,
+      });
+
+      if (prompt) {
+        reply({
+          type: 'agentStatus',
+          status: 'working',
+          message: `Resuming ${stage} stage...`,
+        });
+        await deps.agentBridge.sendToChat(prompt);
+      }
+    }
   } catch (err) {
     reply({
       type: 'error',
