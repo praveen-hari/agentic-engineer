@@ -717,25 +717,15 @@ async function handleResumeWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): P
     const updated = await deps.stateManager.update((wf) => deps.workflowEngine.resume(wf));
     reply({ type: 'state', workflow: updated });
 
-    // Send the agent back to work on the current stage
+    // Send "Continue" to the agent — it already has context from the previous chat
     const stage = updated.state.currentStage;
     if (stage) {
-      const prompt = deps.promptTemplates.getPromptForStage(stage, {
-        objective: updated.objective,
-        context: null,
-        signals: updated.detectedRisks,
-        processLevel: updated.processLevel,
-        specPath: undefined,
+      reply({
+        type: 'agentStatus',
+        status: 'working',
+        message: `Resuming ${stage} stage...`,
       });
-
-      if (prompt) {
-        reply({
-          type: 'agentStatus',
-          status: 'working',
-          message: `Resuming ${stage} stage...`,
-        });
-        await deps.agentBridge.sendToChat(prompt);
-      }
+      await deps.agentBridge.sendToChat('Continue');
     }
   } catch (err) {
     reply({
