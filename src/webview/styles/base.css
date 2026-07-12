@@ -14,11 +14,14 @@ body {
 
 body {
   font-family: var(--font-ui);
-  font-size: var(--font-size-md);
+  font-size: var(--vscode-font-size, var(--font-size-md));
+  font-weight: var(--vscode-font-weight, normal);
   color: var(--color-text);
   background: var(--color-bg);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+  line-height: 1.4;
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  letter-spacing: normal;
 }
 
 #root {

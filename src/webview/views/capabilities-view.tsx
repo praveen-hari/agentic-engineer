@@ -106,7 +106,7 @@ export const CapabilitiesView: FunctionalComponent = () => {
       {store.installed.length > 0 && !store.searchQuery && (
         <div class="mp-section">
           <div class="mp-section-header">
-            <span class="mp-section-title">Added</span>
+            <span class="mp-section-title">Installed</span>
             <span class="mp-section-count">{store.installed.length}</span>
           </div>
           <div class="mp-installed-grid">
@@ -271,7 +271,7 @@ interface InstalledIconProps {
 }
 
 const InstalledIcon: FunctionalComponent<InstalledIconProps> = ({ plugin, onUninstall }) => (
-  <div class="mp-installed-item" title={`${plugin.name} — Click to remove`}>
+  <div class="mp-installed-item" title={plugin.name}>
     <img
       class="mp-installed-icon"
       src={plugin.icon}
@@ -282,6 +282,7 @@ const InstalledIcon: FunctionalComponent<InstalledIconProps> = ({ plugin, onUnin
         (e.target as HTMLImageElement).style.display = 'none';
       }}
     />
+    <span class="mp-installed-label">{plugin.name}</span>
     <button class="mp-installed-remove" onClick={() => onUninstall(plugin.id)} title="Remove">
       <Icon name="close" size={10} />
     </button>
