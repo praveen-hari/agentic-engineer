@@ -238,7 +238,9 @@ const ActiveState: FunctionalComponent = () => {
             <button
               class="btn btn-secondary btn-sm tasks-delete-btn"
               title="Delete this task permanently"
-              onClick={() => { showDeleteConfirm.value = true; }}
+              onClick={() => {
+                showDeleteConfirm.value = true;
+              }}
             >
               <Icon name="close" size={12} />
             </button>
@@ -299,7 +301,9 @@ const ActiveState: FunctionalComponent = () => {
           message="This will permanently delete the current task and all its artifacts. This cannot be undone."
           confirmLabel="Delete"
           confirmDanger
-          onCancel={() => { showDeleteConfirm.value = false; }}
+          onCancel={() => {
+            showDeleteConfirm.value = false;
+          }}
           onConfirm={() => {
             showDeleteConfirm.value = false;
             bridge.send({ type: 'cancelAgent' });

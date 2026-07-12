@@ -152,6 +152,9 @@ export function activate(context: vscode.ExtensionContext): void {
     artifactManager,
     (wf) => {
       panelProvider.postMessage({ type: 'state', workflow: wf });
+      // Reset agent status so buttons become clickable
+      // (agent finished its work — now waiting for user action)
+      panelProvider.postMessage({ type: 'agentStatus', status: 'idle' });
     },
     readApprovalMode,
   );

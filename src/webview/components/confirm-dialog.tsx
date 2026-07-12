@@ -38,16 +38,17 @@ export const ConfirmDialog: FunctionalComponent<ConfirmDialogProps> = ({
       <div class="confirm-dialog-icon">
         <Icon name={icon} size={24} />
       </div>
-      <h3 id="confirm-title" class="confirm-dialog-title">{title}</h3>
-      <p id="confirm-message" class="confirm-dialog-message">{message}</p>
+      <h3 id="confirm-title" class="confirm-dialog-title">
+        {title}
+      </h3>
+      <p id="confirm-message" class="confirm-dialog-message">
+        {message}
+      </p>
       <div class="confirm-dialog-actions">
         <button class="btn btn-secondary" onClick={onCancel}>
           Cancel
         </button>
-        <button
-          class={`btn ${confirmDanger ? 'btn-danger' : 'btn-primary'}`}
-          onClick={onConfirm}
-        >
+        <button class={`btn ${confirmDanger ? 'btn-danger' : 'btn-primary'}`} onClick={onConfirm}>
           {confirmLabel}
         </button>
       </div>
