@@ -1092,6 +1092,36 @@
   flex: 1;
 }
 
+/* ─── Knowledge Refresh Card (Done screen) ─────────────────────── */
+
+.knowledge-refresh-card {
+  border-left: 3px solid var(--color-info);
+}
+
+.knowledge-refresh-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.knowledge-refresh-title {
+  font-weight: 600;
+  font-size: var(--font-sm);
+}
+
+.knowledge-refresh-body {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+.knowledge-refresh-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 /* ─── Button Variants ───────────────────────────────────────────── */
 
 .btn-primary {

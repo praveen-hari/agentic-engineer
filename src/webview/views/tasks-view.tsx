@@ -12,7 +12,7 @@
  */
 import { type FunctionalComponent } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { useComputed } from '@preact/signals';
+import { useComputed, useSignal } from '@preact/signals';
 import type { WorkflowDefinition, AgentActivityStatus, Artifact } from '../../core/types';
 import type { StageDetailData } from '../store/workflow.store';
 import {
@@ -470,6 +470,9 @@ const CompleteState: FunctionalComponent = () => {
         </div>
       </div>
 
+      {/* Knowledge Refresh */}
+      <KnowledgeRefreshCard />
+
       {/* Actions */}
       <div class="complete-actions">
         <button
@@ -488,6 +491,54 @@ const CompleteState: FunctionalComponent = () => {
         >
           <Icon name="add" size={14} /> Start New
         </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Knowledge Refresh Card (shown on Done screen) ───────────────────────
+
+const KnowledgeRefreshCard: FunctionalComponent = () => {
+  const status = useSignal<'idle' | 'refreshing' | 'done' | 'dismissed'>('idle');
+
+  if (status.value === 'dismissed' || status.value === 'done') return null;
+
+  return (
+    <div class="card knowledge-refresh-card">
+      <div class="knowledge-refresh-header">
+        <Icon name="book" size={16} />
+        <span class="knowledge-refresh-title">Update Project Knowledge?</span>
+      </div>
+      <div class="knowledge-refresh-body">
+        This workflow may have changed the architecture, tech stack, or conventions.
+        Update knowledge files so the agent stays informed.
+      </div>
+      <div class="knowledge-refresh-actions">
+        {status.value === 'refreshing' ? (
+          <button class="btn btn-primary btn-sm" disabled>
+            <Icon name="loading" size={12} spin /> Updating...
+          </button>
+        ) : (
+          <>
+            <button
+              class="btn btn-primary btn-sm"
+              onClick={() => {
+                status.value = 'refreshing';
+                bridge.send({ type: 'refreshKnowledge' });
+                // Auto-mark done after a delay (agent works async)
+                setTimeout(() => { status.value = 'done'; }, 3000);
+              }}
+            >
+              <Icon name="refresh" size={12} /> Update Knowledge
+            </button>
+            <button
+              class="btn btn-secondary btn-sm"
+              onClick={() => { status.value = 'dismissed'; }}
+            >
+              Skip
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -697,14 +697,8 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
         await deps.historyManager.archiveWorkflow(advanced);
         await deps.stateManager.clear();
 
-        // Step 5: Prompt agent to check if knowledge needs updating
-        // In user mode: agent asks user before updating
-        // In agent mode: agent updates directly
-        const knowledgePrompt =
-          deps.approvalMode === 'agent'
-            ? 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, update the relevant knowledge files in .codestudio/knowledge/ directly.'
-            : 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, tell the user which knowledge files may need updating and ask if they want you to refresh them.';
-        void deps.agentBridge.sendToChat(knowledgePrompt);
+        // Knowledge refresh is handled by the Done screen UI
+        // (KnowledgeRefreshCard) — user clicks "Update Knowledge" or "Skip"
       }
 
       reply({ type: 'state', workflow: advanced });
