@@ -108,7 +108,7 @@ export const HistoryView: FunctionalComponent = () => {
         <table class="history-table">
           <thead>
             <tr>
-              <th class="history-th history-th--objective">Objective</th>
+              <th class="history-th history-th--objective">Task</th>
               <th class="history-th">Type</th>
               <th class="history-th">Level</th>
               <th class="history-th">Stages</th>
