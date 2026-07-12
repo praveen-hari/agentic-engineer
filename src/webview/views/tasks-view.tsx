@@ -12,7 +12,7 @@
  */
 import { type FunctionalComponent } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { useComputed } from '@preact/signals';
+import { useComputed, useSignal } from '@preact/signals';
 import type { WorkflowDefinition, AgentActivityStatus, Artifact } from '../../core/types';
 import type { StageDetailData } from '../store/workflow.store';
 import {
@@ -32,6 +32,7 @@ import { Icon } from '../components/icon';
 import { ProgressBar } from '../components/progress-bar';
 import { RiskBadge } from '../components/risk-badge';
 import { StageAccordion } from '../components/stage-accordion';
+import { ConfirmDialog } from '../components/confirm-dialog';
 
 // ─── Quick Start suggestions ────────────────────────────────────────────────
 
@@ -198,6 +199,7 @@ const ActiveState: FunctionalComponent = () => {
   const agentMsg = agentStatusMessage.value;
   const activeTab = tasksActiveTab;
   const allArtifacts = detail?.artifacts ?? [];
+  const showDeleteConfirm = useSignal(false);
 
   // Request stage detail on mount and when workflow changes
   useEffect(() => {
@@ -236,10 +238,7 @@ const ActiveState: FunctionalComponent = () => {
             <button
               class="btn btn-secondary btn-sm tasks-delete-btn"
               title="Delete this task permanently"
-              onClick={() => {
-                bridge.send({ type: 'cancelAgent' });
-                bridge.send({ type: 'deleteWorkflow' });
-              }}
+              onClick={() => { showDeleteConfirm.value = true; }}
             >
               <Icon name="close" size={12} />
             </button>
@@ -290,6 +289,23 @@ const ActiveState: FunctionalComponent = () => {
         <StagesTab wf={wf} detail={detail} agentSt={agentSt} agentMsg={agentMsg} />
       ) : (
         <ArtifactsTab artifacts={allArtifacts} />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm.value && (
+        <ConfirmDialog
+          icon="warning"
+          title="Delete Task?"
+          message="This will permanently delete the current task and all its artifacts. This cannot be undone."
+          confirmLabel="Delete"
+          confirmDanger
+          onCancel={() => { showDeleteConfirm.value = false; }}
+          onConfirm={() => {
+            showDeleteConfirm.value = false;
+            bridge.send({ type: 'cancelAgent' });
+            bridge.send({ type: 'deleteWorkflow' });
+          }}
+        />
       )}
     </div>
   );

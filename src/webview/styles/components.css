@@ -254,6 +254,62 @@
   color: var(--color-text);
 }
 
+.btn-danger {
+  background: var(--color-error);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+/* ─── Confirm Dialog ───────────────────────────────────────────── */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-dialog-icon {
+  color: var(--color-warning);
+  margin-bottom: var(--space-sm);
+}
+
+.confirm-dialog-title {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-md);
+  font-weight: 600;
+}
+
+.confirm-dialog-message {
+  margin: 0 0 var(--space-lg) 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
 .btn-icon {
   display: inline-flex;
   align-items: center;
