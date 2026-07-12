@@ -131,7 +131,7 @@ Follow the **test-driven-development** and **incremental-implementation** skills
 ${objective}
 
 ## Project Context
-Read the project details from \`.codestudio/stack.md\` and \`.codestudio/conventions.md\` to understand the tech stack, build tools, test framework, and commands used in this project.
+Read the project details from \`.codestudio/knowledge/stack.md\` and \`.codestudio/knowledge/conventions.md\` to understand the tech stack, build tools, test framework, and commands used in this project.
 
 ## Instructions
 1. **Discover the correct commands** — read \`package.json\`, \`Makefile\`, \`Cargo.toml\`, \`*.csproj\`, \`pyproject.toml\`, or whatever build config exists in this project.

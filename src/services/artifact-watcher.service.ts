@@ -51,12 +51,13 @@ export class ArtifactWatcher {
     });
     this.watchers.push(artifactWatcher);
 
-    // Watch .codestudio/ root for setup files (onboarding completion)
+    // Watch .codestudio/ for setup files (onboarding completion)
     const setupMdPattern = `${this.rootPath}/${WORKFLOW_DIR}/*.md`;
     const setupJsonPattern = `${this.rootPath}/${WORKFLOW_DIR}/*.json`;
+    const knowledgeMdPattern = `${this.rootPath}/${WORKFLOW_DIR}/knowledge/*.md`;
     const instructionPattern = `${this.rootPath}/${WORKFLOW_DIR}/**/*instructions*.md`;
 
-    for (const pattern of [setupMdPattern, setupJsonPattern, instructionPattern]) {
+    for (const pattern of [setupMdPattern, setupJsonPattern, knowledgeMdPattern, instructionPattern]) {
       const watcher = this.vscodeApi.workspace.createFileSystemWatcher(pattern);
       watcher.onDidCreate((uri) => {
         void this.handleSetupFileChange(uri);

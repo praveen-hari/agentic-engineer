@@ -11,15 +11,16 @@ export const EXTENSION_ID = 'engineering-workspace';
 
 export const WORKFLOW_DIR = '.codestudio';
 
-// ─── Top-Level Files ────────────────────────────────────────────────────────
+// ─── Top-Level Files (config + agent instructions) ─────────────────────────
 
-export const CONTEXT_FILE = 'context.md';
 export const CONFIG_FILE = 'config.json';
-export const ARCHITECTURE_FILE = 'architecture.md';
-export const CONVENTIONS_FILE_ROOT = 'conventions.md';
-export const STACK_FILE = 'stack.md';
-export const BOUNDARIES_FILE_ROOT = 'boundaries.md';
 export const INSTRUCTIONS_FILE = 'codestudio-instructions.md';
+
+// ─── Knowledge Files (project context, inside knowledge/) ───────────────────
+
+export const CONTEXT_FILE = 'knowledge/context.md';
+export const ARCHITECTURE_FILE = 'knowledge/architecture.md';
+export const STACK_FILE = 'knowledge/stack.md';
 
 // ─── Workflows (DD-002, DD-009: branch-scoped) ─────────────────────────────
 
@@ -43,6 +44,8 @@ export const KNOWLEDGE_DIR = 'knowledge';
 export const KNOWLEDGE_ADRS_DIR = 'knowledge/adrs';
 export const CONVENTIONS_FILE = 'knowledge/conventions.md';
 export const BOUNDARIES_FILE = 'knowledge/boundaries.md';
+export const CONVENTIONS_FILE_ROOT = CONVENTIONS_FILE;
+export const BOUNDARIES_FILE_ROOT = BOUNDARIES_FILE;
 
 // ─── Agent Customizations (DD-022, DD-023, DD-026) ──────────────────────────
 

@@ -16,7 +16,7 @@ import type {
   MessageToWebview,
   RiskAssessment,
 } from '../core/types';
-import { WORKFLOW_DIR } from '../constants';
+import { WORKFLOW_DIR, STACK_FILE, CONVENTIONS_FILE } from '../constants';
 
 /**
  * Callback to send a response message back to the webview.
@@ -204,8 +204,8 @@ async function handleRequestContext(deps: MessageHandlerDeps, reply: ReplyFn): P
     return;
   }
 
-  // Read context from .codestudio/stack.md if it exists (agent creates this)
-  const stackPath = `${root}/${WORKFLOW_DIR}/stack.md`;
+  // Read context from .codestudio/knowledge/stack.md if it exists (agent creates this)
+  const stackPath = `${root}/${WORKFLOW_DIR}/${STACK_FILE}`;
   let languages: string[] = [];
   let frameworks: string[] = [];
   let testFramework: string | null = null;
@@ -238,7 +238,7 @@ async function handleRequestContext(deps: MessageHandlerDeps, reply: ReplyFn): P
   // Read conventions from .codestudio/conventions.md if it exists
   let conventions: string[] = [];
   try {
-    const convPath = `${root}/${WORKFLOW_DIR}/conventions.md`;
+    const convPath = `${root}/${WORKFLOW_DIR}/${CONVENTIONS_FILE}`;
     if (await deps.fileSystem.exists(convPath)) {
       const content = await deps.fileSystem.read(convPath);
       // Extract bullet points as conventions
@@ -618,11 +618,11 @@ This creates the .codestudio/ directory structure and config.json.
 Read the codebase thoroughly — package.json, source files, config files, tests, README, etc.
 Then create these files in .codestudio/ based on what you ACTUALLY find:
 
-- \`context.md\` — Project overview: what this project is, its purpose, target users
-- \`architecture.md\` — Architecture: module boundaries, patterns, data flow, key abstractions
-- \`conventions.md\` — Coding conventions: naming, formatting, file organization, patterns used
-- \`stack.md\` — Tech stack: languages, frameworks, dependencies with versions, build tools
-- \`boundaries.md\` — Rules: Always do / Ask first / Never do (based on existing patterns)
+- \`knowledge/context.md\` — Project overview: what this project is, its purpose, target users
+- \`knowledge/architecture.md\` — Architecture: module boundaries, patterns, data flow, key abstractions
+- \`knowledge/conventions.md\` — Coding conventions: naming, formatting, file organization, patterns used
+- \`knowledge/stack.md\` — Tech stack: languages, frameworks, dependencies with versions, build tools
+- \`knowledge/boundaries.md\` — Rules: Always do / Ask first / Never do (based on existing patterns)
 - \`codestudio-instructions.md\` — Combined agent instructions summarizing all the above
 
 **Important:** Base everything on the ACTUAL codebase. Read real files. Don't guess or use generic templates.
@@ -673,12 +673,12 @@ Ask the user clarifying questions to understand:
 - Constraints and requirements
 
 ### Step 3: Create project context files in .codestudio/
-Based on the interview and workspace scan, create these files:
-- \`context.md\` — Project overview, purpose, target users
-- \`architecture.md\` — Architecture decisions, module boundaries, data flow
-- \`conventions.md\` — Coding conventions, naming, formatting, patterns
-- \`stack.md\` — Tech stack details: languages, frameworks, deps, versions
-- \`boundaries.md\` — Always do / Ask first / Never do rules
+Based on the interview and workspace scan, create these files in .codestudio/:
+- \`knowledge/context.md\` — Project overview, purpose, target users
+- \`knowledge/architecture.md\` — Architecture decisions, module boundaries, data flow
+- \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
+- \`knowledge/stack.md\` — Tech stack details: languages, frameworks, deps, versions
+- \`knowledge/boundaries.md\` — Always do / Ask first / Never do rules
 - \`codestudio-instructions.md\` — Combined agent instructions
 
 ### Step 4: Call \`engineering_start_workflow\` tool

@@ -348,7 +348,7 @@ describe('ArtifactWatcher — Edge Cases', () => {
       watcher.start();
 
       // Should create watchers for: artifacts, setup md, setup json, instructions
-      expect(vscodeApi.workspace.createFileSystemWatcher).toHaveBeenCalledTimes(4);
+      expect(vscodeApi.workspace.createFileSystemWatcher).toHaveBeenCalledTimes(5);
     });
 
     it('calling start multiple times creates additional watchers', () => {
@@ -357,7 +357,7 @@ describe('ArtifactWatcher — Edge Cases', () => {
       watcher.start();
       watcher.start();
 
-      expect(vscodeApi.workspace.createFileSystemWatcher).toHaveBeenCalledTimes(8);
+      expect(vscodeApi.workspace.createFileSystemWatcher).toHaveBeenCalledTimes(10);
     });
 
     it('stop then start creates fresh watchers', () => {
@@ -367,7 +367,7 @@ describe('ArtifactWatcher — Edge Cases', () => {
       watcher.stop();
       watcher.start();
 
-      expect(vscodeApi.workspace.createFileSystemWatcher).toHaveBeenCalledTimes(8);
+      expect(vscodeApi.workspace.createFileSystemWatcher).toHaveBeenCalledTimes(10);
     });
   });
 });
