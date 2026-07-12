@@ -80,7 +80,7 @@ export const KnowledgeView: FunctionalComponent = () => {
     <div class="knowledge-view">
       {/* Header with refresh button */}
       <div class="knowledge-header">
-        <h3>Knowledge</h3>
+        <h3>Project Knowledge</h3>
         <button
           class="btn btn-secondary btn-sm"
           disabled={refreshing}
