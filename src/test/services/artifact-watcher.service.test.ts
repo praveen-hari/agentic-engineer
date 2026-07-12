@@ -10,7 +10,13 @@ function createMockVscode() {
 
   return {
     vscodeApi: {
+      Uri: {
+        file: (path: string) => ({ fsPath: path, scheme: 'file' }),
+      },
       workspace: {
+        fs: {
+          readFile: vi.fn().mockResolvedValue(new TextEncoder().encode('# Artifact content')),
+        },
         createFileSystemWatcher: vi.fn().mockReturnValue({
           onDidCreate: vi.fn((handler: (uri: { fsPath: string }) => void) => {
             createHandlers.push(handler);

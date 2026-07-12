@@ -1151,6 +1151,13 @@ async function handleNotifyArtifactDetected(
   reply: ReplyFn,
   artifact: Artifact,
 ): Promise<void> {
+  // Guard: ignore artifact notifications when no workflow is active.
+  // After deleteWorkflow, clearCurrent() empties artifact files which
+  // triggers the file watcher — without this guard, ghost artifacts
+  // would re-populate the UI.
+  const wf = await deps.stateManager.load();
+  if (!wf) return;
+
   // 1. Forward the artifact to the webview
   reply({ type: 'artifactDetected', artifact });
 

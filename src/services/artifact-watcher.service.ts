@@ -169,6 +169,19 @@ export class ArtifactWatcher {
     // Only process .md files in the artifacts directory
     if (!filePath.endsWith('.md')) return;
 
+    // Skip empty files — clearCurrent() empties artifact files on delete,
+    // which triggers onDidChange. Without this guard, ghost artifacts
+    // would be re-detected and sent to the webview after deletion.
+    try {
+      const fileUri = this.vscodeApi.Uri.file(filePath);
+      const bytes = await this.vscodeApi.workspace.fs.readFile(fileUri);
+      const content = new TextDecoder().decode(bytes).trim();
+      if (!content) return;
+    } catch {
+      // File unreadable or deleted — skip
+      return;
+    }
+
     const relativePath = this.getRelativePath(filePath);
     if (!relativePath) return;
 

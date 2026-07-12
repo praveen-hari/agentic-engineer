@@ -141,8 +141,6 @@ export const TasksView: FunctionalComponent = () => {
             </button>
           </div>
         )}
-
-
       </div>
     );
   }
@@ -307,44 +305,44 @@ const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, a
   const isPaused = wf.state.status === 'paused';
 
   return (
-  <div class="stage-accordion-list">
-    {wf.stages.map((stage) => {
-      // Stage is only truly active if workflow is not paused
-      const isActive = stage.status === 'active' && !isPaused;
-      // Only show approvals that belong to this stage
-      const stageApprovals = isActive
-        ? wf.approvals.filter(
-            (a) => a.status === 'pending' && APPROVAL_STAGE_MAP[a.artifact] === stage.id,
-          )
-        : [];
-      return (
-        <StageAccordion
-          key={stage.id}
-          stage={stage}
-          isActive={isActive}
-          action={isActive ? detail?.action : null}
-          completion={isActive ? detail?.completion : null}
-          artifacts={detail?.artifacts}
-          gates={wf.qualityGates}
-          approvals={stageApprovals}
-          agentStatus={isActive ? agentSt : undefined}
-          agentMessage={isActive ? (agentMsg ?? undefined) : undefined}
-          onSendToAgent={
-            isActive ? () => bridge.send({ type: 'sendToAgent', stage: stage.id }) : undefined
-          }
-          onCompleteStage={isActive ? () => bridge.send({ type: 'executeStage' }) : undefined}
-          onSkipStage={
-            isActive && stage.skippable
-              ? () => bridge.send({ type: 'skipStage', stageId: stage.id })
-              : undefined
-          }
-          onApprove={(id) => bridge.send({ type: 'approve', approvalId: id })}
-          onReject={(id) => bridge.send({ type: 'reject', approvalId: id })}
-          onViewArtifact={(id) => bridge.send({ type: 'openArtifact', artifactId: id })}
-        />
-      );
-    })}
-  </div>
+    <div class="stage-accordion-list">
+      {wf.stages.map((stage) => {
+        // Stage is only truly active if workflow is not paused
+        const isActive = stage.status === 'active' && !isPaused;
+        // Only show approvals that belong to this stage
+        const stageApprovals = isActive
+          ? wf.approvals.filter(
+              (a) => a.status === 'pending' && APPROVAL_STAGE_MAP[a.artifact] === stage.id,
+            )
+          : [];
+        return (
+          <StageAccordion
+            key={stage.id}
+            stage={stage}
+            isActive={isActive}
+            action={isActive ? detail?.action : null}
+            completion={isActive ? detail?.completion : null}
+            artifacts={detail?.artifacts}
+            gates={wf.qualityGates}
+            approvals={stageApprovals}
+            agentStatus={isActive ? agentSt : undefined}
+            agentMessage={isActive ? (agentMsg ?? undefined) : undefined}
+            onSendToAgent={
+              isActive ? () => bridge.send({ type: 'sendToAgent', stage: stage.id }) : undefined
+            }
+            onCompleteStage={isActive ? () => bridge.send({ type: 'executeStage' }) : undefined}
+            onSkipStage={
+              isActive && stage.skippable
+                ? () => bridge.send({ type: 'skipStage', stageId: stage.id })
+                : undefined
+            }
+            onApprove={(id) => bridge.send({ type: 'approve', approvalId: id })}
+            onReject={(id) => bridge.send({ type: 'reject', approvalId: id })}
+            onViewArtifact={(id) => bridge.send({ type: 'openArtifact', artifactId: id })}
+          />
+        );
+      })}
+    </div>
   );
 };
 
