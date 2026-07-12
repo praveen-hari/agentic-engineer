@@ -222,8 +222,8 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
             />
           )}
 
-          {/* Inline approval buttons (when approval is pending) */}
-          {stageApprovals.length > 0 && (
+          {/* Inline approval buttons — only show after artifacts exist to review */}
+          {stageApprovals.length > 0 && stageArtifacts.length > 0 && (
             <div class="stage-approval-actions">
               {stageApprovals.map((a) => (
                 <div key={a.id} class="stage-approval-row">
