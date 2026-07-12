@@ -34,18 +34,10 @@ import { RiskBadge } from '../components/risk-badge';
 import { StageAccordion } from '../components/stage-accordion';
 import { ConfirmDialog } from '../components/confirm-dialog';
 
-// ─── Quick Start suggestions ────────────────────────────────────────────────
+// ─── Tasks View ─────────────────────────────────────────────────────────
 
-const QUICK_START_SUGGESTIONS: readonly { readonly icon: string; readonly text: string }[] = [
-  { icon: '⚡', text: 'Fix the pagination bug in /api/users endpoint' },
-  { icon: '🔧', text: 'Add email notification service with SendGrid' },
-  { icon: '🏗️', text: 'Implement OAuth2 authentication with session management' },
-];
-
-// ─── Tasks View ─────────────────────────────────────────────────────────────
-
-/** Timeout for the analyzing spinner (30 seconds). */
-const ANALYZE_TIMEOUT_MS = 30_000;
+/** Timeout for the analyzing spinner (60 seconds). */
+const ANALYZE_TIMEOUT_MS = 60_000;
 
 export const TasksView: FunctionalComponent = () => {
   const objective = objectiveInput;
@@ -118,10 +110,10 @@ export const TasksView: FunctionalComponent = () => {
                 });
               }}
             >
-              <Icon name="sparkle" size={14} /> Start in Chat
+              <Icon name="sparkle" size={14} /> Start Task
             </button>
             <div class="analyze-hint">
-              The agent will assess complexity, select skills, and create a workflow.
+              The agent will assess complexity, plan the work, and guide you through each step.
             </div>
           </div>
         )}
@@ -142,6 +134,7 @@ export const TasksView: FunctionalComponent = () => {
               class="btn btn-secondary btn-sm analyze-cancel-btn"
               onClick={() => {
                 analyzing.value = false;
+                bridge.send({ type: 'cancelAgent' });
               }}
             >
               Cancel
@@ -149,34 +142,7 @@ export const TasksView: FunctionalComponent = () => {
           </div>
         )}
 
-        {/* Quick start */}
-        {!analyzing.value && (
-          <div class="quick-start">
-            <div class="quick-start-label">Quick Start</div>
-            <div class="quick-start-list">
-              {QUICK_START_SUGGESTIONS.map((s) => (
-                <div
-                  key={s.text}
-                  class="quick-start-item"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    objective.value = s.text;
-                  }}
-                  onKeyDown={(e: KeyboardEvent) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      objective.value = s.text;
-                    }
-                  }}
-                >
-                  <span class="quick-start-item-icon">{s.icon}</span>
-                  <span class="quick-start-item-text">{s.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
       </div>
     );
   }
@@ -337,10 +303,14 @@ const APPROVAL_STAGE_MAP: Record<string, string> = {
   deployment: 'ship',
 };
 
-const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, agentMsg }) => (
+const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, agentMsg }) => {
+  const isPaused = wf.state.status === 'paused';
+
+  return (
   <div class="stage-accordion-list">
     {wf.stages.map((stage) => {
-      const isActive = stage.status === 'active';
+      // Stage is only truly active if workflow is not paused
+      const isActive = stage.status === 'active' && !isPaused;
       // Only show approvals that belong to this stage
       const stageApprovals = isActive
         ? wf.approvals.filter(
@@ -375,7 +345,8 @@ const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, a
       );
     })}
   </div>
-);
+  );
+};
 
 // ─── Artifacts Tab ──────────────────────────────────────────────────────────
 
