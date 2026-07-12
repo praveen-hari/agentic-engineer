@@ -361,4 +361,111 @@ describe('Phase 7: Presentation Layer Fixes', () => {
       expect(replies.length).toBeGreaterThan(0);
     });
   });
+
+  // ─── Issue 8: executeStage clears state after archiving ───────────
+
+  describe('executeStage clears state after archiving completed workflow', () => {
+    it('calls stateManager.clear when workflow completes', async () => {
+      const deps = createMockDeps(ACTIVE_WORKFLOW);
+      vi.mocked(deps.stateManager.update)
+        .mockResolvedValueOnce(ACTIVE_WORKFLOW) // approve gates
+        .mockResolvedValueOnce({
+          ...ACTIVE_WORKFLOW,
+          state: { ...ACTIVE_WORKFLOW.state, status: 'completed', currentStage: null },
+        }); // advance → completed
+
+      const replies: MessageToWebview[] = [];
+      const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
+
+      await handler({ type: 'executeStage' });
+
+      expect(deps.historyManager.archiveWorkflow).toHaveBeenCalled();
+      expect(deps.stateManager.clear).toHaveBeenCalled();
+    });
+
+    it('does NOT clear state when workflow is still active', async () => {
+      const deps = createMockDeps(ACTIVE_WORKFLOW);
+      vi.mocked(deps.stateManager.update)
+        .mockResolvedValueOnce(ACTIVE_WORKFLOW)
+        .mockResolvedValueOnce({
+          ...ACTIVE_WORKFLOW,
+          state: { ...ACTIVE_WORKFLOW.state, currentStage: 'build' },
+        });
+
+      const replies: MessageToWebview[] = [];
+      const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
+
+      await handler({ type: 'executeStage' });
+
+      expect(deps.stateManager.clear).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Issue 9: cancelWorkflow skips archive when already gone ──────
+
+  describe('cancelWorkflow handles already-archived workflows', () => {
+    it('does not call archiveWorkflow when workflow is null', async () => {
+      const deps = createMockDeps();
+      vi.mocked(deps.stateManager.load).mockResolvedValue(null);
+      const replies: MessageToWebview[] = [];
+      const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
+
+      await handler({ type: 'cancelWorkflow' });
+
+      expect(deps.historyManager.archiveWorkflow).not.toHaveBeenCalled();
+      expect(deps.stateManager.clear).not.toHaveBeenCalled();
+      // Still resets UI
+      expect(replies[0].type).toBe('state');
+      expect((replies[0] as { workflow: null }).workflow).toBeNull();
+    });
+
+    it('archives and clears when workflow exists', async () => {
+      const deps = createMockDeps(ACTIVE_WORKFLOW);
+      const replies: MessageToWebview[] = [];
+      const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
+
+      await handler({ type: 'cancelWorkflow' });
+
+      expect(deps.historyManager.archiveWorkflow).toHaveBeenCalledWith(ACTIVE_WORKFLOW);
+      expect(deps.stateManager.clear).toHaveBeenCalled();
+      expect(replies[0].type).toBe('state');
+      expect((replies[0] as { workflow: null }).workflow).toBeNull();
+    });
+  });
+
+  // ─── Issue 10: requestSettings with corrupt config ────────────────
+
+  describe('requestSettings edge cases', () => {
+    it('returns defaults when config.json is corrupt JSON', async () => {
+      const deps = createMockDeps();
+      vi.mocked(deps.fileSystem.exists).mockResolvedValue(true);
+      vi.mocked(deps.fileSystem.read).mockResolvedValue('not valid json{{{');
+      const replies: MessageToWebview[] = [];
+      const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
+
+      await handler({ type: 'requestSettings' });
+
+      expect(replies[0].type).toBe('settingsLoaded');
+      const msg = replies[0] as { settings: { processLevelDefault: string } };
+      expect(msg.settings.processLevelDefault).toBe('auto');
+    });
+
+    it('returns defaults when config has missing fields', async () => {
+      const deps = createMockDeps();
+      vi.mocked(deps.fileSystem.exists).mockResolvedValue(true);
+      vi.mocked(deps.fileSystem.read).mockResolvedValue(JSON.stringify({ version: 1 }));
+      const replies: MessageToWebview[] = [];
+      const handler = handleWebviewMessage(deps, (msg) => replies.push(msg));
+
+      await handler({ type: 'requestSettings' });
+
+      expect(replies[0].type).toBe('settingsLoaded');
+      const msg = replies[0] as {
+        settings: { processLevelDefault: string; autoApproveLowRisk: boolean; reviewTimeoutMinutes: number };
+      };
+      expect(msg.settings.processLevelDefault).toBe('auto');
+      expect(msg.settings.autoApproveLowRisk).toBe(false);
+      expect(msg.settings.reviewTimeoutMinutes).toBe(30);
+    });
+  });
 });
