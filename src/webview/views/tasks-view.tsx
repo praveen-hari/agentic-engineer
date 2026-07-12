@@ -208,7 +208,19 @@ const ActiveState: FunctionalComponent = () => {
     <div class="tasks-active">
       {/* Objective + Progress Header */}
       <div class="tasks-header">
-        <h3>{wf.objective}</h3>
+        <div class="tasks-header-top">
+          <h3>{wf.objective}</h3>
+          <button
+            class="btn btn-secondary btn-sm tasks-cancel-btn"
+            title="Cancel this task and start fresh"
+            onClick={() => {
+              bridge.send({ type: 'cancelAgent' });
+              bridge.send({ type: 'cancelWorkflow' });
+            }}
+          >
+            <Icon name="close" size={12} /> Stop
+          </button>
+        </div>
         <ProgressBar value={progress.value} />
         <div class="tasks-progress-meta">
           <span>

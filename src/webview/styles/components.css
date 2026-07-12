@@ -698,10 +698,22 @@
   margin-bottom: var(--space-lg);
 }
 
+.tasks-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
 .tasks-header h3 {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  margin-bottom: var(--space-md);
+  margin: 0 0 var(--space-md) 0;
+  flex: 1;
+}
+
+.tasks-cancel-btn {
+  flex-shrink: 0;
 }
 
 .tasks-progress-meta {
