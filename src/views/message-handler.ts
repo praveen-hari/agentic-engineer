@@ -162,6 +162,15 @@ export function handleWebviewMessage(
         case 'cancelAgent':
           await handleCancelAgent();
           break;
+        case 'pauseWorkflow':
+          await handlePauseWorkflow(deps, reply);
+          break;
+        case 'resumeWorkflow':
+          await handleResumeWorkflow(deps, reply);
+          break;
+        case 'deleteWorkflow':
+          await handleDeleteWorkflow(deps, reply);
+          break;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -205,6 +214,9 @@ const VALID_MESSAGE_TYPES = new Set<string>([
   'openKnowledgeFile',
   'requestHistoryDetail',
   'cancelAgent',
+  'pauseWorkflow',
+  'resumeWorkflow',
+  'deleteWorkflow',
 ]);
 
 /**
@@ -687,7 +699,42 @@ async function handleCancelAgent(): Promise<void> {
   }
 }
 
-// ─── Cancel Workflow Handler ────────────────────────────────────────────────
+// ─── Pause / Resume / Delete Handlers ───────────────────────────────────────
+
+async function handlePauseWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  try {
+    const updated = await deps.stateManager.update((wf) => deps.workflowEngine.pause(wf));
+    await handleCancelAgent(); // Stop the agent
+    reply({ type: 'state', workflow: updated });
+  } catch (err) {
+    reply({ type: 'error', message: err instanceof Error ? err.message : 'Cannot pause workflow' });
+  }
+}
+
+async function handleResumeWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  try {
+    const updated = await deps.stateManager.update((wf) => deps.workflowEngine.resume(wf));
+    reply({ type: 'state', workflow: updated });
+  } catch (err) {
+    reply({
+      type: 'error',
+      message: err instanceof Error ? err.message : 'Cannot resume workflow',
+    });
+  }
+}
+
+async function handleDeleteWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  await handleCancelAgent(); // Stop the agent
+
+  // Clear state and artifacts WITHOUT archiving
+  await deps.stateManager.clear();
+  await deps.historyManager.clearCurrent();
+
+  // Reset UI
+  reply({ type: 'state', workflow: null });
+}
+
+// ─── Cancel Workflow Handler (archive + clear) ──────────────────────────────
 
 async function handleCancelWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   const wf = await deps.stateManager.load();

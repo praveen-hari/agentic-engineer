@@ -210,17 +210,47 @@ const ActiveState: FunctionalComponent = () => {
       <div class="tasks-header">
         <div class="tasks-header-top">
           <h3>{wf.objective}</h3>
-          <button
-            class="btn btn-secondary btn-sm tasks-cancel-btn"
-            title="Cancel this task and start fresh"
-            onClick={() => {
-              bridge.send({ type: 'cancelAgent' });
-              bridge.send({ type: 'cancelWorkflow' });
-            }}
-          >
-            <Icon name="close" size={12} /> Stop
-          </button>
+          <div class="tasks-header-actions">
+            {wf.state.status === 'active' && (
+              <button
+                class="btn btn-secondary btn-sm"
+                title="Pause this task — you can resume later"
+                onClick={() => {
+                  bridge.send({ type: 'pauseWorkflow' });
+                }}
+              >
+                <Icon name="circle-slash" size={12} /> Pause
+              </button>
+            )}
+            {wf.state.status === 'paused' && (
+              <button
+                class="btn btn-primary btn-sm"
+                title="Resume this task"
+                onClick={() => {
+                  bridge.send({ type: 'resumeWorkflow' });
+                }}
+              >
+                <Icon name="play" size={12} /> Resume
+              </button>
+            )}
+            <button
+              class="btn btn-secondary btn-sm tasks-delete-btn"
+              title="Delete this task permanently"
+              onClick={() => {
+                bridge.send({ type: 'cancelAgent' });
+                bridge.send({ type: 'deleteWorkflow' });
+              }}
+            >
+              <Icon name="close" size={12} />
+            </button>
+          </div>
         </div>
+        {wf.state.status === 'paused' && (
+          <div class="tasks-paused-banner">
+            <Icon name="circle-slash" size={14} />
+            <span>Task paused — click Resume to continue</span>
+          </div>
+        )}
         <ProgressBar value={progress.value} />
         <div class="tasks-progress-meta">
           <span>

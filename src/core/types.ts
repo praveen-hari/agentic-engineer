@@ -35,7 +35,7 @@ export type ContextSignal =
   | 'performance_sensitive'
   | 'high_risk_decision';
 
-export type WorkflowStateStatus = 'idle' | 'active' | 'completed' | 'failed';
+export type WorkflowStateStatus = 'idle' | 'active' | 'paused' | 'completed' | 'failed';
 
 export type ApprovalLevel = 'informational' | 'review' | 'explicit' | 'restricted';
 
@@ -266,7 +266,10 @@ export type MessageToHost =
   | { readonly type: 'refreshKnowledge' }
   | { readonly type: 'openKnowledgeFile'; readonly fileName: string }
   | { readonly type: 'requestHistoryDetail'; readonly archivePath: string }
-  | { readonly type: 'cancelAgent' };
+  | { readonly type: 'cancelAgent' }
+  | { readonly type: 'pauseWorkflow' }
+  | { readonly type: 'resumeWorkflow' }
+  | { readonly type: 'deleteWorkflow' };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }

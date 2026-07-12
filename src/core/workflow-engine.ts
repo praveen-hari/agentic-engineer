@@ -197,6 +197,42 @@ export class WorkflowEngine {
     };
   }
 
+  /**
+   * Pause an active workflow.
+   * @throws Error if workflow is not active
+   */
+  pause(workflow: WorkflowDefinition): WorkflowDefinition {
+    if (workflow.state.status !== 'active') {
+      throw new Error(`Cannot pause: workflow is ${workflow.state.status}`);
+    }
+    return {
+      ...workflow,
+      state: {
+        ...workflow.state,
+        status: 'paused' as WorkflowStateStatus,
+        lastActivityAt: new Date().toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Resume a paused workflow.
+   * @throws Error if workflow is not paused
+   */
+  resume(workflow: WorkflowDefinition): WorkflowDefinition {
+    if (workflow.state.status !== 'paused') {
+      throw new Error(`Cannot resume: workflow is ${workflow.state.status}`);
+    }
+    return {
+      ...workflow,
+      state: {
+        ...workflow.state,
+        status: 'active' as WorkflowStateStatus,
+        lastActivityAt: new Date().toISOString(),
+      },
+    };
+  }
+
   // ─── Stage Generation ──────────────────────────────────────────────────
 
   private generateStages(processLevel: ProcessLevel): Stage[] {

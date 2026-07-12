@@ -221,7 +221,7 @@ export class HistoryManager {
     );
   }
 
-  private async clearCurrent(): Promise<void> {
+  async clearCurrent(): Promise<void> {
     // Clear workflow.json
     const wfPath = `${this.rootPath}/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}/${WORKFLOW_FILE}`;
     try {
