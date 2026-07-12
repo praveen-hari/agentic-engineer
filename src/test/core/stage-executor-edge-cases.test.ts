@@ -318,14 +318,16 @@ describe('StageExecutor — Edge Cases', () => {
       expect(result.pendingApprovals.length).toBeGreaterThan(0);
     });
 
-    it('build stage with no requirements completes immediately', () => {
+    it('build stage is blocked until build-complete gate passes', () => {
       const wf = makeWorkflow({
         processLevel: 'standard',
         stages: [makeStage('build', 'active')],
         state: { ...makeWorkflow().state, currentStage: 'build' },
       });
       const result = executor.evaluateStageCompletion(wf, []);
-      expect(result.status).toBe('completed');
+      // build-complete gate is required — stage is blocked without it
+      expect(result.status).toBe('blocked');
+      expect(result.message).toContain('build-complete');
     });
 
     it('message includes all blocker types when multiple exist', () => {

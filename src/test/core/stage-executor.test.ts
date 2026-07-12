@@ -172,9 +172,19 @@ describe('StageExecutor', () => {
   });
 
   describe('evaluateStageCompletion()', () => {
-    it('returns completed when all requirements met', () => {
+    it('returns completed when build-complete gate is passed', () => {
       const wf = makeWorkflow({
-        qualityGates: [],
+        qualityGates: [
+          {
+            id: 'build-complete',
+            name: 'Build Complete',
+            type: 'approval',
+            status: 'passed',
+            stage: 'build' as Stage['id'],
+            blocking: true,
+            conditional: false,
+          },
+        ],
         approvals: [],
         stages: [makeStage('build', 'active')],
         state: { ...makeWorkflow().state, currentStage: 'build' },
@@ -182,6 +192,29 @@ describe('StageExecutor', () => {
 
       const result = executor.evaluateStageCompletion(wf, []);
       expect(result.status).toBe('completed');
+    });
+
+    it('returns blocked when build-complete gate is pending', () => {
+      const wf = makeWorkflow({
+        qualityGates: [
+          {
+            id: 'build-complete',
+            name: 'Build Complete',
+            type: 'approval',
+            status: 'pending',
+            stage: 'build' as Stage['id'],
+            blocking: true,
+            conditional: false,
+          },
+        ],
+        approvals: [],
+        stages: [makeStage('build', 'active')],
+        state: { ...makeWorkflow().state, currentStage: 'build' },
+      });
+
+      const result = executor.evaluateStageCompletion(wf, []);
+      expect(result.status).toBe('blocked');
+      expect(result.message).toContain('Pending gates');
     });
 
     it('returns blocked when spec artifact is missing in define stage', () => {

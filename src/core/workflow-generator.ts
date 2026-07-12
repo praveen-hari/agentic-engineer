@@ -86,7 +86,10 @@ export class WorkflowGenerator {
   private generateGates(assessment: RiskAssessment): QualityGate[] {
     const gates: QualityGate[] = [];
 
-    // Base gates per process level (DD-014)
+    // Base gates for all process levels
+    gates.push(this.makeGate('build-complete', 'Build Complete', 'approval', 'build', false));
+
+    // Standard+ gates
     if (assessment.processLevel !== 'light') {
       gates.push(this.makeGate('tests-pass', 'Tests Pass', 'automated', 'verify', false));
       gates.push(this.makeGate('spec-approved', 'Spec Approved', 'approval', 'define', false));
@@ -94,8 +97,9 @@ export class WorkflowGenerator {
       gates.push(this.makeGate('code-review', 'Code Review', 'review', 'review', false));
     }
 
-    // Thorough+ gates
+    // Thorough+ gates (ship stage only exists at thorough/guarded)
     if (assessment.processLevel === 'thorough' || assessment.processLevel === 'guarded') {
+      gates.push(this.makeGate('ship-checklist', 'Ship Checklist', 'approval', 'ship', false));
       gates.push(this.makeGate('security-review', 'Security Review', 'review', 'review', false));
       gates.push(
         this.makeGate('performance-budget', 'Performance Budget', 'automated', 'verify', false),

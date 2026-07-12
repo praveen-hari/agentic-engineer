@@ -264,7 +264,7 @@ const STAGE_CONFIG: Readonly<Record<LifecycleStage, StageConfig>> = {
   build: {
     description: 'Build — Implement tasks one at a time with TDD',
     artifacts: [],
-    gates: [],
+    gates: ['build-complete'],
     autoAdvance: false,
   },
   verify: {
@@ -282,7 +282,7 @@ const STAGE_CONFIG: Readonly<Record<LifecycleStage, StageConfig>> = {
   ship: {
     description: 'Ship — Pre-launch checklist and deployment',
     artifacts: [],
-    gates: [],
+    gates: ['ship-checklist'],
     autoAdvance: false,
   },
 };
@@ -366,8 +366,10 @@ const STAGE_INSTRUCTIONS: Readonly<Record<LifecycleStage, StageInstructionDef>> 
 const GATE_MIN_LEVELS: Readonly<Record<string, ProcessLevel>> = {
   'spec-approved': 'standard',
   'plan-approved': 'standard',
+  'build-complete': 'light',
   'tests-pass': 'standard',
   'code-review': 'standard',
+  'ship-checklist': 'thorough',
   'security-review': 'thorough',
   'performance-budget': 'thorough',
   'docs-complete': 'thorough',
