@@ -163,15 +163,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
   panelProvider = new EngineeringWorkspacePanelProvider(context, messageHandler);
 
-  // Auto-open Tasks view when the sidebar becomes visible
-  treeView.onDidChangeVisibility((e) => {
-    if (e.visible && !panelProvider.isVisible) {
-      const tasksItem = navigationTree.getChildren()[0];
-      void treeView.reveal(tasksItem, { select: true, focus: false });
-      panelProvider.open('tasks');
-    }
-  });
-
   // ─── File Watchers ─────────────────────────────────────────────────
   if (workspaceRoot) {
     const artifactWatcher = new ArtifactWatcher(vscodeApi, workspaceRoot);
