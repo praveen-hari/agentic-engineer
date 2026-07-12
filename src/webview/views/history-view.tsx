@@ -109,8 +109,9 @@ export const HistoryView: FunctionalComponent = () => {
           <thead>
             <tr>
               <th class="history-th history-th--objective">Objective</th>
-              <th class="history-th history-th--level">Level</th>
-              <th class="history-th history-th--stages">Stages</th>
+              <th class="history-th">Type</th>
+              <th class="history-th">Level</th>
+              <th class="history-th">Stages</th>
               <th class="history-th history-th--date">Completed</th>
             </tr>
           </thead>
@@ -126,6 +127,9 @@ export const HistoryView: FunctionalComponent = () => {
                 <td class="history-td history-td--objective">
                   <Icon name="pass-filled" size={14} class="task-card-icon--completed" />
                   <span class="history-objective-text">{entry.objective}</span>
+                </td>
+                <td class="history-td">
+                  {entry.workType ?? '—'}
                 </td>
                 <td class="history-td">
                   <span class={`badge badge-sm ${LEVEL_CLASS[entry.processLevel] ?? ''}`}>

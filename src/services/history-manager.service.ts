@@ -169,6 +169,7 @@ export class HistoryManager {
       id: `hist_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       workflowId: workflow.id,
       objective: workflow.objective,
+      workType: workflow.workType,
       processLevel: workflow.processLevel,
       startedAt: workflow.state.startedAt,
       completedAt,

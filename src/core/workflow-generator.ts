@@ -40,6 +40,7 @@ export class WorkflowGenerator {
       id,
       version: 1,
       objective,
+      workType: assessment.workType,
       processLevel: assessment.processLevel,
       detectedRisks: assessment.signals,
       stages,

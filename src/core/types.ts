@@ -175,6 +175,7 @@ export interface WorkflowDefinition {
   readonly id: string;
   readonly version: number;
   readonly objective: string;
+  readonly workType?: WorkType;
   readonly processLevel: ProcessLevel;
   readonly detectedRisks: readonly RiskSignal[];
   readonly stages: readonly Stage[];
@@ -372,6 +373,7 @@ export interface HistoryEntry {
   readonly id: string;
   readonly workflowId: string;
   readonly objective: string;
+  readonly workType?: WorkType;
   readonly processLevel: ProcessLevel;
   readonly startedAt: string;
   readonly completedAt: string;

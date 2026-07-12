@@ -71,7 +71,8 @@ export const filteredHistory = computed(() => {
   return historyStore.value.filter(
     (e) =>
       e.objective.toLowerCase().includes(search) ||
-      e.processLevel.toLowerCase().includes(search),
+      e.processLevel.toLowerCase().includes(search) ||
+      (e.workType?.toLowerCase().includes(search) ?? false),
   );
 });
 export const totalPages = computed(() =>
