@@ -287,7 +287,9 @@
               "description": "Optional phase name: setup, define, plan, build, verify, review, ship"
             }
           },
-          "required": ["message"]
+          "required": [
+            "message"
+          ]
         }
       }
     ]

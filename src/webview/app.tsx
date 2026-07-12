@@ -161,7 +161,9 @@ export const App: FunctionalComponent = () => {
             <span class="error-banner-text">{onboardingError}</span>
             <button
               class="error-banner-dismiss"
-              onClick={() => { error.value = null; }}
+              onClick={() => {
+                error.value = null;
+              }}
               aria-label="Dismiss error"
             >
               ×

@@ -1,7 +1,13 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal } from '@preact/signals';
 import { useEffect, useRef } from 'preact/hooks';
-import { onboardingStatus, hasExistingFiles, actions, error, agentStatusMessage } from '../store/workflow.store';
+import {
+  onboardingStatus,
+  hasExistingFiles,
+  actions,
+  error,
+  agentStatusMessage,
+} from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
 
@@ -64,7 +70,8 @@ const WelcomeScreen: FunctionalComponent = () => {
             <div class="onboarding__card-content">
               <div class="onboarding__card-title">Set Up Existing Project</div>
               <div class="onboarding__card-desc">
-                Scan your workspace to detect the tech stack, conventions, and structure automatically.
+                Scan your workspace to detect the tech stack, conventions, and structure
+                automatically.
               </div>
             </div>
             <div class="onboarding__card-arrow">
@@ -126,7 +133,8 @@ const ScanningScreen: FunctionalComponent = () => {
           <p class="onboarding__subtitle">
             The agent didn't complete the setup in time.
             <br />
-            This can happen if the agent hit a budget limit, lost connection, or encountered an error.
+            This can happen if the agent hit a budget limit, lost connection, or encountered an
+            error.
           </p>
         </div>
 
@@ -138,7 +146,9 @@ const ScanningScreen: FunctionalComponent = () => {
               actions.setOnboardingStatus('scanning');
               bridge.send({ type: 'setupExistingProject' });
               // Restart timeout
-              timer.current = setTimeout(() => { timedOut.value = true; }, SCANNING_TIMEOUT_MS);
+              timer.current = setTimeout(() => {
+                timedOut.value = true;
+              }, SCANNING_TIMEOUT_MS);
             }}
           >
             <Icon name="refresh" size={14} /> Try Again

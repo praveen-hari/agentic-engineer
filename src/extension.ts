@@ -66,13 +66,17 @@ export function activate(context: vscode.ExtensionContext): void {
   // The agent provides all intelligence (risk assessment, context
   // detection, skill selection) — the extension only orchestrates.
   const setupProjectTool = new SetupProjectTool(fsService, workspaceRoot ?? '/', () => {
-    // Notify webview that .codestudio/ was created
+    // .codestudio/ directory created — but DON'T transition to ready yet.
+    // The agent still needs to create knowledge files (architecture.md,
+    // stack.md, conventions.md, boundaries.md, codestudio-instructions.md).
+    // The ArtifactWatcher will transition to ready when instructions.md
+    // is detected (the last file the agent creates).
+    //
+    // Just update the status message so the user knows progress is happening.
     panelProvider.postMessage({
-      type: 'onboardingStatus',
-      status: 'ready',
-      projectType: 'brownfield',
-      context: null,
-      hasExistingFiles: true,
+      type: 'agentStatus',
+      status: 'working',
+      message: 'Project structure created. Scanning workspace...',
     });
   });
 

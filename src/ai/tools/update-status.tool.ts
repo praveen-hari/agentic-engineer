@@ -23,9 +23,7 @@ export interface UpdateStatusInput {
  *   engineering_update_status({ message: "Running npm test..." })
  */
 export class UpdateStatusTool implements vscode.LanguageModelTool<UpdateStatusInput> {
-  constructor(
-    private readonly onStatusUpdate: (message: string, phase?: string) => void,
-  ) {}
+  constructor(private readonly onStatusUpdate: (message: string, phase?: string) => void) {}
 
   async prepareInvocation(
     _options: vscode.LanguageModelToolInvocationPrepareOptions<UpdateStatusInput>,

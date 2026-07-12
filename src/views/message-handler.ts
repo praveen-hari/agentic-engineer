@@ -909,11 +909,14 @@ async function handleRequestOnboardingStatus(
     return;
   }
 
-  // Check if .codestudio/config.json exists — if so, project is already set up
-  const codestudioExists = await deps.fileSystem.exists(`${root}/.codestudio/config.json`);
+  // Check if setup is fully complete — codestudio-instructions.md is the last
+  // file created during setup, so its existence means all knowledge files are done.
+  const instructionsExist = await deps.fileSystem.exists(
+    `${root}/.codestudio/codestudio-instructions.md`,
+  );
 
-  if (codestudioExists) {
-    // Already onboarded — go to ready state
+  if (instructionsExist) {
+    // Fully onboarded — all knowledge files exist
     reply({
       type: 'onboardingStatus',
       status: 'ready',
