@@ -7,13 +7,14 @@ import type { KnowledgeFileInfo } from '../../core/types';
 
 // ─── Icon mapping for knowledge files ───────────────────────────────────────
 
-const FILE_ICONS: Record<string, string> = {
-  'context.md': '📄',
-  'architecture.md': '🏗️',
-  'conventions.md': '📐',
-  'stack.md': '🔧',
-  'boundaries.md': '🚧',
-  'codestudio-instructions.md': '📋',
+import type { IconName } from '../components/icon';
+
+const FILE_ICONS: Record<string, IconName> = {
+  'architecture.md': 'layers',
+  'conventions.md': 'list-tree',
+  'stack.md': 'package',
+  'boundaries.md': 'shield',
+  'codestudio-instructions.md': 'file-code',
 };
 
 // ─── Knowledge View ─────────────────────────────────────────────────────────
@@ -129,12 +130,12 @@ export const KnowledgeView: FunctionalComponent = () => {
 // ─── Knowledge File Card ────────────────────────────────────────────────────
 
 const KnowledgeFileCard: FunctionalComponent<{ file: KnowledgeFileInfo }> = ({ file }) => {
-  const icon = FILE_ICONS[file.name] ?? '📄';
+  const iconName = FILE_ICONS[file.name] ?? 'file-text';
 
   return (
     <div class="knowledge-file-card">
       <div class="knowledge-file-card-header">
-        <span class="knowledge-file-icon">{icon}</span>
+        <Icon name={iconName} size={16} />
         <span class="knowledge-file-name">{file.name}</span>
       </div>
       {file.preview && (

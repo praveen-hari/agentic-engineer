@@ -1748,11 +1748,6 @@
   gap: var(--space-sm);
 }
 
-.knowledge-file-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
 .knowledge-file-name {
   font-weight: 500;
   font-size: var(--font-sm);
