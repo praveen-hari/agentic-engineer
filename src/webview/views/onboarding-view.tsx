@@ -187,6 +187,8 @@ const ScanningScreen: FunctionalComponent = () => {
           class="btn btn-secondary btn-sm"
           onClick={() => {
             if (timer.current) clearTimeout(timer.current);
+            agentStatusMessage.value = null;
+            bridge.send({ type: 'cancelAgent' });
             actions.setOnboardingStatus('welcome');
           }}
         >

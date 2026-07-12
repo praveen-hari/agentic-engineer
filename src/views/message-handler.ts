@@ -160,6 +160,9 @@ export function handleWebviewMessage(
         case 'requestHistoryDetail':
           await handleRequestHistoryDetail(deps, reply, msg.archivePath);
           break;
+        case 'cancelAgent':
+          await handleCancelAgent();
+          break;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -202,6 +205,7 @@ const VALID_MESSAGE_TYPES = new Set<string>([
   'refreshKnowledge',
   'openKnowledgeFile',
   'requestHistoryDetail',
+  'cancelAgent',
 ]);
 
 /**
@@ -645,6 +649,28 @@ async function handleRequestHistoryDetail(
     workflow: archive.workflow,
     artifacts: archive.artifacts,
   });
+}
+
+// ─── Cancel Agent Handler ───────────────────────────────────────────────────
+
+async function handleCancelAgent(): Promise<void> {
+  try {
+    const vscodeModule = await import('vscode');
+    // Try to cancel the current chat request
+    try {
+      await vscodeModule.commands.executeCommand('workbench.action.chat.cancel');
+    } catch {
+      // Command may not exist — try alternative
+      try {
+        await vscodeModule.commands.executeCommand('workbench.action.chat.stop');
+      } catch {
+        // No cancel API available — agent will continue in background
+        // but the UI has already been reset by the caller
+      }
+    }
+  } catch {
+    // vscode import failed — running in test environment
+  }
 }
 
 // ─── Cancel Workflow Handler ────────────────────────────────────────────────

@@ -265,7 +265,8 @@ export type MessageToHost =
   | { readonly type: 'requestKnowledge' }
   | { readonly type: 'refreshKnowledge' }
   | { readonly type: 'openKnowledgeFile'; readonly fileName: string }
-  | { readonly type: 'requestHistoryDetail'; readonly archivePath: string };
+  | { readonly type: 'requestHistoryDetail'; readonly archivePath: string }
+  | { readonly type: 'cancelAgent' };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
