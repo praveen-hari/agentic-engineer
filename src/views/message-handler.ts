@@ -869,14 +869,41 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
         await deps.historyManager.archiveWorkflow(advanced);
         await deps.stateManager.clear();
 
-        // Step 5: Prompt agent to check if knowledge needs updating
-        // In user mode: agent asks user before updating
-        // In agent mode: agent updates directly
+        // Step 5: Update knowledge files based on what changed.
+        // The agent already has full context from this session — it knows
+        // every file it touched, every decision it made, every dependency
+        // it added. We pass the objective + stage summary so it has
+        // explicit context even if the chat history is long.
+        const completedStages = advanced.stages
+          .filter((s) => s.status === 'completed')
+          .map((s) => s.name)
+          .join(' → ');
         const currentApprovalMode = await deps.readApprovalMode();
         const knowledgePrompt =
           currentApprovalMode === 'agent'
-            ? 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, update the relevant knowledge files in .codestudio/knowledge/ directly.'
-            : 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, tell the user which knowledge files may need updating and ask if they want you to refresh them.';
+            ? `The workflow "${advanced.objective}" is complete (${completedStages}).
+
+You just completed this entire workflow — you know exactly what changed. Now update the project knowledge files to reflect the current state of the codebase:
+
+1. Read each knowledge file in \`.codestudio/knowledge/\`
+2. Compare with what you know changed during this workflow
+3. Update ONLY the sections that are now outdated:
+   - \`knowledge/architecture.md\` — if you added modules, changed patterns, or modified data flow
+   - \`knowledge/stack.md\` — if you added dependencies, changed versions, or added tools
+   - \`knowledge/conventions.md\` — if you established new patterns or changed existing ones
+   - \`knowledge/boundaries.md\` — if you discovered new "always do" or "never do" rules
+   - \`codestudio-instructions.md\` — if knowledge file paths changed or new project rules emerged
+
+Do NOT rewrite files from scratch — only update what this workflow changed. Preserve user-added notes.`
+            : `The workflow "${advanced.objective}" is complete (${completedStages}).
+
+You just completed this entire workflow — you know exactly what changed. Check if the project knowledge files need updating:
+
+1. Read each file in \`.codestudio/knowledge/\`
+2. List which files are now outdated based on what you changed
+3. For each outdated file, show the user what you'd change and ask for approval before writing
+
+Files to check: \`architecture.md\`, \`stack.md\`, \`conventions.md\`, \`boundaries.md\`, \`codestudio-instructions.md\``;
         void deps.agentBridge.sendToChat(knowledgePrompt);
       }
 
