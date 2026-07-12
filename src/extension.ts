@@ -119,6 +119,20 @@ export function activate(context: vscode.ExtensionContext): void {
     // Sending here would cause a double notification.
   });
 
+  // Approval mode reader: reads approvalMode from .codestudio/config.json
+  const readApprovalMode = async (): Promise<'user' | 'agent'> => {
+    try {
+      if (await fsService.exists(configPath)) {
+        const raw = await fsService.read(configPath);
+        const config = JSON.parse(raw) as Record<string, unknown>;
+        if (config.approvalMode === 'agent') return 'agent';
+      }
+    } catch {
+      // Corrupt config — default to user
+    }
+    return 'user';
+  };
+
   const advanceStageTool = new AdvanceStageTool(
     workflowEngine,
     stateManager,
@@ -127,6 +141,7 @@ export function activate(context: vscode.ExtensionContext): void {
     (wf) => {
       panelProvider.postMessage({ type: 'state', workflow: wf });
     },
+    readApprovalMode,
   );
 
   // Register all tools with vscode.lm

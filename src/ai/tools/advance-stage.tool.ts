@@ -3,7 +3,10 @@ import type { WorkflowEngine } from '../../core/workflow-engine';
 import type { StateManager } from '../../core/state-manager';
 import type { StageExecutor } from '../../core/stage-executor';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
-import type { WorkflowDefinition } from '../../core/types';
+import type { ApprovalMode, WorkflowDefinition } from '../../core/types';
+
+/** Reads the approvalMode from config. Returns 'user' by default. */
+export type ApprovalModeReader = () => Promise<ApprovalMode>;
 
 /**
  * Input for the engineering_advance_stage tool.
@@ -17,7 +20,11 @@ export interface AdvanceStageInput {
  *
  * Checks if the current stage requirements are met (artifacts,
  * gates, approvals) and advances to the next stage if ready.
- * Returns the next stage's instructions.
+ *
+ * Behavior depends on approvalMode:
+ * - 'agent': auto-approves gates AND advances the stage
+ * - 'user': auto-approves gates but does NOT advance — user must
+ *   click "Approve & Continue" in the UI
  */
 export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageInput> {
   constructor(
@@ -26,6 +33,7 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
     private readonly stageExecutor: StageExecutor,
     private readonly artifactManager: ArtifactManager,
     private readonly onWorkflowUpdated: (wf: WorkflowDefinition) => void,
+    private readonly readApprovalMode: ApprovalModeReader = async () => 'user',
   ) {}
 
   async prepareInvocation(
@@ -109,7 +117,33 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
       ]);
     }
 
-    // Step 3: Advance to next stage via update()
+    // Step 3: Check approval mode
+    const approvalMode = await this.readApprovalMode();
+
+    if (approvalMode === 'user') {
+      // User mode: gates are approved, but DON'T advance the stage.
+      // The user must click "Approve & Continue" in the UI.
+      this.onWorkflowUpdated(approved);
+
+      return new vscodeModule.LanguageModelToolResult([
+        new vscodeModule.LanguageModelTextPart(
+          JSON.stringify(
+            {
+              advanced: false,
+              currentStage: result.stage,
+              gatesApproved: true,
+              approvalMode: 'user',
+              message: `Stage "${result.stage}" requirements are met. Gates have been approved. Waiting for the user to click "Approve & Continue" in the UI to advance.`,
+              nextSteps: ['Wait for the user to review and click "Approve & Continue" in the Engineering Workspace panel.'],
+            },
+            null,
+            2,
+          ),
+        ),
+      ]);
+    }
+
+    // Agent mode: auto-advance to next stage
     const updated = await this.stateManager.update((current) =>
       this.workflowEngine.advanceStage(current),
     );
@@ -129,6 +163,7 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
             previousStage: result.stage,
             currentStage: updated.state.currentStage,
             workflowStatus: updated.state.status,
+            approvalMode: 'agent',
             stageAction: nextAction
               ? {
                   stage: nextAction.stage,

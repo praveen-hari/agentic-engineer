@@ -8,6 +8,7 @@ import type { ProcessLevel } from '../../core/types';
 
 export const SettingsView: FunctionalComponent = () => {
   const processLevel = useSignal<ProcessLevel | 'auto'>('auto');
+  const approvalMode = useSignal<'user' | 'agent'>('user');
   const autoApprove = useSignal(false);
   const reviewTimeout = useSignal(30);
   const saveStatus = useSignal<'idle' | 'saving' | 'saved'>('idle');
@@ -24,6 +25,7 @@ export const SettingsView: FunctionalComponent = () => {
       }
       if (msg.type === 'settingsLoaded') {
         processLevel.value = msg.settings.processLevelDefault as ProcessLevel | 'auto';
+        approvalMode.value = (msg.settings as Record<string, unknown>).approvalMode === 'agent' ? 'agent' : 'user';
         autoApprove.value = msg.settings.autoApproveLowRisk;
         reviewTimeout.value = msg.settings.reviewTimeoutMinutes;
         loaded.value = true;
@@ -45,6 +47,7 @@ export const SettingsView: FunctionalComponent = () => {
       type: 'updateSettings',
       settings: {
         processLevelDefault: processLevel.value,
+        approvalMode: approvalMode.value,
         autoApproveLowRisk: autoApprove.value,
         reviewTimeoutMinutes: reviewTimeout.value,
       },
@@ -90,6 +93,21 @@ export const SettingsView: FunctionalComponent = () => {
               <option value="guarded">
                 Guarded — DB migrations, auth changes, deployments (6 stages + gates)
               </option>
+            </select>
+          </div>
+
+          <div class="settings-field">
+            <label class="settings-label">Stage Advancement</label>
+            <select
+              class="input"
+              value={approvalMode.value}
+              onChange={(e: Event) => {
+                approvalMode.value = (e.target as HTMLSelectElement).value as 'user' | 'agent';
+                saveSettings();
+              }}
+            >
+              <option value="user">User controls — you click "Approve &amp; Continue" to advance each stage</option>
+              <option value="agent">Agent controls — agent auto-advances stages when requirements are met</option>
             </select>
           </div>
 

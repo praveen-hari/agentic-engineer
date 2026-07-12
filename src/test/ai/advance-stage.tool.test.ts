@@ -60,12 +60,14 @@ describe('AdvanceStageTool', () => {
     artifactManager = new ArtifactManager(fs, '/project');
     onWorkflowUpdated = vi.fn();
 
+    // Default to agent mode for existing tests (auto-advance behavior)
     tool = new AdvanceStageTool(
       workflowEngine,
       stateManager,
       stageExecutor,
       artifactManager,
       onWorkflowUpdated,
+      async () => 'agent',
     );
   });
 
@@ -186,6 +188,51 @@ describe('AdvanceStageTool', () => {
       expect(parsed.advanced).toBe(true);
       expect(parsed.workflowStatus).toBe('completed');
       expect(parsed.message).toContain('completed');
+    });
+  });
+
+  // ─── User Mode (approvalMode = 'user') ─────────────────────────
+
+  describe('user mode (approvalMode = user)', () => {
+    let userTool: AdvanceStageTool;
+
+    beforeEach(() => {
+      userTool = new AdvanceStageTool(
+        workflowEngine,
+        stateManager,
+        stageExecutor,
+        artifactManager,
+        onWorkflowUpdated,
+        async () => 'user',
+      );
+    });
+
+    it('approves gates but does NOT advance the stage', async () => {
+      await createAndStartWorkflow();
+
+      const result = await userTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+
+      expect(parsed.advanced).toBe(false);
+      expect(parsed.gatesApproved).toBe(true);
+      expect(parsed.approvalMode).toBe('user');
+      expect(parsed.message).toContain('Waiting for the user');
+    });
+
+    it('notifies extension with updated workflow (gates approved)', async () => {
+      await createAndStartWorkflow();
+
+      await userTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      expect(onWorkflowUpdated).toHaveBeenCalledTimes(1);
     });
   });
 
