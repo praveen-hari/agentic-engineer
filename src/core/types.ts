@@ -43,6 +43,10 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'auto-approve
 
 export type ApprovalMode = 'user' | 'agent';
 
+export type PluginCategory = 'syncfusion' | 'community' | 'official';
+
+export type PluginInstallStatus = 'not-installed' | 'installing' | 'installed' | 'failed';
+
 export type GateStatus = 'pending' | 'passed' | 'failed' | 'skipped';
 
 export type GateType = 'automated' | 'review' | 'approval';
@@ -215,6 +219,47 @@ export interface SkillDefinition {
   readonly gateType?: SkillGateType;
 }
 
+// ─── Plugin Marketplace ────────────────────────────────────────────────────
+
+export interface PluginInstallSource {
+  readonly type: 'git' | 'npm' | 'url';
+  readonly repo: string;
+}
+
+export interface PluginInfo {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly author: string;
+  readonly version: string;
+  readonly icon: string;
+  readonly repository: string;
+  readonly keywords: readonly string[];
+  readonly category: PluginCategory;
+  readonly featured: boolean;
+  readonly skillCount: number;
+  readonly installSource: PluginInstallSource;
+  readonly installStatus?: PluginInstallStatus;
+}
+
+export interface PluginRegistryData {
+  readonly version: number;
+  readonly lastUpdated: string;
+  readonly plugins: readonly PluginInfo[];
+}
+
+export interface PluginStoreState {
+  readonly plugins: readonly PluginInfo[];
+  readonly installed: readonly PluginInfo[];
+  readonly recommended: readonly PluginInfo[];
+  readonly featured: readonly PluginInfo[];
+  readonly loading: boolean;
+  readonly searchQuery: string;
+  readonly activeTab: 'all' | 'syncfusion' | 'community';
+  readonly installingIds: readonly string[];
+  readonly error: string | null;
+}
+
 // ─── Message Protocol (Webview ↔ Extension Host) ────────────────────────────
 
 export type MessageToHost =
@@ -255,7 +300,11 @@ export type MessageToHost =
   | { readonly type: 'cancelAgent' }
   | { readonly type: 'pauseWorkflow' }
   | { readonly type: 'resumeWorkflow' }
-  | { readonly type: 'deleteWorkflow' };
+  | { readonly type: 'deleteWorkflow' }
+  | { readonly type: 'requestPlugins' }
+  | { readonly type: 'installPlugin'; readonly pluginId: string }
+  | { readonly type: 'uninstallPlugin'; readonly pluginId: string }
+  | { readonly type: 'refreshPlugins' };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -321,6 +370,23 @@ export type MessageToWebview =
         readonly autoApproveLowRisk: boolean;
         readonly reviewTimeoutMinutes: number;
       };
+    }
+  | {
+      readonly type: 'pluginsData';
+      readonly plugins: readonly PluginInfo[];
+      readonly installed: readonly PluginInfo[];
+      readonly recommended: readonly PluginInfo[];
+      readonly featured: readonly PluginInfo[];
+    }
+  | {
+      readonly type: 'pluginInstalling';
+      readonly pluginId: string;
+    }
+  | {
+      readonly type: 'pluginInstallResult';
+      readonly pluginId: string;
+      readonly success: boolean;
+      readonly error?: string;
     };
 
 // ─── Agent Activity ────────────────────────────────────────────────────────

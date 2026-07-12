@@ -16,7 +16,7 @@ interface NavItem {
 
 const NAV_ITEMS: readonly NavItem[] = [
   { id: 'tasks', label: 'New Task', icon: 'tasklist' },
-  { id: 'capabilities', label: 'Capabilities', icon: 'lightbulb' },
+  { id: 'capabilities', label: 'Plugins', icon: 'package' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book' },
   { id: 'history', label: 'History', icon: 'history' },
   { id: 'settings', label: 'Settings', icon: 'gear' },

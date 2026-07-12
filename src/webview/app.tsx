@@ -24,6 +24,7 @@ import {
   historyDetailEntry,
   historyDetailWorkflow,
   historyDetailArtifacts,
+  pluginStore,
 } from './store/workflow.store';
 import { bridge } from './bridge';
 import { OnboardingView } from './views/onboarding-view';
@@ -143,6 +144,30 @@ export const App: FunctionalComponent = () => {
           historyDetailEntry.value = msg.entry;
           historyDetailWorkflow.value = msg.workflow;
           historyDetailArtifacts.value = msg.artifacts;
+          break;
+        case 'pluginsData':
+          pluginStore.value = {
+            ...pluginStore.value,
+            plugins: msg.plugins as typeof pluginStore.value.plugins,
+            installed: msg.installed as typeof pluginStore.value.installed,
+            recommended: msg.recommended as typeof pluginStore.value.recommended,
+            featured: msg.featured as typeof pluginStore.value.featured,
+            loading: false,
+            error: null,
+          };
+          break;
+        case 'pluginInstalling':
+          pluginStore.value = {
+            ...pluginStore.value,
+            installingIds: [...pluginStore.value.installingIds, msg.pluginId],
+          };
+          break;
+        case 'pluginInstallResult':
+          pluginStore.value = {
+            ...pluginStore.value,
+            installingIds: pluginStore.value.installingIds.filter((id) => id !== msg.pluginId),
+            error: msg.success ? null : (msg.error ?? 'Install failed'),
+          };
           break;
       }
     });

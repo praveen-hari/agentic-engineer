@@ -14,6 +14,7 @@ import { AgentBridge } from './services/agent-bridge.service';
 import { HistoryManager } from './services/history-manager.service';
 import { ArtifactWatcher } from './services/artifact-watcher.service';
 import { BranchWatcher } from './services/branch-watcher.service';
+import { PluginRegistryService } from './services/plugin-registry.service';
 import { PromptTemplates } from './core/prompt-templates';
 import { SetupProjectTool } from './ai/tools/setup-project.tool';
 import { StartWorkflowTool } from './ai/tools/start-workflow.tool';
@@ -59,6 +60,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const historyManager = new HistoryManager(fsService, workspaceRoot ?? '/');
   const promptTemplates = new PromptTemplates();
   const agentBridge = new AgentBridge(vscodeApi);
+  const pluginRegistry = new PluginRegistryService();
 
   // ─── Language Model Tools (registered with vscode.lm) ────────────
   // These tools are invoked by the agent in agent mode automatically.
@@ -195,6 +197,7 @@ export function activate(context: vscode.ExtensionContext): void {
       agentBridge,
       historyManager,
       readApprovalMode,
+      pluginRegistry,
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),

@@ -8,12 +8,14 @@ import type { WorkspaceService } from '../services/workspace.service';
 import type { ArtifactManager } from '../services/artifact-manager.service';
 import type { AgentBridge } from '../services/agent-bridge.service';
 import type { HistoryManager } from '../services/history-manager.service';
+import type { PluginRegistryService } from '../services/plugin-registry.service';
 import type {
   Artifact,
   FileIO,
   LifecycleStage,
   MessageToHost,
   MessageToWebview,
+  ProjectContext,
   RiskAssessment,
 } from '../core/types';
 import {
@@ -55,6 +57,11 @@ export interface MessageHandlerDeps {
    * Returns 'user' by default if config is missing or corrupt.
    */
   readonly readApprovalMode: () => Promise<'user' | 'agent'>;
+  /**
+   * Plugin registry service for marketplace operations.
+   * Optional — if not provided, plugin messages are silently ignored.
+   */
+  readonly pluginRegistry?: PluginRegistryService;
 }
 
 /**
@@ -176,6 +183,18 @@ export function handleWebviewMessage(
         case 'deleteWorkflow':
           await handleDeleteWorkflow(deps, reply);
           break;
+        case 'requestPlugins':
+          await handleRequestPlugins(deps, reply);
+          break;
+        case 'installPlugin':
+          await handleInstallPlugin(deps, reply, msg.pluginId);
+          break;
+        case 'uninstallPlugin':
+          await handleUninstallPlugin(deps, reply, msg.pluginId);
+          break;
+        case 'refreshPlugins':
+          await handleRefreshPlugins(deps, reply);
+          break;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -222,6 +241,10 @@ const VALID_MESSAGE_TYPES = new Set<string>([
   'pauseWorkflow',
   'resumeWorkflow',
   'deleteWorkflow',
+  'requestPlugins',
+  'installPlugin',
+  'uninstallPlugin',
+  'refreshPlugins',
 ]);
 
 /**
@@ -1299,4 +1322,151 @@ const APPROVAL_STAGE_MAP: Readonly<Record<string, LifecycleStage>> = {
 function isApprovalForCurrentStage(artifactName: string, stage: LifecycleStage | null): boolean {
   if (!stage) return false;
   return APPROVAL_STAGE_MAP[artifactName] === stage;
+}
+
+// ─── Plugin Marketplace Handlers ─────────────────────────────────────────────
+
+/** Cached project context for recommendations. */
+let lastProjectContext: ProjectContext | null = null;
+
+async function handleRequestPlugins(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  if (!deps.pluginRegistry) {
+    reply({ type: 'pluginsData', plugins: [], installed: [], recommended: [], featured: [] });
+    return;
+  }
+
+  try {
+    const allPlugins = await deps.pluginRegistry.getPluginsWithStatus();
+    const installed = await deps.pluginRegistry.getInstalledPlugins(allPlugins);
+    const featured = deps.pluginRegistry.getFeaturedPlugins(allPlugins);
+
+    // Get project context for recommendations
+    if (!lastProjectContext) {
+      const root = deps.workspaceService.getWorkspaceRoot();
+      if (root) {
+        try {
+          const stackPath = `${root}/.codestudio/knowledge/stack.md`;
+          if (await deps.fileSystem.exists(stackPath)) {
+            const content = await deps.fileSystem.read(stackPath);
+            const lines = content.split('\n');
+            const languages: string[] = [];
+            const frameworks: string[] = [];
+            for (const line of lines) {
+              const lower = line.toLowerCase();
+              if (lower.includes('language') && line.includes(':')) {
+                languages.push(...extractListFromLine(line));
+              } else if (lower.includes('framework') && line.includes(':')) {
+                frameworks.push(...extractListFromLine(line));
+              }
+            }
+            lastProjectContext = {
+              rootPath: root,
+              languages,
+              frameworks,
+              detectedStack: [...languages, ...frameworks],
+              packageManager: null,
+              testFramework: null,
+              conventions: [],
+              generatedAt: new Date().toISOString(),
+            };
+          }
+        } catch {
+          // No context available
+        }
+      }
+    }
+
+    const recommended = deps.pluginRegistry.computeRecommendations(allPlugins, lastProjectContext);
+
+    reply({
+      type: 'pluginsData',
+      plugins: allPlugins,
+      installed,
+      recommended,
+      featured,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to fetch plugins';
+    reply({ type: 'error', message });
+  }
+}
+
+async function handleInstallPlugin(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  pluginId: string,
+): Promise<void> {
+  if (!deps.pluginRegistry) return;
+
+  try {
+    const allPlugins = await deps.pluginRegistry.fetchCatalog();
+    const plugin = allPlugins.find((p) => p.id === pluginId);
+    if (!plugin) {
+      reply({ type: 'pluginInstallResult', pluginId, success: false, error: 'Plugin not found' });
+      return;
+    }
+
+    reply({ type: 'pluginInstalling', pluginId });
+    await deps.pluginRegistry.installPlugin(plugin);
+    reply({ type: 'pluginInstallResult', pluginId, success: true });
+
+    // Refresh the full list so UI updates
+    await handleRequestPlugins(deps, reply);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Install failed';
+    reply({ type: 'pluginInstallResult', pluginId, success: false, error: message });
+  }
+}
+
+async function handleUninstallPlugin(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+  pluginId: string,
+): Promise<void> {
+  if (!deps.pluginRegistry) return;
+
+  try {
+    const allPlugins = await deps.pluginRegistry.fetchCatalog();
+    const plugin = allPlugins.find((p) => p.id === pluginId);
+    if (!plugin) {
+      reply({ type: 'pluginInstallResult', pluginId, success: false, error: 'Plugin not found' });
+      return;
+    }
+
+    await deps.pluginRegistry.uninstallPlugin(plugin);
+    reply({ type: 'pluginInstallResult', pluginId, success: true });
+
+    // Refresh the full list so UI updates
+    await handleRequestPlugins(deps, reply);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Uninstall failed';
+    reply({ type: 'pluginInstallResult', pluginId, success: false, error: message });
+  }
+}
+
+async function handleRefreshPlugins(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
+  if (!deps.pluginRegistry) return;
+  lastProjectContext = null; // Force re-read of project context
+  try {
+    const allPlugins = await deps.pluginRegistry.getPluginsWithStatus(true);
+    const installed = await deps.pluginRegistry.getInstalledPlugins(allPlugins);
+    const featured = deps.pluginRegistry.getFeaturedPlugins(allPlugins);
+    const recommended = deps.pluginRegistry.computeRecommendations(allPlugins, null);
+    reply({ type: 'pluginsData', plugins: allPlugins, installed, recommended, featured });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to refresh plugins';
+    reply({ type: 'error', message });
+  }
+}
+
+/** Extract comma/space-separated values from a markdown line like "Languages: TypeScript, Python". */
+function extractListFromLine(line: string): string[] {
+  const parts = line.split(':');
+  if (parts.length < 2) return [];
+  return parts
+    .slice(1)
+    .join(':')
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }

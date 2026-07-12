@@ -133,12 +133,70 @@ export const agentStatusStage = signal<LifecycleStage | null>(null);
 export const artifactContents = signal<Readonly<Record<string, string>>>({});
 const MAX_CACHED_ARTIFACTS = 30;
 
-// ─── Capabilities State ───────────────────────────────────────────────────
+// ─── Plugin Marketplace State ─────────────────────────────────────────────
 
-export const capabilitiesStore = signal<{
-  readonly recommendations: readonly unknown[];
-  readonly installedPacks: readonly string[];
-}>({ recommendations: [], installedPacks: [] });
+export interface PluginInfoView {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly author: string;
+  readonly version: string;
+  readonly icon: string;
+  readonly repository: string;
+  readonly keywords: readonly string[];
+  readonly category: 'syncfusion' | 'community' | 'official';
+  readonly featured: boolean;
+  readonly skillCount: number;
+  readonly installSource: { readonly type: string; readonly repo: string };
+  readonly installStatus?: 'not-installed' | 'installing' | 'installed' | 'failed';
+}
+
+export const pluginStore = signal<{
+  readonly plugins: readonly PluginInfoView[];
+  readonly installed: readonly PluginInfoView[];
+  readonly recommended: readonly PluginInfoView[];
+  readonly featured: readonly PluginInfoView[];
+  readonly loading: boolean;
+  readonly searchQuery: string;
+  readonly activeTab: 'all' | 'syncfusion' | 'community';
+  readonly installingIds: readonly string[];
+  readonly error: string | null;
+}>({
+  plugins: [],
+  installed: [],
+  recommended: [],
+  featured: [],
+  loading: false,
+  searchQuery: '',
+  activeTab: 'all',
+  installingIds: [],
+  error: null,
+});
+
+/** Filtered plugins based on search query and active tab. */
+export const filteredPlugins = computed(() => {
+  const { plugins, searchQuery, activeTab } = pluginStore.value;
+  let filtered = [...plugins];
+
+  // Filter by tab
+  if (activeTab !== 'all') {
+    filtered = filtered.filter((p) => p.category === activeTab);
+  }
+
+  // Filter by search
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.keywords.some((k) => k.toLowerCase().includes(q)) ||
+        p.author.toLowerCase().includes(q),
+    );
+  }
+
+  return filtered;
+});
 
 // ─── Store Actions ────────────────────────────────────────────────────────
 // Encapsulated mutations so components don't directly write to signals.

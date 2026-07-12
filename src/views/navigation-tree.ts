@@ -47,7 +47,7 @@ export class NavigationTreeProvider implements vscode.TreeDataProvider<Navigatio
   getChildren(): NavigationItem[] {
     return [
       new NavigationItem('tasks', 'Tasks', 'tasklist', this.badges['tasks']),
-      new NavigationItem('capabilities', 'Capabilities', 'lightbulb', this.badges['capabilities']),
+      new NavigationItem('capabilities', 'Plugins', 'extensions', this.badges['capabilities']),
       new NavigationItem('knowledge', 'Knowledge', 'book', this.badges['knowledge']),
       new NavigationItem('history', 'History', 'history', this.badges['history']),
     ];

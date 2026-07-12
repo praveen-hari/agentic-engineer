@@ -89,6 +89,14 @@ export const CHAT_PARTICIPANT_NAME = 'engineering';
 
 export const WEBVIEW_VIEW_ID = 'engineeringWorkspace.mainView';
 
+// ─── Plugin Marketplace ─────────────────────────────────────────────────────
+
+export const PLUGIN_REGISTRY_URL =
+  'https://raw.githubusercontent.com/praveen-hari/agent-plugin-marketplace/main/plugins.json';
+export const PLUGIN_ICON_BASE_URL =
+  'https://raw.githubusercontent.com/praveen-hari/agent-plugin-marketplace/main/icons/';
+export const PLUGIN_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
 /** Process level → minimum number of approvals (DD-010). */
 export const MIN_APPROVALS: Readonly<Record<ProcessLevel, number>> = {
   light: 0,
