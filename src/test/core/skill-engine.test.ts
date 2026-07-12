@@ -19,12 +19,11 @@ describe('SkillEngine', () => {
   });
 
   describe('computeActiveSkills', () => {
-    it('always includes the 4 always-active skills', () => {
+    it('always includes the 3 always-active skills', () => {
       const result = engine.computeActiveSkills(makeAssessment());
       expect(result.activeSkills).toContain('context-engineering');
       expect(result.activeSkills).toContain('git-workflow-and-versioning');
       expect(result.activeSkills).toContain('incremental-implementation');
-      expect(result.activeSkills).toContain('using-agent-skills');
     });
 
     it('includes task-type skills for feature work', () => {
@@ -41,10 +40,10 @@ describe('SkillEngine', () => {
 
     it('includes task-type skills for refactor work', () => {
       const result = engine.computeActiveSkills(
-        makeAssessment({ workType: 'refactor', processLevel: 'thorough' }),
+        makeAssessment({ workType: 'refactor', processLevel: 'standard' }),
       );
       expect(result.activeSkills).toContain('spec-driven-development');
-      expect(result.activeSkills).toContain('deprecation-and-migration');
+      expect(result.activeSkills).toContain('test-driven-development');
     });
 
     it('includes task-type skills for security work', () => {
@@ -66,18 +65,6 @@ describe('SkillEngine', () => {
   });
 
   describe('context signal activation', () => {
-    it('adds frontend-ui-engineering when touches_ui signal present', () => {
-      const result = engine.computeActiveSkills(makeAssessment({ contextSignals: ['touches_ui'] }));
-      expect(result.activeSkills).toContain('frontend-ui-engineering');
-    });
-
-    it('adds api-and-interface-design when touches_api signal present', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ contextSignals: ['touches_api'] }),
-      );
-      expect(result.activeSkills).toContain('api-and-interface-design');
-    });
-
     it('adds security-and-hardening when touches_auth_or_input signal present', () => {
       const result = engine.computeActiveSkills(
         makeAssessment({ contextSignals: ['touches_auth_or_input'] }),
@@ -85,25 +72,18 @@ describe('SkillEngine', () => {
       expect(result.activeSkills).toContain('security-and-hardening');
     });
 
-    it('adds observability when touches_external_services signal present', () => {
+    it('adds security-and-hardening when touches_external_services signal present', () => {
       const result = engine.computeActiveSkills(
         makeAssessment({ contextSignals: ['touches_external_services'] }),
       );
-      expect(result.activeSkills).toContain('observability-and-instrumentation');
+      expect(result.activeSkills).toContain('security-and-hardening');
     });
 
-    it('adds performance-optimization when performance_sensitive signal present', () => {
-      const result = engine.computeActiveSkills(
-        makeAssessment({ contextSignals: ['performance_sensitive'] }),
-      );
-      expect(result.activeSkills).toContain('performance-optimization');
-    });
-
-    it('adds ci-cd-and-automation when high_risk_decision signal present', () => {
+    it('adds security-and-hardening when high_risk_decision signal present', () => {
       const result = engine.computeActiveSkills(
         makeAssessment({ contextSignals: ['high_risk_decision'] }),
       );
-      expect(result.activeSkills).toContain('ci-cd-and-automation');
+      expect(result.activeSkills).toContain('security-and-hardening');
     });
   });
 
@@ -115,7 +95,6 @@ describe('SkillEngine', () => {
       expect(result.activeSkills).toContain('context-engineering');
       expect(result.activeSkills).toContain('git-workflow-and-versioning');
       expect(result.activeSkills).toContain('incremental-implementation');
-      expect(result.activeSkills).toContain('using-agent-skills');
     });
 
     it('standard process includes quality-gate skills', () => {
@@ -123,20 +102,21 @@ describe('SkillEngine', () => {
       expect(result.activeSkills).toContain('code-review-and-quality');
     });
 
-    it('thorough process includes standard skills + doubt-driven + shipping', () => {
+    it('thorough process includes standard skills + shipping + security + docs', () => {
       const result = engine.computeActiveSkills(
         makeAssessment({ processLevel: 'thorough', workType: 'feature' }),
       );
-      expect(result.activeSkills).toContain('doubt-driven-development');
       expect(result.activeSkills).toContain('shipping-and-launch');
+      expect(result.activeSkills).toContain('security-and-hardening');
+      expect(result.activeSkills).toContain('documentation-and-adrs');
     });
 
-    it('guarded process includes all thorough skills + security-auditor', () => {
+    it('guarded process includes all thorough skills', () => {
       const result = engine.computeActiveSkills(
         makeAssessment({ processLevel: 'guarded', workType: 'security' }),
       );
-      expect(result.activeSkills).toContain('security-auditor');
       expect(result.activeSkills).toContain('shipping-and-launch');
+      expect(result.activeSkills).toContain('security-and-hardening');
     });
 
     it('higher process levels include lower level skills (additive)', () => {
@@ -195,8 +175,10 @@ describe('SkillEngine', () => {
     });
 
     it('reason for context skill mentions the signal', () => {
-      const result = engine.computeActiveSkills(makeAssessment({ contextSignals: ['touches_ui'] }));
-      expect(result.activationReasons['frontend-ui-engineering']).toMatch(/ui/i);
+      const result = engine.computeActiveSkills(
+        makeAssessment({ contextSignals: ['touches_auth_or_input'] }),
+      );
+      expect(result.activationReasons['security-and-hardening']).toMatch(/touches_auth_or_input/i);
     });
 
     it('reason for process-level skill mentions the process level', () => {
@@ -221,11 +203,10 @@ describe('SkillEngine', () => {
       expect(result.activeSkills).toContain('spec-driven-development');
     });
 
-    it('guarded process level → includes shipping, security, performance, documentation', () => {
+    it('guarded process level → includes shipping, security, documentation', () => {
       const result = engine.computeActiveSkills(makeAssessment({ processLevel: 'guarded' }));
       expect(result.activeSkills).toContain('shipping-and-launch');
       expect(result.activeSkills).toContain('security-and-hardening');
-      expect(result.activeSkills).toContain('performance-optimization');
       expect(result.activeSkills).toContain('documentation-and-adrs');
     });
   });

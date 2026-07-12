@@ -13,9 +13,9 @@ describe('SkillRegistry', () => {
   const registry = new SkillRegistry();
 
   describe('getAll', () => {
-    it('returns all 28 skills (24 engineering + 4 specialist agents)', () => {
+    it('returns all 12 bundled skills', () => {
       const skills = registry.getAll();
-      expect(skills).toHaveLength(28);
+      expect(skills).toHaveLength(12);
     });
 
     it('every skill has a unique id', () => {
@@ -46,53 +46,40 @@ describe('SkillRegistry', () => {
     });
 
     it('returns undefined for an unknown id', () => {
-      const skill = registry.getById('nonexistent-skill');
+      const skill = registry.getById('nonexistent-skill' as SkillId);
       expect(skill).toBeUndefined();
     });
   });
 
   describe('getByCategory', () => {
-    it('returns 4 always-active skills', () => {
+    it('returns 3 always-active skills', () => {
       const skills = registry.getByCategory('always');
-      expect(skills).toHaveLength(4);
+      expect(skills).toHaveLength(3);
       expect(skills.map((s) => s.id).sort()).toEqual(
-        [
-          'context-engineering',
-          'git-workflow-and-versioning',
-          'incremental-implementation',
-          'using-agent-skills',
-        ].sort(),
+        ['context-engineering', 'git-workflow-and-versioning', 'incremental-implementation'].sort(),
       );
     });
 
     it('returns by-task-type skills', () => {
       const skills = registry.getByCategory('by-task-type');
-      expect(skills.length).toBeGreaterThanOrEqual(7);
+      expect(skills).toHaveLength(5);
     });
 
     it('returns by-context skills', () => {
       const skills = registry.getByCategory('by-context');
-      expect(skills.length).toBeGreaterThanOrEqual(7);
+      expect(skills).toHaveLength(1);
+      expect(skills[0].id).toBe('security-and-hardening');
     });
 
     it('returns interactive skills', () => {
       const skills = registry.getByCategory('interactive');
-      expect(skills.length).toBeGreaterThanOrEqual(2);
-      expect(skills.map((s) => s.id)).toContain('interview-me');
-      expect(skills.map((s) => s.id)).toContain('idea-refine');
+      expect(skills).toHaveLength(1);
+      expect(skills[0].id).toBe('interview-me');
     });
 
     it('returns quality-gate skills', () => {
       const skills = registry.getByCategory('quality-gate');
-      expect(skills.length).toBeGreaterThanOrEqual(3);
-    });
-
-    it('returns specialist skills', () => {
-      const skills = registry.getByCategory('specialist');
-      expect(skills).toHaveLength(4);
-      expect(skills.map((s) => s.id).sort()).toEqual(
-        ['code-reviewer', 'security-auditor', 'test-engineer', 'web-performance-auditor'].sort(),
-      );
+      expect(skills).toHaveLength(2);
     });
   });
 
@@ -142,7 +129,6 @@ describe('SkillRegistry', () => {
       const skills = registry.getByTaskType('refactor');
       expect(skills.length).toBeGreaterThan(0);
       expect(skills.map((s) => s.id)).toContain('spec-driven-development');
-      expect(skills.map((s) => s.id)).toContain('deprecation-and-migration');
     });
 
     it('returns skills for security work type', () => {
@@ -161,7 +147,8 @@ describe('SkillRegistry', () => {
     it('returns skills for infrastructure work type', () => {
       const skills = registry.getByTaskType('infrastructure');
       expect(skills.length).toBeGreaterThan(0);
-      expect(skills.map((s) => s.id)).toContain('ci-cd-and-automation');
+      expect(skills.map((s) => s.id)).toContain('spec-driven-development');
+      expect(skills.map((s) => s.id)).toContain('planning-and-task-breakdown');
     });
   });
 
@@ -200,11 +187,6 @@ describe('SkillRegistry', () => {
       const skill = registry.getById('incremental-implementation')!;
       expect(skill.activation.mode).toBe('always');
     });
-
-    it('using-agent-skills is always active', () => {
-      const skill = registry.getById('using-agent-skills')!;
-      expect(skill.activation.mode).toBe('always');
-    });
   });
 
   describe('quality gate skills', () => {
@@ -217,28 +199,6 @@ describe('SkillRegistry', () => {
     it('security-and-hardening can be a conditional gate', () => {
       const skill = registry.getById('security-and-hardening')!;
       expect(skill.gateType).not.toBe('none');
-    });
-  });
-
-  describe('specialist agents', () => {
-    it('code-reviewer is a specialist agent', () => {
-      const skill = registry.getById('code-reviewer')!;
-      expect(skill.category).toBe('specialist');
-    });
-
-    it('security-auditor is a specialist agent', () => {
-      const skill = registry.getById('security-auditor')!;
-      expect(skill.category).toBe('specialist');
-    });
-
-    it('test-engineer is a specialist agent', () => {
-      const skill = registry.getById('test-engineer')!;
-      expect(skill.category).toBe('specialist');
-    });
-
-    it('web-performance-auditor is a specialist agent', () => {
-      const skill = registry.getById('web-performance-auditor')!;
-      expect(skill.category).toBe('specialist');
     });
   });
 });

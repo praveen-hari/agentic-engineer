@@ -63,10 +63,10 @@ export class SaveArtifactTool implements vscode.LanguageModelTool<SaveArtifactIn
             path: artifact.path,
             type: artifact.type,
             stage: artifact.stage,
-            message: `Artifact saved to ${artifact.path}. The user can review and approve it in the Engineering Workspace sidebar.`,
+            message: `Artifact saved to ${artifact.path}.`,
             nextSteps: [
-              'Wait for the user to review and approve the artifact in the sidebar.',
-              'Once approved, call engineering_advance_stage to move to the next stage.',
+              'Call engineering_advance_stage to check requirements and advance to the next stage.',
+              'The advance tool will handle approval mode — in user mode it waits for user approval, in agent mode it advances automatically.',
             ],
           },
           null,

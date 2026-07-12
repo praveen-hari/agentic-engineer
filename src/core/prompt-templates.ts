@@ -37,7 +37,7 @@ export class PromptTemplates {
     return `Follow the **spec-driven-development** skill to generate a specification.
 
 ## Objective
-${objective}
+${fenceUserInput(objective)}
 
 ## Project Context
 ${contextBlock}
@@ -47,6 +47,8 @@ ${contextBlock}
 - ${signalBlock}
 
 ## Instructions
+Call \`engineering_update_status\` frequently to report progress (e.g., "Scanning workspace...", "Drafting spec: Tech Stack section...", "Spec complete — saving artifact...").
+
 1. Scan the workspace first to understand the existing codebase, patterns, and conventions.
 2. Follow the spec-driven-development skill workflow (Phase 1: Specify).
 3. The spec must cover: Objective, Tech Stack, Commands, Project Structure, Code Style, Testing Strategy, Boundaries, Success Criteria.
@@ -66,11 +68,13 @@ ${contextBlock}
     return `Follow the **planning-and-task-breakdown** skill to create an implementation plan.
 
 ## Objective
-${objective}
+${fenceUserInput(objective)}
 
 ${specSection}
 
 ## Instructions
+Call \`engineering_update_status\` frequently to report progress (e.g., "Reading spec...", "Identifying dependencies...", "Breaking into tasks...", "Plan complete — saving artifact...").
+
 1. Read the specification first.
 2. Scan the workspace to understand the existing codebase.
 3. Follow the planning-and-task-breakdown skill to break the spec into tasks.
@@ -85,12 +89,15 @@ ${specSection}
    * References: incremental-implementation + test-driven-development skills
    */
   getBuildPrompt(objective: string, planPath: string): string {
-    return `Implement the plan for: **${objective}**
+    return `Implement the plan for:
+${fenceUserInput(objective)}
 
 ## Plan
 Read the implementation plan at: \`${planPath}\`
 
 ## Instructions
+Call \`engineering_update_status\` frequently to report progress (e.g., "Task 1/5: Writing failing test...", "Task 1/5: Implementing...", "Task 1/5: Tests passing, committing...", "Task 2/5: Starting...").
+
 1. Read the plan file first to understand all tasks.
 2. Follow the **incremental-implementation** skill — implement one task at a time.
 3. For each task, follow the **test-driven-development** skill:
@@ -128,12 +135,14 @@ Follow the **test-driven-development** and **incremental-implementation** skills
     return `Run verification checks for the completed implementation.
 
 ## Objective
-${objective}
+${fenceUserInput(objective)}
 
 ## Project Context
 Read the project details from \`.codestudio/knowledge/stack.md\` and \`.codestudio/knowledge/conventions.md\` to understand the tech stack, build tools, test framework, and commands used in this project.
 
 ## Instructions
+Call \`engineering_update_status\` frequently to report progress (e.g., "Running test suite...", "Tests passed ✓", "Running build...", "Build succeeded ✓", "Running linter...", "Compiling report...").
+
 1. **Discover the correct commands** — read \`package.json\`, \`Makefile\`, \`Cargo.toml\`, \`*.csproj\`, \`pyproject.toml\`, or whatever build config exists in this project.
 2. **Run the test suite** using the project's actual test command.
 3. **Run the build** using the project's actual build command.
@@ -153,9 +162,11 @@ Report results honestly — if tests fail, document which ones and why.`;
     return `Follow the **code-review-and-quality** skill to review the implementation.
 
 ## Objective
-${objective}
+${fenceUserInput(objective)}
 
 ## Instructions
+Call \`engineering_update_status\` frequently to report progress (e.g., "Reviewing correctness...", "Reviewing architecture...", "Reviewing security...", "Compiling review findings...").
+
 1. Review all changes made during this workflow.
 2. Follow the code-review-and-quality skill — evaluate across five axes: correctness, readability, architecture, security, performance.
 3. Categorize findings: Critical / Required / Optional / Nit / FYI.
@@ -170,9 +181,11 @@ ${objective}
     return `Follow the **shipping-and-launch** skill to complete the pre-launch checklist.
 
 ## Objective
-${objective}
+${fenceUserInput(objective)}
 
 ## Instructions
+Call \`engineering_update_status\` frequently to report progress (e.g., "Checking pre-launch checklist...", "Verifying tests pass...", "Checking for secrets...", "Ship checklist complete — saving report...").
+
 1. Follow the shipping-and-launch skill pre-launch checklist.
 2. Verify: tests pass, build succeeds, no type errors, no lint warnings, code review approved, documentation updated, no secrets in code, error handling appropriate.
 3. **Do NOT create the file directly.** Call the \`engineering_save_artifact\` tool with type="report" and the full content.`;
@@ -191,6 +204,7 @@ ${objective}
       signals: readonly RiskSignal[];
       processLevel: ProcessLevel;
       specPath?: string;
+      planPath?: string;
     },
   ): string | null {
     switch (stage) {
@@ -204,7 +218,7 @@ ${objective}
       case 'plan':
         return this.getPlanPrompt(params.objective, params.specPath ?? '', params.processLevel);
       case 'build':
-        return this.getBuildPrompt(params.objective, params.specPath ?? '');
+        return this.getBuildPrompt(params.objective, params.planPath ?? params.specPath ?? '');
       case 'verify':
         return this.getVerifyPrompt(params.objective);
       case 'review':
@@ -234,6 +248,17 @@ ${objective}
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Fence user-provided input to prevent prompt injection.
+ * Wraps the input in a clearly delimited block so the LLM treats it
+ * as data, not as instructions. Strips any existing fence markers.
+ */
+function fenceUserInput(input: string): string {
+  // Remove any existing triple-backtick fences that could break out
+  const sanitized = input.replace(/```/g, '` ` `');
+  return `\`\`\`user-input\n${sanitized}\n\`\`\``;
+}
 
 function formatContext(context: ProjectContext): string {
   const parts: string[] = [];

@@ -5,11 +5,20 @@ import type { FileIO, WorkflowDefinition } from './types';
  * file in `.codestudio/` (DD-002, DD-004).
  *
  * Handles missing file (first run), corrupt file (recovery), and
- * concurrent access (optimistic concurrency via version check).
+ * concurrent access (mutex + optimistic concurrency via version check).
  *
  * File I/O is injected via the {@link FileIO} interface for testability.
  */
 export class StateManager {
+  /**
+   * Mutex for serializing update() calls.
+   * Prevents the race condition where two concurrent updates both read
+   * the same version, transform independently, and the second save
+   * overwrites the first (lost update).
+   * Pattern: promise-chain mutex — each update waits for the previous.
+   */
+  private updateLock: Promise<void> = Promise.resolve();
+
   constructor(
     private readonly fs: FileIO,
     private readonly filePath: string,
@@ -64,6 +73,10 @@ export class StateManager {
    * The transform function receives the current state and returns the new state.
    * Version is automatically bumped on each update.
    *
+   * Serialized via a promise-chain mutex so concurrent callers
+   * (e.g., UI "Approve & Continue" + agent `advance_stage` tool)
+   * cannot interleave and cause lost updates.
+   *
    * @param fn Transform function
    * @param expectedVersion If provided, rejects if the on-disk version doesn't match
    * @throws Error if no workflow exists or version mismatch
@@ -72,26 +85,40 @@ export class StateManager {
     fn: (current: WorkflowDefinition) => WorkflowDefinition,
     expectedVersion?: number,
   ): Promise<WorkflowDefinition> {
-    const current = await this.load();
-    if (!current) {
-      throw new Error('Cannot update: no workflow state exists');
-    }
+    // Acquire the mutex: chain onto the previous update's promise.
+    // This ensures only one update runs at a time, even if multiple
+    // callers invoke update() concurrently.
+    let result!: WorkflowDefinition;
+    const release = this.updateLock.then(async () => {
+      const current = await this.load();
+      if (!current) {
+        throw new Error('Cannot update: no workflow state exists');
+      }
 
-    if (expectedVersion !== undefined && current.version !== expectedVersion) {
-      throw new Error(`Version conflict: expected ${expectedVersion}, found ${current.version}`);
-    }
+      if (expectedVersion !== undefined && current.version !== expectedVersion) {
+        throw new Error(`Version conflict: expected ${expectedVersion}, found ${current.version}`);
+      }
 
-    const transformed = fn(current);
-    const updated: WorkflowDefinition = {
-      ...transformed,
-      version: current.version + 1,
-      state: {
-        ...transformed.state,
-        lastActivityAt: new Date().toISOString(),
-      },
-    };
+      const transformed = fn(current);
+      const updated: WorkflowDefinition = {
+        ...transformed,
+        version: current.version + 1,
+        state: {
+          ...transformed.state,
+          lastActivityAt: new Date().toISOString(),
+        },
+      };
 
-    await this.save(updated);
-    return updated;
+      await this.save(updated);
+      result = updated;
+    });
+
+    // Update the lock to point to this operation (whether it succeeds or fails).
+    // Use .catch() on the lock chain so a failed update doesn't block future ones.
+    this.updateLock = release.catch(() => {});
+
+    // Await the actual operation — this WILL throw if it fails.
+    await release;
+    return result;
   }
 }

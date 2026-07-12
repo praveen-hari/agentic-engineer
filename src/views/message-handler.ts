@@ -14,6 +14,7 @@ import type {
   LifecycleStage,
   MessageToHost,
   MessageToWebview,
+  ProjectContext,
   RiskAssessment,
 } from '../core/types';
 import {
@@ -49,7 +50,12 @@ export interface MessageHandlerDeps {
   readonly promptTemplates: PromptTemplates;
   readonly agentBridge: AgentBridge;
   readonly historyManager: HistoryManager;
-  readonly approvalMode: 'user' | 'agent';
+  /**
+   * Reads the current approval mode from config.
+   * Function (not static value) so it always reflects the latest setting.
+   * Returns 'user' by default if config is missing or corrupt.
+   */
+  readonly readApprovalMode: () => Promise<'user' | 'agent'>;
 }
 
 /**
@@ -334,7 +340,13 @@ async function handleAnalyzeObjective(
   // Send the objective to the agent — the agent will call
   // engineering_start_workflow with its own assessment.
   // For the webview, we send a prompt to the agent.
-  const prompt = `The user wants to work on: "${objective}"
+  // Fence user input to prevent prompt injection
+  const fencedObjective = objective.replace(/```/g, '` ` `');
+  const prompt = `The user wants to work on the following objective:
+
+\`\`\`user-input
+${fencedObjective}
+\`\`\`
 
 Call \`engineering_update_status\` to report progress as you work.
 
@@ -383,11 +395,12 @@ async function handleStartWorkflow(
   // 0. Handle existing workflow
   const existing = await deps.stateManager.load();
   if (existing) {
-    if (existing.state.status === 'active') {
-      // Block: don't silently overwrite an active workflow
+    if (existing.state.status === 'active' || existing.state.status === 'paused') {
+      // Block: don't silently overwrite an active or paused workflow
+      const verb = existing.state.status === 'paused' ? 'paused' : 'active';
       reply({
         type: 'error',
-        message: 'A workflow is already active. Cancel or complete it before starting a new one.',
+        message: `A workflow is already ${verb}. Cancel or complete it before starting a new one.`,
       });
       return;
     }
@@ -522,6 +535,16 @@ async function handleRequestSettings(deps: MessageHandlerDeps, reply: ReplyFn): 
   });
 }
 
+/** Allowed config keys — prevents arbitrary key injection from the webview. */
+const ALLOWED_SETTINGS_KEYS = new Set([
+  'version',
+  'processLevelDefault',
+  'approvalMode',
+  'autoApproveLowRisk',
+  'reviewTimeoutMinutes',
+  'autoRefreshContext',
+]);
+
 async function handleUpdateSettings(
   deps: MessageHandlerDeps,
   reply: ReplyFn,
@@ -546,8 +569,16 @@ async function handleUpdateSettings(
     // Corrupt config — start fresh
   }
 
-  // Merge new settings
-  const updated = { ...existing, ...settings };
+  // Filter to only allowed keys — prevents arbitrary key injection
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(settings)) {
+    if (ALLOWED_SETTINGS_KEYS.has(key)) {
+      sanitized[key] = value;
+    }
+  }
+
+  // Merge sanitized settings
+  const updated = { ...existing, ...sanitized };
   await deps.fileSystem.write(configPath, JSON.stringify(updated, null, 2));
 
   reply({ type: 'settingsUpdated' });
@@ -717,7 +748,9 @@ async function handleResumeWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): P
     const updated = await deps.stateManager.update((wf) => deps.workflowEngine.resume(wf));
     reply({ type: 'state', workflow: updated });
 
-    // Send "Continue" to the agent — it already has context from the previous chat
+    // Send the full stage prompt so the agent has context even if the
+    // previous chat session was cleared. A bare "Continue" would fail
+    // if the agent lost context.
     const stage = updated.state.currentStage;
     if (stage) {
       reply({
@@ -725,7 +758,23 @@ async function handleResumeWorkflow(deps: MessageHandlerDeps, reply: ReplyFn): P
         status: 'working',
         message: `Resuming ${stage} stage...`,
       });
-      await deps.agentBridge.sendToChat('Continue');
+
+      // Build the full prompt for the current stage
+      const artifacts = await deps.artifactManager.listAll();
+      const specPath = artifacts.find((a) => a.type === 'spec')?.path;
+      const planPath = artifacts.find((a) => a.type === 'plan')?.path;
+      const prompt = deps.promptTemplates.getPromptForStage(stage, {
+        objective: updated.objective,
+        context: null,
+        signals: updated.detectedRisks,
+        processLevel: updated.processLevel,
+        specPath,
+        planPath,
+      });
+
+      await deps.agentBridge.sendToChat(
+        prompt ?? `Continue working on the ${stage} stage for: ${updated.objective}`,
+      );
     }
   } catch (err) {
     reply({
@@ -776,28 +825,27 @@ async function handleRequestStageActions(deps: MessageHandlerDeps, reply: ReplyF
 
 async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Promise<void> {
   try {
-    // Step 1: Auto-approve all pending approvals and gates for current stage
+    // Step 1: Auto-approve ONLY current-stage approvals and gates.
+    // Uses an explicit artifact→stage mapping instead of fragile string manipulation.
     const approved = await deps.stateManager.update((wf) => {
       const currentStage = wf.state.currentStage;
-      const hasPendingWork =
-        wf.approvals.some((a) => a.status === 'pending') ||
-        wf.qualityGates.some((g) => g.status === 'pending' && g.stage === currentStage);
+      const stageApprovals = wf.approvals.filter(
+        (a) => a.status === 'pending' && isApprovalForCurrentStage(a.artifact, currentStage),
+      );
+      const stageGates = wf.qualityGates.filter(
+        (g) => g.status === 'pending' && g.stage === currentStage,
+      );
+      const hasPendingWork = stageApprovals.length > 0 || stageGates.length > 0;
 
       if (!hasPendingWork) return wf;
 
+      const approvalIds = new Set(stageApprovals.map((a) => a.id));
       const now = new Date().toISOString();
       return {
         ...wf,
-        approvals: wf.approvals.map((a) => {
-          // Only auto-approve approvals for the current stage
-          const isCurrentStage = wf.qualityGates.some(
-            (g) => g.stage === currentStage && a.artifact === g.id.replace('-approved', ''),
-          );
-          if (a.status === 'pending' && isCurrentStage) {
-            return { ...a, status: 'approved' as const, approvedAt: now };
-          }
-          return a;
-        }),
+        approvals: wf.approvals.map((a) =>
+          approvalIds.has(a.id) ? { ...a, status: 'approved' as const, approvedAt: now } : a,
+        ),
         qualityGates: wf.qualityGates.map((g) => {
           if (g.status !== 'pending' || g.stage !== currentStage) return g;
           return {
@@ -825,8 +873,9 @@ async function handleExecuteStage(deps: MessageHandlerDeps, reply: ReplyFn): Pro
         // Step 5: Prompt agent to check if knowledge needs updating
         // In user mode: agent asks user before updating
         // In agent mode: agent updates directly
+        const currentApprovalMode = await deps.readApprovalMode();
         const knowledgePrompt =
-          deps.approvalMode === 'agent'
+          currentApprovalMode === 'agent'
             ? 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, update the relevant knowledge files in .codestudio/knowledge/ directly.'
             : 'The workflow is complete. Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, tell the user which knowledge files may need updating and ask if they want you to refresh them.';
         void deps.agentBridge.sendToChat(knowledgePrompt);
@@ -917,13 +966,22 @@ async function handleSetupNewProject(
   description: string,
 ): Promise<void> {
   const objective = description || `Build ${projectName}`;
+  // Fence user input to prevent prompt injection
+  const fencedName = projectName.replace(/```/g, '` ` `');
+  const fencedObjective = objective.replace(/```/g, '` ` `');
 
-  const prompt = `Start the engineering workflow for: **${projectName}**
+  const prompt = `Start the engineering workflow for the following project:
+
+\`\`\`user-input
+${fencedName}
+\`\`\`
 
 **Important:** Call \`engineering_update_status\` frequently to report your progress (e.g., "Interviewing user...", "Creating architecture.md..."). The user sees these messages in real-time.
 
 ## Objective
-${objective}
+\`\`\`user-input
+${fencedObjective}
+\`\`\`
 
 ## Steps — follow these in order:
 
@@ -1098,23 +1156,23 @@ async function handleSendToAgent(
 
   // Find artifact paths needed by downstream stages
   let specPath: string | undefined;
+  let planPath: string | undefined;
   if (stage === 'plan' || stage === 'build') {
     const artifacts = await deps.artifactManager.listAll();
-    if (stage === 'plan') {
-      specPath = artifacts.find((a) => a.type === 'spec')?.path;
-    } else {
-      // Build stage needs the plan path
-      specPath = artifacts.find((a) => a.type === 'plan')?.path;
-    }
+    specPath = artifacts.find((a) => a.type === 'spec')?.path;
+    planPath = artifacts.find((a) => a.type === 'plan')?.path;
   }
 
   // Build the prompt for this stage
+  // Note: context is null — the agent scans the workspace directly,
+  // which is more reliable than our fragile markdown parsing.
   const prompt = deps.promptTemplates.getPromptForStage(stage, {
     objective: wf.objective,
     context: null,
     signals: wf.detectedRisks,
     processLevel: wf.processLevel,
     specPath,
+    planPath,
   });
 
   if (!prompt) {
@@ -1194,4 +1252,25 @@ async function handleOpenArtifact(
 
   const fullPath = `${root}/${WORKFLOW_DIR}/${artifact.path}`;
   await deps.workspaceService.openFileInEditor(fullPath);
+}
+
+// ─── Approval → Stage mapping ───────────────────────────────────────────────
+// Maps approval artifact names to the lifecycle stage they belong to.
+// Used by handleExecuteStage to scope auto-approval to the current stage only.
+
+const APPROVAL_STAGE_MAP: Readonly<Record<string, LifecycleStage>> = {
+  spec: 'define',
+  plan: 'plan',
+  'code-review': 'review',
+  review: 'review',
+  'security-review': 'review',
+  architecture: 'review',
+  integration: 'review',
+  'schema-migration': 'ship',
+  deployment: 'ship',
+};
+
+function isApprovalForCurrentStage(artifactName: string, stage: LifecycleStage | null): boolean {
+  if (!stage) return false;
+  return APPROVAL_STAGE_MAP[artifactName] === stage;
 }

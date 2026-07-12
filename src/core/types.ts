@@ -54,37 +54,23 @@ export type RiskSignalType = 'keyword' | 'file-pattern' | 'dependency' | 'scope'
 
 export type AssessmentSource = 'deterministic' | 'llm';
 
-// ─── All 24 Skill IDs ──────────────────────────────────────────────────────
+// ─── Bundled Skill IDs ──────────────────────────────────────────────────────
+// Only skills that have a SKILL.md file in the skills/ directory.
+// The agent can only load skills that are actually bundled.
 
 export type SkillId =
   | 'context-engineering'
   | 'git-workflow-and-versioning'
   | 'incremental-implementation'
   | 'interview-me'
-  | 'idea-refine'
   | 'spec-driven-development'
   | 'planning-and-task-breakdown'
   | 'test-driven-development'
-  | 'source-driven-development'
-  | 'doubt-driven-development'
-  | 'frontend-ui-engineering'
-  | 'api-and-interface-design'
-  | 'browser-testing-with-devtools'
   | 'debugging-and-error-recovery'
   | 'code-review-and-quality'
-  | 'code-simplification'
   | 'security-and-hardening'
-  | 'performance-optimization'
-  | 'observability-and-instrumentation'
   | 'documentation-and-adrs'
-  | 'deprecation-and-migration'
-  | 'ci-cd-and-automation'
-  | 'shipping-and-launch'
-  | 'using-agent-skills'
-  | 'code-reviewer'
-  | 'security-auditor'
-  | 'test-engineer'
-  | 'web-performance-auditor';
+  | 'shipping-and-launch';
 
 // ─── Result Type (for expected failures, per SPEC §6) ───────────────────────
 

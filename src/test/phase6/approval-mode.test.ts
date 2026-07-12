@@ -86,18 +86,14 @@ function createMockDeps(approvalMode: 'user' | 'agent' = 'user'): MessageHandler
         }),
     } as unknown as MessageHandlerDeps['stateManager'],
     workflowEngine: {
-      start: vi
-        .fn()
-        .mockReturnValue({
-          ...WORKFLOW_WITH_GATES,
-          state: { ...WORKFLOW_WITH_GATES.state, status: 'active' },
-        }),
-      advanceStage: vi
-        .fn()
-        .mockReturnValue({
-          ...WORKFLOW_WITH_GATES,
-          state: { ...WORKFLOW_WITH_GATES.state, currentStage: 'plan' },
-        }),
+      start: vi.fn().mockReturnValue({
+        ...WORKFLOW_WITH_GATES,
+        state: { ...WORKFLOW_WITH_GATES.state, status: 'active' },
+      }),
+      advanceStage: vi.fn().mockReturnValue({
+        ...WORKFLOW_WITH_GATES,
+        state: { ...WORKFLOW_WITH_GATES.state, currentStage: 'plan' },
+      }),
       skipStage: vi.fn().mockReturnValue(WORKFLOW_WITH_GATES),
     } as unknown as MessageHandlerDeps['workflowEngine'],
     workflowGenerator: {
@@ -105,16 +101,14 @@ function createMockDeps(approvalMode: 'user' | 'agent' = 'user'): MessageHandler
     } as unknown as MessageHandlerDeps['workflowGenerator'],
     stageExecutor: {
       getStageAction: vi.fn().mockReturnValue(null),
-      evaluateStageCompletion: vi
-        .fn()
-        .mockReturnValue({
-          stage: 'define',
-          status: 'completed',
-          artifacts: [],
-          pendingGates: [],
-          pendingApprovals: [],
-          message: 'Ready',
-        }),
+      evaluateStageCompletion: vi.fn().mockReturnValue({
+        stage: 'define',
+        status: 'completed',
+        artifacts: [],
+        pendingGates: [],
+        pendingApprovals: [],
+        message: 'Ready',
+      }),
       getStageInstructions: vi.fn().mockReturnValue(''),
     } as unknown as MessageHandlerDeps['stageExecutor'],
     notificationService: {
@@ -152,7 +146,7 @@ function createMockDeps(approvalMode: 'user' | 'agent' = 'user'): MessageHandler
       archiveWorkflow: vi.fn(),
       loadArchivedWorkflow: vi.fn(),
     } as unknown as MessageHandlerDeps['historyManager'],
-    approvalMode: approvalMode,
+    readApprovalMode: async () => approvalMode,
   } as MessageHandlerDeps;
 }
 

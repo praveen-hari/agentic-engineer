@@ -144,13 +144,7 @@ const PROCESS_LEVEL_ORDER: Readonly<Record<ProcessLevel, number>> = {
 
 const PROCESS_LEVEL_SKILLS: Readonly<Record<ProcessLevel, readonly SkillId[]>> = {
   light: [],
-  standard: ['code-review-and-quality', 'code-simplification'],
-  thorough: [
-    'doubt-driven-development',
-    'shipping-and-launch',
-    'security-and-hardening',
-    'performance-optimization',
-    'documentation-and-adrs',
-  ],
-  guarded: ['security-auditor', 'web-performance-auditor'],
+  standard: ['code-review-and-quality'],
+  thorough: ['shipping-and-launch', 'security-and-hardening', 'documentation-and-adrs'],
+  guarded: [],
 };

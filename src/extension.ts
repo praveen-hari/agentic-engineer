@@ -194,7 +194,7 @@ export function activate(context: vscode.ExtensionContext): void {
       promptTemplates,
       agentBridge,
       historyManager,
-      approvalMode: 'user',
+      readApprovalMode,
     },
     // Reply callback — sends MessageToWebview back to the webview
     (message) => panelProvider.postMessage(message),
@@ -284,6 +284,9 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   // ─── Status Bar ───────────────────────────────────────────────────
+  // Register notification service for disposal so the status bar item
+  // is cleaned up when the extension deactivates.
+  context.subscriptions.push({ dispose: () => notificationService.dispose() });
   notificationService.updateStatusBar('🏗️ Engineering Workspace', 'Engineering Workspace');
 
   // ─── Onboarding Check (NO auto-initialization) ────────────────────

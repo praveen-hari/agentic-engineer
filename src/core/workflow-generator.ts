@@ -7,11 +7,11 @@ import type {
   QualityGate,
   RiskAssessment,
   Stage,
-  StageStatus,
   WorkflowDefinition,
   WorkflowStateStatus,
 } from './types';
-import { BASE_STAGES, MIN_APPROVALS, STAGE_NAMES } from '../constants';
+import { MIN_APPROVALS } from '../constants';
+import { generateStagesForLevel } from './workflow-engine';
 
 /**
  * Dynamic workflow builder (DD-014 Step 2).
@@ -60,26 +60,10 @@ export class WorkflowGenerator {
     };
   }
 
-  // ─── Stage Generation ──────────────────────────────────────────────────
+  // ─── Stage Generation (delegates to shared helper) ─────────────────────
 
   private generateStages(processLevel: ProcessLevel): Stage[] {
-    const stageIds = BASE_STAGES[processLevel] ?? BASE_STAGES.standard;
-
-    return stageIds.map((id) => ({
-      id,
-      name: STAGE_NAMES[id] ?? id,
-      status: 'pending' as StageStatus,
-      skippable: this.isStageSkippable(id, processLevel),
-      entryConditions: [],
-      exitConditions: [],
-      artifacts: [],
-    }));
-  }
-
-  private isStageSkippable(stage: string, processLevel: ProcessLevel): boolean {
-    if (processLevel === 'guarded') return false;
-    if (processLevel === 'light') return stage === 'review';
-    return stage === 'review';
+    return generateStagesForLevel(processLevel);
   }
 
   // ─── Quality Gate Generation ───────────────────────────────────────────

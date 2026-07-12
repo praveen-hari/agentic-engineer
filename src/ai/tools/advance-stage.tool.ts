@@ -3,7 +3,7 @@ import type { WorkflowEngine } from '../../core/workflow-engine';
 import type { StateManager } from '../../core/state-manager';
 import type { StageExecutor } from '../../core/stage-executor';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
-import type { ApprovalMode, WorkflowDefinition } from '../../core/types';
+import type { ApprovalMode, LifecycleStage, WorkflowDefinition } from '../../core/types';
 
 /** Reads the approvalMode from config. Returns 'user' by default. */
 export type ApprovalModeReader = () => Promise<ApprovalMode>;
@@ -68,20 +68,28 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
       throw new Error(`Workflow is ${wf.state.status}, not active. Cannot advance.`);
     }
 
-    // Step 1: Auto-approve all pending approvals and gates via update()
+    // Step 1: Auto-approve ONLY current-stage approvals and gates via update().
+    // Previous versions auto-approved ALL pending approvals across every stage,
+    // which silently granted restricted approvals for future stages (e.g.,
+    // schema-migration, deployment). Now scoped to the active stage only.
     const approved = await this.stateManager.update((current) => {
       const stage = current.state.currentStage;
-      const hasPending =
-        current.approvals.some((a) => a.status === 'pending') ||
-        current.qualityGates.some((g) => g.status === 'pending' && g.stage === stage);
+      const stageApprovals = current.approvals.filter(
+        (a) => a.status === 'pending' && isApprovalForStage(a.artifact, stage),
+      );
+      const stageGates = current.qualityGates.filter(
+        (g) => g.status === 'pending' && g.stage === stage,
+      );
+      const hasPending = stageApprovals.length > 0 || stageGates.length > 0;
 
       if (!hasPending) return current;
 
+      const approvalIds = new Set(stageApprovals.map((a) => a.id));
       const now = new Date().toISOString();
       return {
         ...current,
         approvals: current.approvals.map((a) =>
-          a.status === 'pending' ? { ...a, status: 'approved' as const, approvedAt: now } : a,
+          approvalIds.has(a.id) ? { ...a, status: 'approved' as const, approvedAt: now } : a,
         ),
         qualityGates: current.qualityGates.map((g) => {
           if (g.status !== 'pending' || g.stage !== stage) return g;
@@ -212,4 +220,25 @@ const STAGE_NEXT_STEPS: Readonly<Record<string, string>> = {
 function getNextStepForStage(stage: string | null): string {
   if (!stage) return 'Workflow has no active stage.';
   return STAGE_NEXT_STEPS[stage] ?? `Complete the ${stage} stage.`;
+}
+
+// ─── Approval → Stage mapping ───────────────────────────────────────────────
+// Maps approval artifact names to the stage they belong to.
+// Used to scope auto-approval to only the current stage's approvals.
+
+const APPROVAL_STAGE_MAP: Readonly<Record<string, LifecycleStage>> = {
+  spec: 'define',
+  plan: 'plan',
+  'code-review': 'review',
+  review: 'review',
+  'security-review': 'review',
+  architecture: 'review',
+  integration: 'review',
+  'schema-migration': 'ship',
+  deployment: 'ship',
+};
+
+function isApprovalForStage(artifactName: string, stage: LifecycleStage | null): boolean {
+  if (!stage) return false;
+  return APPROVAL_STAGE_MAP[artifactName] === stage;
 }

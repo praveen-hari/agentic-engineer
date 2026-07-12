@@ -1,5 +1,5 @@
 // VS Code API type — injected via constructor for testability
-import type { Artifact, ArtifactType, LifecycleStage } from '../core/types';
+import type { Artifact, ArtifactStatus, ArtifactType, LifecycleStage } from '../core/types';
 import { WORKFLOW_DIR, ARTIFACTS_DIR } from '../constants';
 
 /**
@@ -162,6 +162,9 @@ export class ArtifactWatcher {
   /**
    * Handle a file create/change event.
    * Reads the file, determines artifact type, and notifies callbacks.
+   *
+   * Tries to look up the artifact in the manifest to get the canonical ID.
+   * Falls back to a generated ID if the manifest is unavailable.
    */
   private async handleFileChange(uri: { fsPath: string }): Promise<void> {
     const filePath = uri.fsPath;
@@ -192,15 +195,20 @@ export class ArtifactWatcher {
     const title = this.extractTitle(relativePath);
     const now = new Date().toISOString();
 
+    // Try to look up the canonical artifact from the manifest so the ID
+    // matches what ArtifactManager created. This prevents duplicate
+    // artifacts in the UI (one from manifest, one from watcher).
+    const manifestEntry = await this.lookupManifestEntry(type);
+
     const artifact: Artifact = {
-      id: `${type}-${slugify(title)}`,
+      id: manifestEntry?.id ?? `${type}-${slugify(title)}`,
       type,
-      title,
+      title: manifestEntry?.title ?? title,
       path: relativePath,
-      stage,
-      createdAt: now,
+      stage: manifestEntry?.stage ?? stage,
+      createdAt: manifestEntry?.createdAt ?? now,
       updatedAt: now,
-      status: 'pending-review',
+      status: manifestEntry?.status ?? 'pending-review',
     };
 
     // Notify all callbacks
@@ -210,6 +218,42 @@ export class ArtifactWatcher {
       } catch {
         // Don't let one callback failure break others
       }
+    }
+  }
+
+  /**
+   * Look up an artifact entry in the manifest by type.
+   * Returns null if the manifest doesn't exist or the type isn't found.
+   */
+  private async lookupManifestEntry(
+    type: ArtifactType,
+  ): Promise<{
+    id: string;
+    title: string;
+    stage: LifecycleStage;
+    createdAt: string;
+    status: ArtifactStatus;
+  } | null> {
+    try {
+      const manifestPath = `${this.rootPath}/${WORKFLOW_DIR}/workflows/current/artifacts/manifest.json`;
+      const manifestUri = this.vscodeApi.Uri.file(manifestPath);
+      const bytes = await this.vscodeApi.workspace.fs.readFile(manifestUri);
+      const content = new TextDecoder().decode(bytes);
+      const manifest = JSON.parse(content) as {
+        artifacts: Array<{
+          id: string;
+          type: string;
+          title: string;
+          stage: LifecycleStage;
+          createdAt: string;
+          status: ArtifactStatus;
+        }>;
+      };
+      const entry = manifest.artifacts.find((a) => a.type === type);
+      return entry ?? null;
+    } catch {
+      // Manifest not found or corrupt — fall back to generated ID
+      return null;
     }
   }
 

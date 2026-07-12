@@ -137,6 +137,9 @@ export const capabilitiesStore = signal<{
 // Encapsulated mutations so components don't directly write to signals.
 // Each action is a named function that describes the intent.
 
+/** Timer ID for the analyzing safety timeout. */
+let analyzeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
 export const actions = {
   /** Cache an artifact's content, evicting oldest entries if over limit. */
   cacheArtifactContent(artifactId: string, content: string): void {
@@ -161,15 +164,35 @@ export const actions = {
     artifactContents.value = {};
   },
 
-  /** Set the analyzing state with intent tracking. */
+  /**
+   * Set the analyzing state with intent tracking.
+   * Includes a safety timeout (60s) that auto-resets the spinner
+   * if the agent never responds (e.g., chat panel closed, network error).
+   */
   startAnalyzing(): void {
     isAnalyzing.value = true;
     error.value = null;
+    // Safety timeout — if the agent doesn't respond within 60s,
+    // reset the spinner and show an error so the user isn't stuck.
+    if (analyzeTimeoutId !== null) {
+      clearTimeout(analyzeTimeoutId);
+    }
+    analyzeTimeoutId = window.setTimeout(() => {
+      analyzeTimeoutId = null;
+      if (isAnalyzing.value) {
+        isAnalyzing.value = false;
+        error.value = 'Analysis timed out. The agent may not have responded. Please try again.';
+      }
+    }, 60_000);
   },
 
   /** Cancel the analyzing state. */
   cancelAnalyzing(): void {
     isAnalyzing.value = false;
+    if (analyzeTimeoutId !== null) {
+      clearTimeout(analyzeTimeoutId);
+      analyzeTimeoutId = null;
+    }
   },
 
   /** Set an error message, optionally auto-clearing after a delay. */

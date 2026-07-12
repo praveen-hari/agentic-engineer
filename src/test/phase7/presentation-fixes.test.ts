@@ -217,7 +217,7 @@ function createMockDeps(currentWorkflow: WorkflowDefinition | null = null): Mess
       }),
       loadArchivedWorkflow: vi.fn().mockResolvedValue(null),
     } as unknown as MessageHandlerDeps['historyManager'],
-    approvalMode: 'user' as const,
+    readApprovalMode: async () => 'user' as const,
   };
 }
 

@@ -233,32 +233,42 @@ export class WorkflowEngine {
     };
   }
 
-  // ─── Stage Generation ──────────────────────────────────────────────────
+  // ─── Stage Generation (delegates to shared helpers) ─────────────────────
 
   private generateStages(processLevel: ProcessLevel): Stage[] {
-    const stageIds = BASE_STAGES[processLevel] ?? BASE_STAGES.standard;
-
-    return stageIds.map((id) => ({
-      id,
-      name: STAGE_NAMES[id] ?? id,
-      status: 'pending' as StageStatus,
-      skippable: this.isStageSkippable(id, processLevel),
-      entryConditions: [],
-      exitConditions: [],
-      artifacts: [],
-    }));
+    return generateStagesForLevel(processLevel);
   }
+}
 
-  private isStageSkippable(stage: LifecycleStage, processLevel: ProcessLevel): boolean {
-    // Guarded: nothing is skippable
-    if (processLevel === 'guarded') return false;
+// ─── Shared Stage Generation Helpers ────────────────────────────────────────
+// Exported so WorkflowGenerator can reuse the same logic without duplication.
 
-    // Light: review is optional
-    if (processLevel === 'light') {
-      return stage === 'review';
-    }
+export function generateStagesForLevel(processLevel: ProcessLevel): Stage[] {
+  const stageIds = BASE_STAGES[processLevel] ?? BASE_STAGES.standard;
 
-    // Standard/Thorough: review is skippable
+  return stageIds.map((id) => ({
+    id,
+    name: STAGE_NAMES[id] ?? id,
+    status: 'pending' as StageStatus,
+    skippable: isStageSkippableAtLevel(id, processLevel),
+    entryConditions: [],
+    exitConditions: [],
+    artifacts: [],
+  }));
+}
+
+export function isStageSkippableAtLevel(
+  stage: LifecycleStage,
+  processLevel: ProcessLevel,
+): boolean {
+  // Guarded: nothing is skippable
+  if (processLevel === 'guarded') return false;
+
+  // Light: review is optional
+  if (processLevel === 'light') {
     return stage === 'review';
   }
+
+  // Standard/Thorough: review is skippable
+  return stage === 'review';
 }
