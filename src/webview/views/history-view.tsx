@@ -65,7 +65,7 @@ export const HistoryView: FunctionalComponent = () => {
           </div>
           <div class="empty-state-title">No History Yet</div>
           <div class="empty-state-description">
-            Completed workflows will appear here with their artifacts and decisions.
+            Completed tasks will appear here with their artifacts and decisions.
           </div>
         </div>
       </div>
@@ -75,8 +75,8 @@ export const HistoryView: FunctionalComponent = () => {
   return (
     <div class="history-view">
       <div class="history-header">
-        <h3>Workflow History</h3>
-        <span class="history-count">{totalCount} workflow{totalCount !== 1 ? 's' : ''}</span>
+        <h3>Task History</h3>
+        <span class="history-count">{totalCount} task{totalCount !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Search */}
@@ -85,7 +85,7 @@ export const HistoryView: FunctionalComponent = () => {
         <input
           class="input history-search-input"
           type="text"
-          placeholder="Search workflows..."
+          placeholder="Search tasks..."
           value={historySearch.value}
           onInput={(e: Event) => {
             historySearch.value = (e.target as HTMLInputElement).value;
@@ -181,14 +181,14 @@ export const HistoryView: FunctionalComponent = () => {
       {totalFiltered > 0 && (
         <div class="history-footer">
           Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalFiltered)} of {totalFiltered}
-          {historySearch.value ? ' results' : ' workflows'}
+          {historySearch.value ? ' results' : ' tasks'}
         </div>
       )}
 
       {historySearch.value && entries.length === 0 && (
         <div class="history-no-results">
           <Icon name="info" size={14} />
-          <span>No workflows match "{historySearch.value}"</span>
+          <span>No tasks match "{historySearch.value}"</span>
         </div>
       )}
     </div>
