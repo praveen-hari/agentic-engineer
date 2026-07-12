@@ -76,7 +76,9 @@ export const HistoryView: FunctionalComponent = () => {
     <div class="history-view">
       <div class="history-header">
         <h3>Task History</h3>
-        <span class="history-count">{totalCount} task{totalCount !== 1 ? 's' : ''}</span>
+        <span class="history-count">
+          {totalCount} task{totalCount !== 1 ? 's' : ''}
+        </span>
       </div>
 
       {/* Search */}
@@ -95,7 +97,10 @@ export const HistoryView: FunctionalComponent = () => {
         {historySearch.value && (
           <button
             class="history-search-clear"
-            onClick={() => { historySearch.value = ''; historyPage.value = 1; }}
+            onClick={() => {
+              historySearch.value = '';
+              historyPage.value = 1;
+            }}
             aria-label="Clear search"
           >
             <Icon name="close" size={12} />
@@ -128,9 +133,7 @@ export const HistoryView: FunctionalComponent = () => {
                   <Icon name="pass-filled" size={14} class="task-card-icon--completed" />
                   <span class="history-objective-text">{entry.objective}</span>
                 </td>
-                <td class="history-td">
-                  {entry.workType ?? '—'}
-                </td>
+                <td class="history-td">{entry.workType ?? '—'}</td>
                 <td class="history-td">
                   <span class={`badge badge-sm ${LEVEL_CLASS[entry.processLevel] ?? ''}`}>
                     {entry.processLevel}
@@ -141,9 +144,7 @@ export const HistoryView: FunctionalComponent = () => {
                     ? `${entry.stats.stagesCompleted}/${entry.stats.stagesCompleted + entry.stats.stagesSkipped}`
                     : '—'}
                 </td>
-                <td class="history-td history-td--date">
-                  {formatDate(entry.completedAt)}
-                </td>
+                <td class="history-td history-td--date">{formatDate(entry.completedAt)}</td>
               </tr>
             ))}
           </tbody>
@@ -156,7 +157,9 @@ export const HistoryView: FunctionalComponent = () => {
           <button
             class="btn btn-secondary btn-sm"
             disabled={currentPage <= 1}
-            onClick={() => { historyPage.value = currentPage - 1; }}
+            onClick={() => {
+              historyPage.value = currentPage - 1;
+            }}
           >
             <Icon name="chevron-right" size={12} style="transform: rotate(180deg)" /> Prev
           </button>
@@ -165,7 +168,9 @@ export const HistoryView: FunctionalComponent = () => {
               <button
                 key={p}
                 class={`history-page-btn${p === currentPage ? ' history-page-btn--active' : ''}`}
-                onClick={() => { historyPage.value = p; }}
+                onClick={() => {
+                  historyPage.value = p;
+                }}
               >
                 {p}
               </button>
@@ -174,7 +179,9 @@ export const HistoryView: FunctionalComponent = () => {
           <button
             class="btn btn-secondary btn-sm"
             disabled={currentPage >= pages}
-            onClick={() => { historyPage.value = currentPage + 1; }}
+            onClick={() => {
+              historyPage.value = currentPage + 1;
+            }}
           >
             Next <Icon name="chevron-right" size={12} />
           </button>
@@ -184,7 +191,8 @@ export const HistoryView: FunctionalComponent = () => {
       {/* Footer info */}
       {totalFiltered > 0 && (
         <div class="history-footer">
-          Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalFiltered)} of {totalFiltered}
+          Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalFiltered)} of{' '}
+          {totalFiltered}
           {historySearch.value ? ' results' : ' tasks'}
         </div>
       )}
@@ -225,7 +233,9 @@ const HistoryDetailView: FunctionalComponent<HistoryDetailProps> = ({
       <h3>{entry.objective}</h3>
       <div class="history-detail-meta">
         <span class={`badge ${LEVEL_CLASS[entry.processLevel] ?? ''}`}>{entry.processLevel}</span>
-        <span>{formatDate(entry.startedAt)} → {formatDate(entry.completedAt)}</span>
+        <span>
+          {formatDate(entry.startedAt)} → {formatDate(entry.completedAt)}
+        </span>
       </div>
     </div>
 
@@ -237,9 +247,17 @@ const HistoryDetailView: FunctionalComponent<HistoryDetailProps> = ({
           {workflow.stages.map((s) => (
             <div key={s.id} class="history-stage-chip">
               <Icon
-                name={s.status === 'completed' ? 'pass-filled' : s.status === 'skipped' ? 'close' : 'circle-outline'}
+                name={
+                  s.status === 'completed'
+                    ? 'pass-filled'
+                    : s.status === 'skipped'
+                      ? 'close'
+                      : 'circle-outline'
+                }
                 size={12}
-                class={s.status === 'completed' ? 'task-card-icon--completed' : 'task-card-icon--pending'}
+                class={
+                  s.status === 'completed' ? 'task-card-icon--completed' : 'task-card-icon--pending'
+                }
               />
               <span>{s.name}</span>
             </div>
@@ -282,11 +300,19 @@ const HistoryDetailView: FunctionalComponent<HistoryDetailProps> = ({
               class="history-artifact-row history-artifact-row--clickable"
               role="button"
               tabIndex={0}
-              onClick={() => bridge.send({ type: 'openKnowledgeFile', fileName: `${entry.archivePath}/${a.filename}` })}
+              onClick={() =>
+                bridge.send({
+                  type: 'openKnowledgeFile',
+                  fileName: `${entry.archivePath}/${a.filename}`,
+                })
+              }
               onKeyDown={(e: KeyboardEvent) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  bridge.send({ type: 'openKnowledgeFile', fileName: `${entry.archivePath}/${a.filename}` });
+                  bridge.send({
+                    type: 'openKnowledgeFile',
+                    fileName: `${entry.archivePath}/${a.filename}`,
+                  });
                 }
               }}
             >

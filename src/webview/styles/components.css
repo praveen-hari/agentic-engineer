@@ -1591,62 +1591,51 @@
 
 /* ─── Settings View ────────────────────────────────────────────── */
 
-.settings-field {
-  margin-bottom: var(--space-md);
-}
-
-.settings-label {
-  display: block;
-  margin-bottom: var(--space-xs);
-  font-size: var(--font-size-sm);
-}
-
-.settings-checkbox-label {
+.settings-view {
   display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-size: var(--font-size-sm);
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
-.settings-number-input {
-  max-width: 100px;
+.settings-view h3 {
+  margin: 0;
 }
 
-.settings-save-status {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+.settings-save-banner {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-}
-
-.settings-save-status--saved {
-  color: var(--color-success);
-}
-
-.settings-history-tiers {
-  margin-bottom: var(--space-md);
-}
-
-.settings-tier-list {
-  margin-left: var(--space-lg);
-  margin-top: var(--space-xs);
-  font-size: var(--font-size-sm);
-}
-
-.settings-recovery-details {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-xs);
   color: var(--color-text-muted);
 }
 
-.settings-recovery-summary {
-  cursor: pointer;
-  margin-bottom: var(--space-xs);
+.settings-save-banner--saved {
+  color: var(--color-success);
 }
 
-.settings-recovery-text {
-  margin-top: var(--space-xs);
-  padding-left: var(--space-md);
+.settings-section {
+  background: var(--color-bg-sidebar);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: 500;
+  font-size: var(--font-sm);
+}
+
+.settings-section-desc {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
 /* ─── History View ─────────────────────────────────────────────── */
@@ -1811,7 +1800,9 @@
   color: var(--color-text-muted);
   font-size: var(--font-xs);
   cursor: pointer;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 
 .history-page-btn:hover {

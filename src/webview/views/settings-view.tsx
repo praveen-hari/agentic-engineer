@@ -8,8 +8,6 @@ import type { ProcessLevel } from '../../core/types';
 export const SettingsView: FunctionalComponent = () => {
   const processLevel = useSignal<ProcessLevel | 'auto'>('auto');
   const approvalMode = useSignal<'user' | 'agent'>('user');
-  const autoApprove = useSignal(false);
-  const reviewTimeout = useSignal(30);
   const saveStatus = useSignal<'idle' | 'saving' | 'saved'>('idle');
   const loaded = useSignal(false);
 
@@ -26,8 +24,6 @@ export const SettingsView: FunctionalComponent = () => {
         processLevel.value = msg.settings.processLevelDefault as ProcessLevel | 'auto';
         approvalMode.value =
           (msg.settings as Record<string, unknown>).approvalMode === 'agent' ? 'agent' : 'user';
-        autoApprove.value = msg.settings.autoApproveLowRisk;
-        reviewTimeout.value = msg.settings.reviewTimeoutMinutes;
         loaded.value = true;
       }
     });
@@ -47,102 +43,70 @@ export const SettingsView: FunctionalComponent = () => {
       settings: {
         processLevelDefault: processLevel.value,
         approvalMode: approvalMode.value,
-        autoApproveLowRisk: autoApprove.value,
-        reviewTimeoutMinutes: reviewTimeout.value,
       },
     });
   }, []);
 
   return (
-    <div>
-      {/* Section 1: Process Defaults */}
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Process Defaults</span>
-          {saveStatus.value === 'saving' && (
-            <span class="settings-save-status">
-              <Icon name="loading" size={12} spin /> Saving…
-            </span>
-          )}
-          {saveStatus.value === 'saved' && (
-            <span class="settings-save-status settings-save-status--saved">
-              <Icon name="pass" size={12} /> Saved
-            </span>
-          )}
+    <div class="settings-view">
+      <h3>Settings</h3>
+
+      {/* Save indicator */}
+      {saveStatus.value !== 'idle' && (
+        <div class={`settings-save-banner${saveStatus.value === 'saved' ? ' settings-save-banner--saved' : ''}`}>
+          {saveStatus.value === 'saving'
+            ? <><Icon name="loading" size={12} spin /> Saving…</>
+            : <><Icon name="pass" size={12} /> Saved</>
+          }
         </div>
-        <div class="card-body">
-          <div class="settings-field">
-            <label class="settings-label">Default Process Level</label>
-            <select
-              class="input"
-              value={processLevel.value}
-              onChange={(e: Event) => {
-                processLevel.value = (e.target as HTMLSelectElement).value as ProcessLevel | 'auto';
-                saveSettings();
-              }}
-            >
-              <option value="auto">Auto — agent decides based on each task (recommended)</option>
-              <option value="light">Light — typo fixes, docs, config changes (3 stages)</option>
-              <option value="standard">Standard — features, bugfixes, refactors (5 stages)</option>
-              <option value="thorough">
-                Thorough — architecture, API design, major features (6 stages)
-              </option>
-              <option value="guarded">
-                Guarded — DB migrations, auth changes, deployments (6 stages + gates)
-              </option>
-            </select>
-          </div>
+      )}
 
-          <div class="settings-field">
-            <label class="settings-label">Stage Advancement</label>
-            <select
-              class="input"
-              value={approvalMode.value}
-              onChange={(e: Event) => {
-                approvalMode.value = (e.target as HTMLSelectElement).value as 'user' | 'agent';
-                saveSettings();
-              }}
-            >
-              <option value="user">
-                User controls — you click "Approve &amp; Continue" to advance each stage
-              </option>
-              <option value="agent">
-                Agent controls — agent auto-advances stages when requirements are met
-              </option>
-            </select>
-          </div>
-
-          <div class="settings-field">
-            <label class="settings-checkbox-label">
-              <input
-                type="checkbox"
-                checked={autoApprove.value}
-                onChange={(e: Event) => {
-                  autoApprove.value = (e.target as HTMLInputElement).checked;
-                  saveSettings();
-                }}
-              />
-              Auto-approve informational approvals
-            </label>
-          </div>
-
-          <div class="settings-field">
-            <label class="settings-label">Review Timeout (minutes)</label>
-            <input
-              class="input settings-number-input"
-              type="number"
-              min={5}
-              max={120}
-              value={reviewTimeout.value}
-              onInput={(e: Event) => {
-                reviewTimeout.value = Number((e.target as HTMLInputElement).value);
-                saveSettings();
-              }}
-            />
-          </div>
+      {/* Setting 1: How thorough? */}
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <Icon name="list-tree" size={14} />
+          <span>How thorough should each task be?</span>
         </div>
+        <p class="settings-section-desc">
+          More steps means more review and documentation. Fewer steps means faster delivery.
+        </p>
+        <select
+          class="input"
+          value={processLevel.value}
+          onChange={(e: Event) => {
+            processLevel.value = (e.target as HTMLSelectElement).value as ProcessLevel | 'auto';
+            saveSettings();
+          }}
+        >
+          <option value="auto">Automatic — agent picks the right level per task (recommended)</option>
+          <option value="light">Quick — plan, build, verify (3 steps)</option>
+          <option value="standard">Standard — define, plan, build, verify, review (5 steps)</option>
+          <option value="thorough">Thorough — all steps including ship checklist (6 steps)</option>
+          <option value="guarded">Maximum — all steps with extra safety gates</option>
+        </select>
       </div>
 
+      {/* Setting 2: Who's in control? */}
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <Icon name="shield" size={14} />
+          <span>Who moves the task to the next step?</span>
+        </div>
+        <p class="settings-section-desc">
+          You can review and approve each step yourself, or let the agent run on its own.
+        </p>
+        <select
+          class="input"
+          value={approvalMode.value}
+          onChange={(e: Event) => {
+            approvalMode.value = (e.target as HTMLSelectElement).value as 'user' | 'agent';
+            saveSettings();
+          }}
+        >
+          <option value="user">I review each step before moving on</option>
+          <option value="agent">Agent runs automatically — I'll review at the end</option>
+        </select>
+      </div>
     </div>
   );
 };
