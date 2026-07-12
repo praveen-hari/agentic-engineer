@@ -225,10 +225,72 @@ export class PluginRegistryService {
         });
       });
 
+      // Ensure .github/plugin/plugin.json exists so Code Studio discovers skills
+      await this.ensurePluginManifest(plugin, targetDir);
+
       // Update installed.json
       await this.addToInstalledJson(repo, targetDir);
     } finally {
       terminal.dispose();
+    }
+  }
+
+  /**
+   * Ensure the plugin has a .github/plugin/plugin.json manifest.
+   *
+   * Code Studio discovers skills by reading this manifest's "skills" field.
+   * If the cloned repo doesn't have one (e.g., Syncfusion repos that only
+   * have a skills/ folder), we auto-generate it so the agent can find them.
+   */
+  private async ensurePluginManifest(plugin: PluginInfo, targetDir: string): Promise<void> {
+    const manifestDir = `${targetDir}/.github/plugin`;
+    const manifestPath = `${manifestDir}/plugin.json`;
+
+    try {
+      // Check if manifest already exists
+      const manifestUri = vscode.Uri.file(manifestPath);
+      try {
+        await vscode.workspace.fs.stat(manifestUri);
+        return; // Already exists — nothing to do
+      } catch {
+        // Doesn't exist — we'll create it
+      }
+
+      // Check if there's a skills/ directory to reference
+      const skillsDir = `${targetDir}/skills`;
+      try {
+        await vscode.workspace.fs.stat(vscode.Uri.file(skillsDir));
+      } catch {
+        return; // No skills/ directory — nothing to generate
+      }
+
+      // Scan for skill folders to build the skills list
+      const skillEntries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(skillsDir));
+      const skillPaths = skillEntries
+        .filter(([, type]) => type === vscode.FileType.Directory)
+        .map(([name]) => `./skills/${name}`);
+
+      // Build the manifest
+      const manifest = {
+        name: plugin.id,
+        description: plugin.description,
+        version: plugin.version,
+        author: { name: plugin.author },
+        repository: plugin.repository,
+        keywords: [...plugin.keywords],
+        skills: skillPaths.length > 0 ? skillPaths : ['./skills/'],
+      };
+
+      // Create .github/plugin/ directory
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(manifestDir));
+
+      // Write plugin.json
+      await vscode.workspace.fs.writeFile(
+        manifestUri,
+        Buffer.from(JSON.stringify(manifest, null, 2), 'utf-8'),
+      );
+    } catch {
+      // Non-critical — plugin still works, just might not auto-discover skills
     }
   }
 
