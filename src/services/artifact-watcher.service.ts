@@ -13,6 +13,11 @@ export type ArtifactCallback = (artifact: Artifact) => void;
 export type SetupFileCallback = (fileName: string, filePath: string) => void;
 
 /**
+ * Callback when a knowledge file is created or changed.
+ */
+export type KnowledgeFileCallback = (fileName: string, filePath: string) => void;
+
+/**
  * Watches .codestudio/ for file changes:
  *
  * 1. Artifact watcher — workflows/current/artifacts/ for .md files.
@@ -28,6 +33,7 @@ export class ArtifactWatcher {
   private watchers: Array<{ dispose(): void }> = [];
   private callbacks: Set<ArtifactCallback> = new Set();
   private setupCallbacks: Set<SetupFileCallback> = new Set();
+  private knowledgeCallbacks: Set<KnowledgeFileCallback> = new Set();
 
   constructor(
     private readonly vscodeApi: typeof import('vscode'),
@@ -103,6 +109,15 @@ export class ArtifactWatcher {
   }
 
   /**
+   * Register a callback for knowledge file changes.
+   * Fires when any file in knowledge/ or codestudio-instructions.md changes.
+   */
+  onKnowledgeFileChanged(callback: KnowledgeFileCallback): () => void {
+    this.knowledgeCallbacks.add(callback);
+    return () => this.knowledgeCallbacks.delete(callback);
+  }
+
+  /**
    * Handle a setup file create/change event.
    * Notifies setup callbacks so onboarding can auto-transition.
    */
@@ -116,6 +131,21 @@ export class ArtifactWatcher {
 
       fileName.includes('instructions') ||
       fileName === 'AGENTS.md';
+
+    // Notify knowledge callbacks for knowledge files
+    const isKnowledgeFile =
+      filePath.includes('/knowledge/') ||
+      fileName === 'codestudio-instructions.md';
+
+    if (isKnowledgeFile) {
+      for (const cb of this.knowledgeCallbacks) {
+        try {
+          cb(fileName, filePath);
+        } catch {
+          // Don't let one callback failure break others
+        }
+      }
+    }
 
     if (!isSetupFile) return;
 

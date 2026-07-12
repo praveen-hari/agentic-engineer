@@ -206,6 +206,12 @@ export function activate(context: vscode.ExtensionContext): void {
       notificationService.showInfo(`Project setup detected (${fileName}). Ready to start working!`);
     });
 
+    // When a knowledge file changes, auto-refresh the Knowledge view
+    artifactWatcher.onKnowledgeFileChanged(() => {
+      // Trigger a knowledge refresh by sending requestKnowledge through the handler
+      void messageHandler({ type: 'requestKnowledge' });
+    });
+
     // ─── Branch-Change Watcher (Phase 5) ──────────────────────────
     // Detects git branch switches and reloads workflow state so the
     // webview always shows the correct branch's workflow.
