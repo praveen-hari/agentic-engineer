@@ -1,16 +1,32 @@
-/* Layout — editor panel webview.
+/* Layout — editor panel webview with built-in side navigation.
  *
  * The webview lives in the editor area (full width).
- * Navigation is handled by the native TreeView in the sidebar.
- * This CSS only styles the content panel.
+ * Navigation is handled by the SideNav component inside the webview.
+ * Layout: [SideNav | Content]
  */
 
 .app-panel {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
   width: 100%;
   background: var(--color-bg);
+}
+
+/* Onboarding layout — no side nav, full width centered */
+.app-panel--onboarding {
+  flex-direction: column;
+}
+
+/* ─── Panel Main (content column next to side nav) ─────────────── */
+
+.panel-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* ─── Panel Content ────────────────────────────────────────────── */

@@ -27,16 +27,16 @@ import { CapabilitiesView } from './views/capabilities-view';
 import { KnowledgeView } from './views/knowledge-view';
 import { HistoryView } from './views/history-view';
 import { SettingsView } from './views/settings-view';
+import { SideNav } from './components/side-nav';
 
 /**
  * Root app component for the editor-panel webview.
  *
  * Shows onboarding flow first (welcome → setup → ready).
- * Once onboarded, shows the normal 5-view navigation.
+ * Once onboarded, shows the side nav + content layout.
  *
- * Navigation is driven by the native TreeView in the sidebar.
- * The extension host sends `{ type: 'navigateTo', view }` messages
- * when the user clicks a tree item.
+ * Navigation is driven by the SideNav component inside the webview.
+ * The `activeView` signal controls which view is displayed.
  */
 export const App: FunctionalComponent = () => {
   useEffect(() => {
@@ -137,10 +137,10 @@ export const App: FunctionalComponent = () => {
   }, []);
 
   // ─── Onboarding Gate ───────────────────────────────────────────
-  // Show onboarding until the project is set up
+  // Show onboarding until the project is set up (no side nav)
   if (!isOnboarded.value) {
     return (
-      <div class="app-panel">
+      <div class="app-panel app-panel--onboarding">
         <main class="panel-content">
           <OnboardingView />
         </main>
@@ -148,34 +148,37 @@ export const App: FunctionalComponent = () => {
     );
   }
 
-  // ─── Normal Views ──────────────────────────────────────────────
+  // ─── Normal Views (with side navigation) ─────────────────────────
   const view = activeView.value;
   const currentError = error.value;
 
   return (
     <div class="app-panel">
-      {/* Global error banner — renders errors from host and timeouts */}
-      {currentError && (
-        <div class="error-banner" role="alert" aria-live="assertive">
-          <span class="error-banner-text">{currentError}</span>
-          <button
-            class="error-banner-dismiss"
-            onClick={() => {
-              error.value = null;
-            }}
-            aria-label="Dismiss error"
-          >
-            ×
-          </button>
-        </div>
-      )}
-      <main class="panel-content">
-        {view === 'tasks' && <TasksView />}
-        {view === 'capabilities' && <CapabilitiesView />}
-        {view === 'knowledge' && <KnowledgeView />}
-        {view === 'history' && <HistoryView />}
-        {view === 'settings' && <SettingsView />}
-      </main>
+      <SideNav />
+      <div class="panel-main">
+        {/* Global error banner — renders errors from host and timeouts */}
+        {currentError && (
+          <div class="error-banner" role="alert" aria-live="assertive">
+            <span class="error-banner-text">{currentError}</span>
+            <button
+              class="error-banner-dismiss"
+              onClick={() => {
+                error.value = null;
+              }}
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        <main class="panel-content">
+          {view === 'tasks' && <TasksView />}
+          {view === 'capabilities' && <CapabilitiesView />}
+          {view === 'knowledge' && <KnowledgeView />}
+          {view === 'history' && <HistoryView />}
+          {view === 'settings' && <SettingsView />}
+        </main>
+      </div>
     </div>
   );
 };

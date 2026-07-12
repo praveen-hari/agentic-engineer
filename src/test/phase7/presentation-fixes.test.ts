@@ -141,12 +141,10 @@ function createMockDeps(currentWorkflow: WorkflowDefinition | null = null): Mess
         }),
     } as unknown as MessageHandlerDeps['stateManager'],
     workflowEngine: {
-      start: vi
-        .fn()
-        .mockReturnValue({
-          ...ACTIVE_WORKFLOW,
-          state: { ...ACTIVE_WORKFLOW.state, status: 'active' },
-        }),
+      start: vi.fn().mockReturnValue({
+        ...ACTIVE_WORKFLOW,
+        state: { ...ACTIVE_WORKFLOW.state, status: 'active' },
+      }),
       advanceStage: vi.fn().mockImplementation((wf: WorkflowDefinition) => {
         // Simulate advancing last stage → completed
         const allCompleted = wf.stages.every(
@@ -164,16 +162,14 @@ function createMockDeps(currentWorkflow: WorkflowDefinition | null = null): Mess
     } as unknown as MessageHandlerDeps['workflowGenerator'],
     stageExecutor: {
       getStageAction: vi.fn().mockReturnValue(null),
-      evaluateStageCompletion: vi
-        .fn()
-        .mockReturnValue({
-          stage: 'verify',
-          status: 'completed',
-          artifacts: [],
-          pendingGates: [],
-          pendingApprovals: [],
-          message: 'Ready',
-        }),
+      evaluateStageCompletion: vi.fn().mockReturnValue({
+        stage: 'verify',
+        status: 'completed',
+        artifacts: [],
+        pendingGates: [],
+        pendingApprovals: [],
+        message: 'Ready',
+      }),
       getStageInstructions: vi.fn().mockReturnValue(''),
     } as unknown as MessageHandlerDeps['stageExecutor'],
     notificationService: {
@@ -210,17 +206,15 @@ function createMockDeps(currentWorkflow: WorkflowDefinition | null = null): Mess
     historyManager: {
       loadHistory: vi.fn().mockResolvedValue([]),
       loadMeta: vi.fn().mockResolvedValue({ years: [], totalWorkflows: 0 }),
-      archiveWorkflow: vi
-        .fn()
-        .mockResolvedValue({
-          id: 'hist-1',
-          workflowId: 'wf-old',
-          objective: 'Previous task',
-          processLevel: 'standard',
-          startedAt: '',
-          completedAt: '',
-          archivePath: 'archive/2026/07/wf-old',
-        }),
+      archiveWorkflow: vi.fn().mockResolvedValue({
+        id: 'hist-1',
+        workflowId: 'wf-old',
+        objective: 'Previous task',
+        processLevel: 'standard',
+        startedAt: '',
+        completedAt: '',
+        archivePath: 'archive/2026/07/wf-old',
+      }),
       loadArchivedWorkflow: vi.fn().mockResolvedValue(null),
     } as unknown as MessageHandlerDeps['historyManager'],
     approvalMode: 'user' as const,
@@ -461,7 +455,11 @@ describe('Phase 7: Presentation Layer Fixes', () => {
 
       expect(replies[0].type).toBe('settingsLoaded');
       const msg = replies[0] as {
-        settings: { processLevelDefault: string; autoApproveLowRisk: boolean; reviewTimeoutMinutes: number };
+        settings: {
+          processLevelDefault: string;
+          autoApproveLowRisk: boolean;
+          reviewTimeoutMinutes: number;
+        };
       };
       expect(msg.settings.processLevelDefault).toBe('auto');
       expect(msg.settings.autoApproveLowRisk).toBe(false);

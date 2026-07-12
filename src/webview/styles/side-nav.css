@@ -1,0 +1,87 @@
+/* Side Navigation Rail
+ *
+ * Vertical nav bar inside the webview panel.
+ * Shows icon + label for each view. Highlights the active view.
+ * Uses VS Code theme tokens for seamless integration.
+ */
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  min-width: 180px;
+  background: var(--color-bg-sidebar);
+  border-right: 1px solid var(--color-border);
+  height: 100%;
+  overflow-y: auto;
+  padding-top: var(--space-sm);
+}
+
+.side-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-xs);
+}
+
+.side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+
+.side-nav-item:hover {
+  background: var(--vscode-list-hoverBackground);
+  color: var(--color-text);
+}
+
+.side-nav-item:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.side-nav-item--active {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.side-nav-item--active .codicon {
+  color: var(--color-accent);
+}
+
+.side-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Responsive: collapse to icons-only on narrow panels ────── */
+
+@media (max-width: 500px) {
+  .side-nav {
+    width: 44px;
+    min-width: 44px;
+    padding-top: var(--space-sm);
+  }
+
+  .side-nav-item {
+    justify-content: center;
+    padding: var(--space-sm);
+  }
+
+  .side-nav-label {
+    display: none;
+  }
+}
