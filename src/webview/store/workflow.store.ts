@@ -60,6 +60,8 @@ export const contextStore = signal<ProjectContext | null>(null);
 
 export const historyStore = signal<readonly HistoryEntry[]>([]);
 export const historySearch = signal<string>('');
+export const historyPage = signal<number>(1);
+export const HISTORY_PAGE_SIZE = 10;
 export const historyDetailEntry = signal<HistoryEntry | null>(null);
 export const historyDetailWorkflow = signal<WorkflowDefinition | null>(null);
 export const historyDetailArtifacts = signal<readonly ArtifactManifestEntry[]>([]);
@@ -71,6 +73,13 @@ export const filteredHistory = computed(() => {
       e.objective.toLowerCase().includes(search) ||
       e.processLevel.toLowerCase().includes(search),
   );
+});
+export const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredHistory.value.length / HISTORY_PAGE_SIZE)),
+);
+export const paginatedHistory = computed(() => {
+  const start = (historyPage.value - 1) * HISTORY_PAGE_SIZE;
+  return filteredHistory.value.slice(start, start + HISTORY_PAGE_SIZE);
 });
 
 // ─── Knowledge State ──────────────────────────────────────────────────────

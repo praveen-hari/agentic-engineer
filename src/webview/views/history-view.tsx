@@ -3,7 +3,10 @@ import { useEffect } from 'preact/hooks';
 import {
   historyStore,
   historySearch,
+  historyPage,
   filteredHistory,
+  paginatedHistory,
+  totalPages,
   historyDetailEntry,
   historyDetailWorkflow,
   historyDetailArtifacts,
@@ -47,8 +50,11 @@ export const HistoryView: FunctionalComponent = () => {
   }
 
   // ─── Grid View ─────────────────────────────────────────────────
-  const entries = filteredHistory.value;
+  const entries = paginatedHistory.value;
+  const totalFiltered = filteredHistory.value.length;
   const totalCount = historyStore.value.length;
+  const pages = totalPages.value;
+  const currentPage = historyPage.value;
 
   if (totalCount === 0) {
     return (
@@ -83,12 +89,13 @@ export const HistoryView: FunctionalComponent = () => {
           value={historySearch.value}
           onInput={(e: Event) => {
             historySearch.value = (e.target as HTMLInputElement).value;
+            historyPage.value = 1; // Reset to first page on search
           }}
         />
         {historySearch.value && (
           <button
             class="history-search-clear"
-            onClick={() => { historySearch.value = ''; }}
+            onClick={() => { historySearch.value = ''; historyPage.value = 1; }}
             aria-label="Clear search"
           >
             <Icon name="close" size={12} />
@@ -138,6 +145,45 @@ export const HistoryView: FunctionalComponent = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div class="history-pagination">
+          <button
+            class="btn btn-secondary btn-sm"
+            disabled={currentPage <= 1}
+            onClick={() => { historyPage.value = currentPage - 1; }}
+          >
+            <Icon name="chevron-right" size={12} style="transform: rotate(180deg)" /> Prev
+          </button>
+          <div class="history-pagination-pages">
+            {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                class={`history-page-btn${p === currentPage ? ' history-page-btn--active' : ''}`}
+                onClick={() => { historyPage.value = p; }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <button
+            class="btn btn-secondary btn-sm"
+            disabled={currentPage >= pages}
+            onClick={() => { historyPage.value = currentPage + 1; }}
+          >
+            Next <Icon name="chevron-right" size={12} />
+          </button>
+        </div>
+      )}
+
+      {/* Footer info */}
+      {totalFiltered > 0 && (
+        <div class="history-footer">
+          Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalFiltered)} of {totalFiltered}
+          {historySearch.value ? ' results' : ' workflows'}
+        </div>
+      )}
 
       {historySearch.value && entries.length === 0 && (
         <div class="history-no-results">
