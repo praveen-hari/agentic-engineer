@@ -184,7 +184,7 @@ const ScanningScreen: FunctionalComponent = () => {
 
       <div class="onboarding__actions">
         <button
-          class="btn btn-secondary btn-sm"
+          class="btn btn-secondary"
           onClick={() => {
             if (timer.current) clearTimeout(timer.current);
             agentStatusMessage.value = null;
@@ -192,7 +192,7 @@ const ScanningScreen: FunctionalComponent = () => {
             actions.setOnboardingStatus('welcome');
           }}
         >
-          Cancel
+          <Icon name="close" size={14} /> Cancel Setup
         </button>
       </div>
 
