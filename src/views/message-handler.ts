@@ -16,7 +16,16 @@ import type {
   MessageToWebview,
   RiskAssessment,
 } from '../core/types';
-import { WORKFLOW_DIR, STACK_FILE, CONVENTIONS_FILE } from '../constants';
+import {
+  WORKFLOW_DIR,
+  STACK_FILE,
+  CONVENTIONS_FILE,
+  CONTEXT_FILE,
+  ARCHITECTURE_FILE,
+  BOUNDARIES_FILE,
+  INSTRUCTIONS_FILE,
+  KNOWLEDGE_ADRS_DIR,
+} from '../constants';
 
 /**
  * Callback to send a response message back to the webview.
@@ -140,6 +149,15 @@ export function handleWebviewMessage(
         case 'updateSettings':
           await handleUpdateSettings(deps, reply, msg.settings);
           break;
+        case 'requestKnowledge':
+          await handleRequestKnowledge(deps, reply);
+          break;
+        case 'refreshKnowledge':
+          await handleRefreshKnowledge(deps, reply);
+          break;
+        case 'openKnowledgeFile':
+          await handleOpenKnowledgeFile(deps, msg.fileName);
+          break;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -178,6 +196,9 @@ const VALID_MESSAGE_TYPES = new Set<string>([
   'cancelWorkflow',
   'requestSettings',
   'updateSettings',
+  'requestKnowledge',
+  'refreshKnowledge',
+  'openKnowledgeFile',
 ]);
 
 /**
@@ -495,6 +516,111 @@ async function handleUpdateSettings(
   await deps.fileSystem.write(configPath, JSON.stringify(updated, null, 2));
 
   reply({ type: 'settingsUpdated' });
+}
+
+// ─── Knowledge Handlers ─────────────────────────────────────────────────────
+
+/** All knowledge files with their display info. */
+const KNOWLEDGE_FILES = [
+  { name: 'context.md', path: CONTEXT_FILE, icon: '📄' },
+  { name: 'architecture.md', path: ARCHITECTURE_FILE, icon: '🏗️' },
+  { name: 'conventions.md', path: CONVENTIONS_FILE, icon: '📐' },
+  { name: 'stack.md', path: STACK_FILE, icon: '🔧' },
+  { name: 'boundaries.md', path: BOUNDARIES_FILE, icon: '🚧' },
+  { name: 'codestudio-instructions.md', path: INSTRUCTIONS_FILE, icon: '📋' },
+] as const;
+
+async function handleRequestKnowledge(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const root = deps.workspaceService.getWorkspaceRoot();
+  if (!root) {
+    reply({ type: 'knowledgeFiles', files: [] });
+    return;
+  }
+
+  const base = `${root}/${WORKFLOW_DIR}`;
+  const files = await Promise.all(
+    KNOWLEDGE_FILES.map(async (kf) => {
+      const fullPath = `${base}/${kf.path}`;
+      let exists = false;
+      let preview = '';
+      let updatedAt: string | null = null;
+
+      try {
+        if (await deps.fileSystem.exists(fullPath)) {
+          exists = true;
+          const content = await deps.fileSystem.read(fullPath);
+          // First non-empty, non-heading line as preview
+          const lines = content.split('\n').filter((l) => l.trim() && !l.startsWith('#'));
+          preview = (lines[0] ?? '').trim().slice(0, 120);
+          // Use current time as approximation (no stat API in FileIO)
+          updatedAt = new Date().toISOString();
+        }
+      } catch {
+        // File read error — treat as not existing
+      }
+
+      return {
+        name: kf.name,
+        path: kf.path,
+        exists,
+        preview,
+        updatedAt,
+      };
+    }),
+  );
+
+  reply({ type: 'knowledgeFiles', files });
+}
+
+async function handleRefreshKnowledge(
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  const prompt = `Refresh the project knowledge files in .codestudio/knowledge/.
+
+## Instructions
+1. Scan the workspace thoroughly — read package.json, source files, config files, tests, README, etc.
+2. Compare what you find with the existing knowledge files in .codestudio/knowledge/.
+3. Update ONLY the files that have drifted from reality. Do NOT overwrite user-added notes.
+4. For each file, read the existing content first, then update only what changed:
+   - \`knowledge/context.md\` — Project overview, purpose, target users
+   - \`knowledge/architecture.md\` — Architecture, module boundaries, patterns, data flow
+   - \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
+   - \`knowledge/stack.md\` — Tech stack: languages, frameworks, deps with versions
+   - \`knowledge/boundaries.md\` — Always do / Ask first / Never do rules
+   - \`codestudio-instructions.md\` — Combined agent instructions
+
+**Important:** Base everything on the ACTUAL codebase. Read real files. Don't guess.
+After updating, summarize what changed.`;
+
+  await deps.agentBridge.sendToChat(prompt);
+
+  // Tell the webview the agent is working on it
+  reply({
+    type: 'agentStatus',
+    status: 'working',
+    message: 'Refreshing project knowledge...',
+  });
+}
+
+async function handleOpenKnowledgeFile(
+  deps: MessageHandlerDeps,
+  fileName: string,
+): Promise<void> {
+  const root = deps.workspaceService.getWorkspaceRoot();
+  if (!root) return;
+
+  const filePath = `${root}/${WORKFLOW_DIR}/${fileName}`;
+  try {
+    const vscodeModule = await import('vscode');
+    const uri = vscodeModule.Uri.file(filePath);
+    await vscodeModule.window.showTextDocument(uri);
+  } catch {
+    // File doesn't exist or can't be opened
+  }
 }
 
 // ─── Cancel Workflow Handler ────────────────────────────────────────────────

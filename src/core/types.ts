@@ -185,6 +185,16 @@ export interface WorkflowDefinition {
   readonly state: WorkflowState;
 }
 
+// ─── Knowledge Files ───────────────────────────────────────────────────────
+
+export interface KnowledgeFileInfo {
+  readonly name: string;
+  readonly path: string;
+  readonly exists: boolean;
+  readonly preview: string;
+  readonly updatedAt: string | null;
+}
+
 // ─── Project Context ───────────────────────────────────────────────────────
 
 export interface ProjectContext {
@@ -250,7 +260,10 @@ export type MessageToHost =
   | { readonly type: 'openArtifact'; readonly artifactId: string }
   | { readonly type: 'cancelWorkflow' }
   | { readonly type: 'requestSettings' }
-  | { readonly type: 'updateSettings'; readonly settings: Partial<WorkspaceConfig> };
+  | { readonly type: 'updateSettings'; readonly settings: Partial<WorkspaceConfig> }
+  | { readonly type: 'requestKnowledge' }
+  | { readonly type: 'refreshKnowledge' }
+  | { readonly type: 'openKnowledgeFile'; readonly fileName: string };
 
 export type MessageToWebview =
   | { readonly type: 'state'; readonly workflow: WorkflowDefinition | null }
@@ -299,6 +312,10 @@ export type MessageToWebview =
       readonly message?: string;
     }
   | { readonly type: 'settingsUpdated' }
+  | {
+      readonly type: 'knowledgeFiles';
+      readonly files: readonly KnowledgeFileInfo[];
+    }
   | {
       readonly type: 'settingsLoaded';
       readonly settings: {

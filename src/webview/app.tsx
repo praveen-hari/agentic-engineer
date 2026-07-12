@@ -19,6 +19,8 @@ import {
   agentStatusMessage,
   agentStatusStage,
   actions,
+  knowledgeStore,
+  knowledgeRefreshing,
 } from './store/workflow.store';
 import { bridge } from './bridge';
 import { OnboardingView } from './views/onboarding-view';
@@ -129,6 +131,10 @@ export const App: FunctionalComponent = () => {
           if (msg.content !== null) {
             actions.cacheArtifactContent(msg.artifactId, msg.content);
           }
+          break;
+        case 'knowledgeFiles':
+          knowledgeStore.value = msg.files;
+          knowledgeRefreshing.value = false;
           break;
       }
     });

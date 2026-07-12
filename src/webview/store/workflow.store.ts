@@ -9,6 +9,7 @@ import { signal, computed } from '@preact/signals';
 import type {
   AgentActivityStatus,
   Artifact,
+  KnowledgeFileInfo,
   LifecycleStage,
   OnboardingStatus,
   ProjectContext,
@@ -57,6 +58,11 @@ export const contextStore = signal<ProjectContext | null>(null);
 // ─── History State ─────────────────────────────────────────────────────────
 
 export const historyStore = signal<readonly HistoryEntry[]>([]);
+
+// ─── Knowledge State ──────────────────────────────────────────────────────
+
+export const knowledgeStore = signal<readonly KnowledgeFileInfo[]>([]);
+export const knowledgeRefreshing = signal<boolean>(false);
 
 // ─── Onboarding State ─────────────────────────────────────────────────────
 
