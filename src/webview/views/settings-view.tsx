@@ -1,7 +1,6 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal } from '@preact/signals';
 import { useEffect, useCallback } from 'preact/hooks';
-import { historyStore } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
 import type { ProcessLevel } from '../../core/types';
@@ -33,9 +32,8 @@ export const SettingsView: FunctionalComponent = () => {
       }
     });
 
-    // Request saved settings and history
+    // Request saved settings
     bridge.send({ type: 'requestSettings' });
-    bridge.send({ type: 'requestHistory' });
 
     return unsub;
   }, []);
@@ -54,8 +52,6 @@ export const SettingsView: FunctionalComponent = () => {
       },
     });
   }, []);
-
-  const historyCount = historyStore.value.length;
 
   return (
     <div>
@@ -147,30 +143,6 @@ export const SettingsView: FunctionalComponent = () => {
         </div>
       </div>
 
-      {/* Section 2: History Management */}
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">History Management</span>
-        </div>
-        <div class="card-body">
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-value">{historyCount}</div>
-              <div class="stat-label">Total Tasks</div>
-            </div>
-          </div>
-
-          <details class="settings-recovery-details">
-            <summary class="settings-recovery-summary">Git Recovery</summary>
-            <p class="settings-recovery-text">
-              All workflow state is stored in <code>.codestudio/</code> and tracked by git. If state
-              is lost, you can recover from any commit:
-              <br />
-              <code>git checkout HEAD -- .codestudio/</code>
-            </p>
-          </details>
-        </div>
-      </div>
     </div>
   );
 };
