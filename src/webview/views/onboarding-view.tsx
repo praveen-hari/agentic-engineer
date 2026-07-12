@@ -39,16 +39,10 @@ const WelcomeScreen: FunctionalComponent = () => {
     <div class="onboarding">
       <div class="onboarding__hero">
         <div class="onboarding__icon">
-          <Icon name="rocket" size={32} />
+          <Icon name="tools" size={32} />
         </div>
         <h1 class="onboarding__title">Welcome to Engineering Workspace</h1>
-        <p class="onboarding__subtitle">
-          Set up AI-assisted development for your project.
-          <br />
-          The agent will understand your codebase, follow your conventions,
-          <br />
-          and track work from idea to completion.
-        </p>
+        <p class="onboarding__subtitle">Set up AI-assisted development for your project.</p>
       </div>
 
       <div class="onboarding__options">

@@ -16,15 +16,12 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal } from '@preact/signals';
 import { Icon, type IconName } from './icon';
-import { ApprovalCard } from './approval-card';
 import { buildCompletionItems } from '../utils/build-completion-items';
 import type {
   AgentActivityStatus,
   Approval,
   Artifact,
-  LifecycleStage,
   QualityGate,
-  SkillId,
   StageAction,
   StageExecutionResult,
   Stage,
@@ -83,7 +80,8 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
   action,
   completion,
   artifacts = [],
-  gates = [],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  gates: _gates = [],
   approvals = [],
   agentStatus: agentSt,
   agentMessage,
@@ -107,7 +105,6 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
     expanded.value = !expanded.value;
   };
 
-  const stageGates = gates.filter((g) => g.stage === stage.id);
   const stageApprovals = approvals.filter((a) => a.status === 'pending');
   const stageArtifacts = artifacts.filter((a) => a.stage === stage.id);
   // "Approve & Continue" is enabled when non-rejected artifacts exist.
@@ -389,13 +386,3 @@ const CompletionChecklist: FunctionalComponent<CompletionChecklistProps> = ({
     </div>
   );
 };
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function formatSkillName(skillId: SkillId | string): string {
-  return skillId
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .replace(/And /g, '& ')
-    .replace(/Tdd/g, 'TDD');
-}

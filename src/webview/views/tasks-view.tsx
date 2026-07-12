@@ -74,7 +74,7 @@ export const TasksView: FunctionalComponent = () => {
         {/* Hero */}
         <div class="tasks-empty-hero">
           <div class="tasks-empty-hero-icon">
-            <Icon name="rocket" size={24} />
+            <Icon name="tools" size={24} />
           </div>
           <h2>What do you want to build?</h2>
           <p>Describe your objective and the agent will plan &amp; execute it.</p>
@@ -139,6 +139,47 @@ export const TasksView: FunctionalComponent = () => {
             >
               Cancel
             </button>
+          </div>
+        )}
+
+        {/* How it works — fills the empty space below */}
+        {!analyzing.value && (
+          <div class="tasks-how-it-works">
+            <div class="tasks-how-it-works-title">How it works</div>
+            <div class="tasks-how-it-works-steps">
+              <div class="tasks-how-step">
+                <div class="tasks-how-step-num">1</div>
+                <div>
+                  <div class="tasks-how-step-label">Describe</div>
+                  <div class="tasks-how-step-desc">
+                    Tell the agent what you want to build or change
+                  </div>
+                </div>
+              </div>
+              <div class="tasks-how-step">
+                <div class="tasks-how-step-num">2</div>
+                <div>
+                  <div class="tasks-how-step-label">Plan</div>
+                  <div class="tasks-how-step-desc">
+                    Agent creates a spec and breaks it into tasks
+                  </div>
+                </div>
+              </div>
+              <div class="tasks-how-step">
+                <div class="tasks-how-step-num">3</div>
+                <div>
+                  <div class="tasks-how-step-label">Build</div>
+                  <div class="tasks-how-step-desc">Agent implements each task with tests</div>
+                </div>
+              </div>
+              <div class="tasks-how-step">
+                <div class="tasks-how-step-num">4</div>
+                <div>
+                  <div class="tasks-how-step-label">Verify &amp; Review</div>
+                  <div class="tasks-how-step-desc">Automated checks + code review before merge</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

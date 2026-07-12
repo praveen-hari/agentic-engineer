@@ -14,7 +14,6 @@ import type {
   LifecycleStage,
   MessageToHost,
   MessageToWebview,
-  ProjectContext,
   RiskAssessment,
 } from '../core/types';
 import {

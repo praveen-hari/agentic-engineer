@@ -20,10 +20,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
-  background: var(--vscode-badge-background);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   color: var(--color-accent);
   margin-bottom: var(--space-md);
 }
@@ -51,6 +51,61 @@
   flex-direction: column;
   gap: var(--space-md);
   width: 100%;
+}
+
+/* ─── Onboarding Flow (horizontal stepper) ─────────────────────── */
+
+.onboarding__flow--horizontal {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  padding: var(--space-sm) 0;
+}
+
+.onboarding__flow--horizontal .onboarding__flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.onboarding__flow-step-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding__flow-step-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.onboarding__flow-step-desc {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+.onboarding__flow-connector--h {
+  width: 24px;
+  min-width: 24px;
+  height: 2px;
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: 1px;
+  margin-top: 15px; /* vertically center with the 32px icon */
+  flex-shrink: 0;
 }
 
 .onboarding__card {
@@ -645,6 +700,66 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
+
+/* ─── How It Works (empty state filler) ────────────────────────── */
+
+.tasks-how-it-works {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.tasks-how-it-works-title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.tasks-how-it-works-steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.tasks-how-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+
+.tasks-how-step-num {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tasks-how-step-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.tasks-how-step-desc {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+/* ─── Analysis Results ─────────────────────────────────────────── */
 
 .analysis-results-card {
   border-left: 3px solid var(--color-accent);

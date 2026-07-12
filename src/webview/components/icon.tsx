@@ -50,7 +50,9 @@ export type IconName =
   | 'leaf'
   | 'folder-library'
   | 'circle-slash'
-  | 'pulse';
+  | 'pulse'
+  | 'tools'
+  | 'search';
 
 interface IconProps {
   readonly name: IconName;

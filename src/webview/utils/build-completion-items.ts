@@ -12,13 +12,7 @@
  * - `met` — whether the step is done
  * - `hint` — optional action hint for unmet items
  */
-import type {
-  Approval,
-  Artifact,
-  ArtifactType,
-  StageAction,
-  StageExecutionResult,
-} from '../../core/types';
+import type { Approval, Artifact, StageAction, StageExecutionResult } from '../../core/types';
 
 export interface CompletionItem {
   readonly id: string;

@@ -67,13 +67,20 @@ export const historyDetailWorkflow = signal<WorkflowDefinition | null>(null);
 export const historyDetailArtifacts = signal<readonly ArtifactManifestEntry[]>([]);
 export const filteredHistory = computed(() => {
   const search = historySearch.value.toLowerCase().trim();
-  if (!search) return historyStore.value;
-  return historyStore.value.filter(
-    (e) =>
-      e.objective.toLowerCase().includes(search) ||
-      e.processLevel.toLowerCase().includes(search) ||
-      (e.workType?.toLowerCase().includes(search) ?? false),
-  );
+  const entries = search
+    ? historyStore.value.filter(
+        (e) =>
+          e.objective.toLowerCase().includes(search) ||
+          e.processLevel.toLowerCase().includes(search) ||
+          (e.workType?.toLowerCase().includes(search) ?? false),
+      )
+    : [...historyStore.value];
+  // Sort newest first by completedAt date
+  return entries.slice().sort((a, b) => {
+    const dateA = new Date(a.completedAt).getTime();
+    const dateB = new Date(b.completedAt).getTime();
+    return dateB - dateA;
+  });
 });
 export const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredHistory.value.length / HISTORY_PAGE_SIZE)),
