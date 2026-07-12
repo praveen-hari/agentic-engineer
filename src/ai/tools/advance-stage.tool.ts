@@ -181,7 +181,10 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
                 : `Advanced to ${updated.state.currentStage}.`,
             nextSteps:
               updated.state.status === 'completed'
-                ? ['The workflow is complete. Summarize what was accomplished.']
+                ? [
+                    'The workflow is complete. Summarize what was accomplished.',
+                    'Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, update the relevant knowledge files in .codestudio/knowledge/. Since approvalMode is "agent", you can update them directly.',
+                  ]
                 : [getNextStepForStage(updated.state.currentStage)],
           },
           null,
