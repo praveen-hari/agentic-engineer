@@ -1,8 +1,12 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal } from '@preact/signals';
-import { onboardingStatus, contextStore, hasExistingFiles, actions } from '../store/workflow.store';
+import { useEffect, useRef } from 'preact/hooks';
+import { onboardingStatus, hasExistingFiles, actions, error } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
+
+/** Timeout for the scanning screen (60 seconds). */
+const SCANNING_TIMEOUT_MS = 60_000;
 
 // ─── Main Onboarding View ───────────────────────────────────────────────────
 
@@ -12,8 +16,6 @@ export const OnboardingView: FunctionalComponent = () => {
   switch (status) {
     case 'welcome':
       return <WelcomeScreen />;
-    case 'setup-existing':
-      return <SetupExistingScreen />;
     case 'setup-new':
       return <SetupNewScreen />;
     case 'scanning':
@@ -26,13 +28,15 @@ export const OnboardingView: FunctionalComponent = () => {
 // ─── Welcome Screen ─────────────────────────────────────────────────────────
 
 const WelcomeScreen: FunctionalComponent = () => {
+  const clicked = useSignal(false);
+
   return (
     <div class="onboarding">
       <div class="onboarding__hero">
         <div class="onboarding__icon">
           <Icon name="rocket" size={32} />
         </div>
-        <h1 class="onboarding__title">Welcome to SDLC Workflow</h1>
+        <h1 class="onboarding__title">Welcome to Engineering Workspace</h1>
         <p class="onboarding__subtitle">
           Set up AI-assisted development for your project.
           <br />
@@ -46,7 +50,10 @@ const WelcomeScreen: FunctionalComponent = () => {
         {hasExistingFiles.value && (
           <button
             class="onboarding__card"
+            disabled={clicked.value}
             onClick={() => {
+              if (clicked.value) return;
+              clicked.value = true;
               actions.setOnboardingStatus('scanning');
               bridge.send({ type: 'setupExistingProject' });
             }}
@@ -57,8 +64,7 @@ const WelcomeScreen: FunctionalComponent = () => {
             <div class="onboarding__card-content">
               <div class="onboarding__card-title">Set Up Existing Project</div>
               <div class="onboarding__card-desc">
-                Scan your workspace to detect the tech stack, folder structure, and conventions
-                automatically. Best for projects that already have code.
+                Scan your workspace to detect the tech stack, conventions, and structure automatically.
               </div>
             </div>
             <div class="onboarding__card-arrow">
@@ -79,18 +85,13 @@ const WelcomeScreen: FunctionalComponent = () => {
           <div class="onboarding__card-content">
             <div class="onboarding__card-title">Start New Project</div>
             <div class="onboarding__card-desc">
-              Describe what you want to build and I'll help you choose the right tech stack, set up
-              the project structure, and configure everything.
+              Describe what you want to build and the agent will help you set everything up.
             </div>
           </div>
           <div class="onboarding__card-arrow">
             <Icon name="chevron-right" size={16} />
           </div>
         </button>
-      </div>
-
-      <div class="onboarding__footer">
-        You can also type <code>/project-setup</code> in chat anytime to start this process.
       </div>
     </div>
   );
@@ -99,115 +100,103 @@ const WelcomeScreen: FunctionalComponent = () => {
 // ─── Scanning Screen (shown while workspace is being analyzed) ──────────────
 
 const ScanningScreen: FunctionalComponent = () => {
+  const timedOut = useSignal(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-timeout after SCANNING_TIMEOUT_MS
+  useEffect(() => {
+    timer.current = setTimeout(() => {
+      timedOut.value = true;
+    }, SCANNING_TIMEOUT_MS);
+
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  // Timed out or error state
+  if (timedOut.value) {
+    return (
+      <div class="onboarding">
+        <div class="onboarding__hero">
+          <div class="onboarding__icon">
+            <Icon name="warning" size={32} />
+          </div>
+          <h2 class="onboarding__title">Setup Taking Too Long</h2>
+          <p class="onboarding__subtitle">
+            The agent didn't complete the setup in time.
+            <br />
+            This can happen if the agent hit a budget limit, lost connection, or encountered an error.
+          </p>
+        </div>
+
+        <div class="onboarding__actions">
+          <button
+            class="btn btn-primary"
+            onClick={() => {
+              timedOut.value = false;
+              actions.setOnboardingStatus('scanning');
+              bridge.send({ type: 'setupExistingProject' });
+              // Restart timeout
+              timer.current = setTimeout(() => { timedOut.value = true; }, SCANNING_TIMEOUT_MS);
+            }}
+          >
+            <Icon name="refresh" size={14} /> Try Again
+          </button>
+          <button
+            class="btn btn-secondary"
+            onClick={() => {
+              actions.setOnboardingStatus('welcome');
+            }}
+          >
+            Back to Start
+          </button>
+        </div>
+
+        <div class="onboarding__footer">
+          Check the <strong>Chat panel</strong> for error messages.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div class="onboarding">
       <div class="onboarding__hero">
         <div class="onboarding__icon">
           <Icon name="loading" size={32} spin />
         </div>
-        <h2 class="onboarding__title">Starting SDLC Workflow...</h2>
+        <h2 class="onboarding__title">Setting Up Project...</h2>
         <p class="onboarding__subtitle">
-          The agent is initializing the engineering workspace and starting
-          <br />
-          the structured development workflow in the chat panel.
+          The agent is scanning your workspace and creating project knowledge files.
         </p>
       </div>
 
       <div class="onboarding__progress">
-        <div class="onboarding__progress-item">
-          <Icon name="check" size={14} /> Prompt sent to agent
+        <div class="onboarding__progress-item onboarding__progress-item--done">
+          <Icon name="pass-filled" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
           <Icon name="loading" size={14} spin /> Agent is setting up the workspace…
         </div>
       </div>
 
-      <div class="onboarding__footer">
-        <strong>Check the Chat panel</strong> — the agent is driving the workflow using tools.
-        <br />
-        This screen will close automatically when setup completes.
-      </div>
-    </div>
-  );
-};
-
-// ─── Setup Existing Project Screen ──────────────────────────────────────────
-
-const SetupExistingScreen: FunctionalComponent = () => {
-  const ctx = contextStore.value;
-
-  return (
-    <div class="onboarding">
-      <div class="onboarding__hero">
-        <div class="onboarding__icon onboarding__icon--success">
-          <Icon name="pass-filled" size={32} />
-        </div>
-        <h2 class="onboarding__title">Project Detected</h2>
-        <p class="onboarding__subtitle">
-          Here's what I found in your workspace. The agent will use this context to follow your
-          patterns and conventions.
-        </p>
-      </div>
-
-      {ctx && (
-        <div class="onboarding__context">
-          {ctx.languages.length > 0 && (
-            <div class="onboarding__context-row">
-              <span class="onboarding__context-label">Languages</span>
-              <span class="onboarding__context-value">{ctx.languages.join(', ')}</span>
-            </div>
-          )}
-          {ctx.frameworks.length > 0 && (
-            <div class="onboarding__context-row">
-              <span class="onboarding__context-label">Frameworks</span>
-              <span class="onboarding__context-value">{ctx.frameworks.join(', ')}</span>
-            </div>
-          )}
-          {ctx.testFramework && (
-            <div class="onboarding__context-row">
-              <span class="onboarding__context-label">Testing</span>
-              <span class="onboarding__context-value">{ctx.testFramework}</span>
-            </div>
-          )}
-          {ctx.packageManager && (
-            <div class="onboarding__context-row">
-              <span class="onboarding__context-label">Package Manager</span>
-              <span class="onboarding__context-value">{ctx.packageManager}</span>
-            </div>
-          )}
-          {ctx.conventions.length > 0 && (
-            <div class="onboarding__context-row">
-              <span class="onboarding__context-label">Conventions</span>
-              <span class="onboarding__context-value">{ctx.conventions.join(', ')}</span>
-            </div>
-          )}
-        </div>
-      )}
-
       <div class="onboarding__actions">
         <button
-          class="btn btn-primary btn-full"
+          class="btn btn-secondary btn-sm"
           onClick={() => {
-            actions.setOnboardingStatus('ready');
-          }}
-        >
-          <Icon name="check" size={14} /> Looks Good — Start Working
-        </button>
-        <button
-          class="btn btn-secondary"
-          onClick={() => {
+            if (timer.current) clearTimeout(timer.current);
             actions.setOnboardingStatus('welcome');
           }}
         >
-          Back
+          Cancel
         </button>
       </div>
 
       <div class="onboarding__footer">
-        Project context saved to <code>.codestudio/context.md</code>
+        Check the <strong>Chat panel</strong> to see the agent's progress.
         <br />
-        The agent will also create <code>.codestudio/codestudio-instructions.md</code> with your
-        project conventions.
+        This screen closes automatically when setup completes.
       </div>
     </div>
   );
@@ -218,7 +207,8 @@ const SetupExistingScreen: FunctionalComponent = () => {
 const SetupNewScreen: FunctionalComponent = () => {
   const newProjectName = useSignal('');
   const newProjectDescription = useSignal('');
-  const canStart = newProjectName.value.trim().length >= 2;
+  const starting = useSignal(false);
+  const canStart = newProjectName.value.trim().length >= 2 && !starting.value;
 
   return (
     <div class="onboarding">
@@ -274,6 +264,8 @@ const SetupNewScreen: FunctionalComponent = () => {
           class="btn btn-primary"
           disabled={!canStart}
           onClick={() => {
+            if (starting.value) return;
+            starting.value = true;
             actions.setOnboardingStatus('scanning');
             bridge.send({
               type: 'setupNewProject',

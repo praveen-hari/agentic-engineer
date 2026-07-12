@@ -53,11 +53,18 @@ export const SettingsView: FunctionalComponent = () => {
 
       {/* Save indicator */}
       {saveStatus.value !== 'idle' && (
-        <div class={`settings-save-banner${saveStatus.value === 'saved' ? ' settings-save-banner--saved' : ''}`}>
-          {saveStatus.value === 'saving'
-            ? <><Icon name="loading" size={12} spin /> Saving…</>
-            : <><Icon name="pass" size={12} /> Saved</>
-          }
+        <div
+          class={`settings-save-banner${saveStatus.value === 'saved' ? ' settings-save-banner--saved' : ''}`}
+        >
+          {saveStatus.value === 'saving' ? (
+            <>
+              <Icon name="loading" size={12} spin /> Saving…
+            </>
+          ) : (
+            <>
+              <Icon name="pass" size={12} /> Saved
+            </>
+          )}
         </div>
       )}
 
@@ -78,7 +85,9 @@ export const SettingsView: FunctionalComponent = () => {
             saveSettings();
           }}
         >
-          <option value="auto">Automatic — agent picks the right level per task (recommended)</option>
+          <option value="auto">
+            Automatic — agent picks the right level per task (recommended)
+          </option>
           <option value="light">Quick — plan, build, verify (3 steps)</option>
           <option value="standard">Standard — define, plan, build, verify, review (5 steps)</option>
           <option value="thorough">Thorough — all steps including ship checklist (6 steps)</option>

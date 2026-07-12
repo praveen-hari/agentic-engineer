@@ -153,8 +153,21 @@ export const App: FunctionalComponent = () => {
   // ─── Onboarding Gate ───────────────────────────────────────────
   // Show onboarding until the project is set up (no side nav)
   if (!isOnboarded.value) {
+    const onboardingError = error.value;
     return (
       <div class="app-panel app-panel--onboarding">
+        {onboardingError && (
+          <div class="error-banner" role="alert" aria-live="assertive">
+            <span class="error-banner-text">{onboardingError}</span>
+            <button
+              class="error-banner-dismiss"
+              onClick={() => { error.value = null; }}
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        )}
         <main class="panel-content">
           <OnboardingView />
         </main>
