@@ -263,10 +263,29 @@ interface StagesTabProps {
   readonly agentMsg: string | null;
 }
 
+/** Maps approval artifact names to the stage they belong to. */
+const APPROVAL_STAGE_MAP: Record<string, string> = {
+  spec: 'define',
+  plan: 'plan',
+  review: 'review',
+  'code-review': 'review',
+  'security-review': 'review',
+  architecture: 'review',
+  integration: 'review',
+  'schema-migration': 'ship',
+  deployment: 'ship',
+};
+
 const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, agentMsg }) => (
   <div class="stage-accordion-list">
     {wf.stages.map((stage) => {
       const isActive = stage.status === 'active';
+      // Only show approvals that belong to this stage
+      const stageApprovals = isActive
+        ? wf.approvals.filter(
+            (a) => a.status === 'pending' && APPROVAL_STAGE_MAP[a.artifact] === stage.id,
+          )
+        : [];
       return (
         <StageAccordion
           key={stage.id}
@@ -276,7 +295,7 @@ const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, a
           completion={isActive ? detail?.completion : null}
           artifacts={detail?.artifacts}
           gates={wf.qualityGates}
-          approvals={isActive ? wf.approvals.filter((a) => a.status === 'pending') : []}
+          approvals={stageApprovals}
           agentStatus={isActive ? agentSt : undefined}
           agentMessage={isActive ? (agentMsg ?? undefined) : undefined}
           onSendToAgent={
