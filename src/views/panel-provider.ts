@@ -166,15 +166,8 @@ export class EngineeringWorkspacePanelProvider {
     void this.panel?.webview.postMessage({ type: 'navigateTo', view: viewId });
   }
 
-  private getTitle(viewId: string): string {
-    const titles: Record<string, string> = {
-      tasks: 'Tasks',
-      capabilities: 'Capabilities',
-      knowledge: 'Knowledge',
-      history: 'History',
-      settings: 'Settings',
-    };
-    return titles[viewId] ?? 'Engineering Workspace';
+  private getTitle(_viewId: string): string {
+    return 'Engineering Workspace';
   }
 }
 
