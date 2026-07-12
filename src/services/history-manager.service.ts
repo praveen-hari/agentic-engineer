@@ -1,6 +1,5 @@
 import type {
   ArtifactManifest,
-  ArtifactManifestEntry,
   FileIO,
   HistoryEntry,
   HistoryMeta,
@@ -178,6 +177,7 @@ export class HistoryManager {
         stagesCompleted,
         stagesSkipped,
         approvalsGranted,
+        approvalsRejected: workflow.approvals.filter((a) => a.status === 'rejected').length,
       },
     };
   }

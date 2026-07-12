@@ -50,7 +50,7 @@ export class ChatParticipantHandler {
    */
   private async handleCommand(
     command: ChatCommand,
-    prompt: string,
+    _prompt: string,
     stream: vscode.ChatResponseStream,
   ): Promise<void> {
     switch (command) {

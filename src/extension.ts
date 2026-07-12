@@ -149,7 +149,7 @@ export function activate(context: vscode.ExtensionContext): void {
     readApprovalMode,
   );
 
-  const updateStatusTool = new UpdateStatusTool((message, phase) => {
+  const updateStatusTool = new UpdateStatusTool((message, _phase) => {
     panelProvider.postMessage({
       type: 'agentStatus',
       status: 'working',

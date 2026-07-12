@@ -23,7 +23,6 @@ import {
   ARCHITECTURE_FILE,
   BOUNDARIES_FILE,
   INSTRUCTIONS_FILE,
-  KNOWLEDGE_ADRS_DIR,
 } from '../constants';
 
 /**
