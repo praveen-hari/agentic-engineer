@@ -200,12 +200,16 @@ export function activate(context: vscode.ExtensionContext): void {
       void messageHandler({ type: 'notifyArtifactDetected', artifact });
     });
 
-    // When a setup file is detected (onboarding completion),
-    // auto-transition the webview from onboarding to ready state.
-    // This fires when the agent creates config.json,
-    // or codestudio-instructions.md in .codestudio/
+    // When a setup file is detected, only transition to "ready" when
+    // codestudio-instructions.md is created — that's the LAST file the
+    // agent creates (after all knowledge files). config.json is created
+    // first but the agent is still working on knowledge files at that point.
     artifactWatcher.onSetupFileDetected(async (fileName) => {
-      // Transition webview to ready state — no scanning needed
+      if (!fileName.includes('instructions')) {
+        // config.json or other early files — agent is still working, don't transition yet
+        return;
+      }
+      // codestudio-instructions.md created — all knowledge files are done
       panelProvider.postMessage({
         type: 'onboardingStatus',
         status: 'ready',
@@ -213,7 +217,7 @@ export function activate(context: vscode.ExtensionContext): void {
         context: null,
         hasExistingFiles: true,
       });
-      notificationService.showInfo(`Project setup detected (${fileName}). Ready to start working!`);
+      notificationService.showInfo('Project setup complete! Ready to start working.');
     });
 
     // When a knowledge file changes, auto-refresh the Knowledge view
