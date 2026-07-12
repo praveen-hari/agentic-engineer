@@ -156,23 +156,8 @@ export const SettingsView: FunctionalComponent = () => {
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-value">{historyCount}</div>
-              <div class="stat-label">Total Workflows</div>
+              <div class="stat-label">Total Tasks</div>
             </div>
-          </div>
-
-          <div class="settings-history-tiers">
-            <strong>History Tiers:</strong>
-            <ul class="settings-tier-list">
-              <li>
-                <strong>Hot</strong> — last 5 entries (full detail)
-              </li>
-              <li>
-                <strong>Warm</strong> — entries 6-20 (summary only)
-              </li>
-              <li>
-                <strong>Cold</strong> — older entries (archived)
-              </li>
-            </ul>
           </div>
 
           <details class="settings-recovery-details">
