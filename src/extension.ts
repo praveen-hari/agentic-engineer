@@ -21,7 +21,7 @@ import type { ProcessLevel } from './core/types';
 import { SaveArtifactTool } from './ai/tools/save-artifact.tool';
 import { AdvanceStageTool } from './ai/tools/advance-stage.tool';
 import { ChatParticipantHandler } from './chat/chat-participant';
-import { NavigationTreeProvider } from './views/navigation-tree';
+// NavigationTreeProvider removed — navigation is now in-webview
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
 import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE } from './constants';
@@ -137,14 +137,6 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.lm.registerTool('engineering_advance_stage', advanceStageTool),
   );
 
-  // ─── Sidebar TreeView ──────────────────────────────────────────────
-  const navigationTree = new NavigationTreeProvider();
-  const treeView = vscode.window.createTreeView('engineeringWorkspace.navigation', {
-    treeDataProvider: navigationTree,
-    showCollapseAll: false,
-  });
-  context.subscriptions.push(treeView);
-
   // ─── Editor Panel (Webview) ──────────────────────────────────────
   // PanelProvider is created first so the reply callback can reference it.
   // The message handler is wired after, using a closure over panelProvider.
@@ -240,35 +232,14 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('engineeringWorkspace.newWorkRequest', () => {
-      panelProvider.navigateTo('tasks');
-    }),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('engineeringWorkspace.refresh', () => {
-      navigationTree.refresh();
-    }),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('engineeringWorkspace.openSettings', () => {
-      panelProvider.navigateTo('settings');
-    }),
-  );
-
-  context.subscriptions.push(
     vscode.commands.registerCommand('engineeringWorkspace.analyzeWorkRequest', () => {
-      // Analysis is handled by the agent via engineering_start_workflow tool.
-      // Open the Tasks view where the user can enter their objective.
-      panelProvider.navigateTo('tasks');
+      panelProvider.open();
     }),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand('engineeringWorkspace.showHistory', () => {
-      // Navigate to history view via webview
-      notificationService.showInfo('History view — see the Engineering Workspace sidebar');
+      panelProvider.open();
     }),
   );
 

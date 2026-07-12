@@ -20,43 +20,7 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "engineering-workspace",
-          "title": "Engineering Workspace",
-          "icon": "media/icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "engineering-workspace": [
-        {
-          "id": "engineeringWorkspace.navigation",
-          "name": "Engineering Workspace",
-          "visibility": "visible"
-        }
-      ]
-    },
-    "menus": {
-      "view/title": [
-        {
-          "command": "engineeringWorkspace.newWorkRequest",
-          "when": "view == engineeringWorkspace.navigation",
-          "group": "navigation@1"
-        },
-        {
-          "command": "engineeringWorkspace.refresh",
-          "when": "view == engineeringWorkspace.navigation",
-          "group": "navigation@2"
-        },
-        {
-          "command": "engineeringWorkspace.openSettings",
-          "when": "view == engineeringWorkspace.navigation",
-          "group": "navigation@3"
-        }
-      ]
-    },
+
     "commands": [
       {
         "command": "engineeringWorkspace.openView",
@@ -77,24 +41,6 @@
         "command": "engineeringWorkspace.navigateTo",
         "title": "Engineering Workspace: Navigate To View",
         "category": "Engineering Workspace"
-      },
-      {
-        "command": "engineeringWorkspace.newWorkRequest",
-        "title": "New Work Request",
-        "category": "Engineering Workspace",
-        "icon": "$(add)"
-      },
-      {
-        "command": "engineeringWorkspace.refresh",
-        "title": "Refresh",
-        "category": "Engineering Workspace",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "engineeringWorkspace.openSettings",
-        "title": "Settings",
-        "category": "Engineering Workspace",
-        "icon": "$(gear)"
       }
     ],
     "chatParticipants": [
