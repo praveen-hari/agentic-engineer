@@ -267,6 +267,28 @@
             }
           }
         }
+      },
+      {
+        "name": "engineering_update_status",
+        "displayName": "Update Status",
+        "modelDescription": "Report your current progress to the user's UI. Call this frequently during long operations (setup, build, verify, etc.) to keep the user informed. Example: engineering_update_status({ message: 'Reading package.json...' }) or engineering_update_status({ message: 'Task 2/5: Writing tests...' }). This is lightweight — call it often.",
+        "canBeReferencedInPrompt": false,
+        "icon": "$(pulse)",
+        "userDescription": "Report progress to the Engineering Workspace UI",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Short status message describing what you're currently doing"
+            },
+            "phase": {
+              "type": "string",
+              "description": "Optional phase name: setup, define, plan, build, verify, review, ship"
+            }
+          },
+          "required": ["message"]
+        }
       }
     ]
   },

@@ -321,6 +321,8 @@ async function handleAnalyzeObjective(
   // For the webview, we send a prompt to the agent.
   const prompt = `The user wants to work on: "${objective}"
 
+Call \`engineering_update_status\` to report progress as you work (e.g., "Analyzing objective...", "Scanning workspace...").
+
 Call \`engineering_start_workflow\` tool with:
 - objective: "${objective}"
 - workType: your assessment (feature/bugfix/refactor/infrastructure/documentation/security)
@@ -766,6 +768,8 @@ async function handleSetupExistingProject(
 
   const prompt = `Set up the Engineering Workspace for this existing project.
 
+**Important:** Call \`engineering_update_status\` frequently to report your progress (e.g., "Reading package.json...", "Creating stack.md..."). The user sees these messages in real-time.
+
 ## Steps — use these tools and follow in order:
 
 ### Step 1: Call \`engineering_setup_project\` tool
@@ -816,6 +820,8 @@ async function handleSetupNewProject(
   const objective = description || `Build ${projectName}`;
 
   const prompt = `Start the engineering workflow for: **${projectName}**
+
+**Important:** Call \`engineering_update_status\` frequently to report your progress (e.g., "Interviewing user...", "Creating architecture.md..."). The user sees these messages in real-time.
 
 ## Objective
 ${objective}

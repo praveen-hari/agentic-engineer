@@ -1,7 +1,7 @@
 import { type FunctionalComponent } from 'preact';
 import { useSignal } from '@preact/signals';
 import { useEffect, useRef } from 'preact/hooks';
-import { onboardingStatus, hasExistingFiles, actions, error } from '../store/workflow.store';
+import { onboardingStatus, hasExistingFiles, actions, error, agentStatusMessage } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
 
@@ -177,7 +177,8 @@ const ScanningScreen: FunctionalComponent = () => {
           <Icon name="pass-filled" size={14} /> Prompt sent to agent
         </div>
         <div class="onboarding__progress-item">
-          <Icon name="loading" size={14} spin /> Agent is setting up the workspace…
+          <Icon name="loading" size={14} spin />{' '}
+          {agentStatusMessage.value || 'Agent is setting up the workspace…'}
         </div>
       </div>
 

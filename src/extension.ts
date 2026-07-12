@@ -20,6 +20,7 @@ import { StartWorkflowTool } from './ai/tools/start-workflow.tool';
 import type { ProcessLevel } from './core/types';
 import { SaveArtifactTool } from './ai/tools/save-artifact.tool';
 import { AdvanceStageTool } from './ai/tools/advance-stage.tool';
+import { UpdateStatusTool } from './ai/tools/update-status.tool';
 import { ChatParticipantHandler } from './chat/chat-participant';
 // NavigationTreeProvider removed — navigation is now in-webview
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
@@ -144,12 +145,21 @@ export function activate(context: vscode.ExtensionContext): void {
     readApprovalMode,
   );
 
+  const updateStatusTool = new UpdateStatusTool((message, phase) => {
+    panelProvider.postMessage({
+      type: 'agentStatus',
+      status: 'working',
+      message,
+    });
+  });
+
   // Register all tools with vscode.lm
   context.subscriptions.push(
     vscode.lm.registerTool('engineering_setup_project', setupProjectTool),
     vscode.lm.registerTool('engineering_start_workflow', startWorkflowTool),
     vscode.lm.registerTool('engineering_save_artifact', saveArtifactTool),
     vscode.lm.registerTool('engineering_advance_stage', advanceStageTool),
+    vscode.lm.registerTool('engineering_update_status', updateStatusTool),
   );
 
   // ─── Editor Panel (Webview) ──────────────────────────────────────
