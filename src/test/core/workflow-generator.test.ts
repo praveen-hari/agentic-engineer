@@ -91,6 +91,27 @@ describe('WorkflowGenerator', () => {
       expect(wf.state.status).toBe('idle');
       expect(wf.state.currentStage).toBeNull();
     });
+
+    it('includes build-complete gate even at light level', () => {
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
+      const buildGate = wf.qualityGates.find((g) => g.id === 'build-complete');
+      expect(buildGate).toBeDefined();
+      expect(buildGate!.stage).toBe('build');
+    });
+
+    it('does NOT include ship-checklist gate at light level', () => {
+      const wf = generator.generate(
+        'wf-001',
+        'Fix typo',
+        makeAssessment({ processLevel: 'light' }),
+      );
+      const shipGate = wf.qualityGates.find((g) => g.id === 'ship-checklist');
+      expect(shipGate).toBeUndefined();
+    });
   });
 
   describe('standard process', () => {
@@ -142,6 +163,18 @@ describe('WorkflowGenerator', () => {
       const testGate = wf.qualityGates.find((g) => g.id === 'tests-pass');
       expect(testGate).toBeDefined();
     });
+
+    it('includes build-complete gate for build stage', () => {
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'standard' }),
+      );
+      const buildGate = wf.qualityGates.find((g) => g.id === 'build-complete');
+      expect(buildGate).toBeDefined();
+      expect(buildGate!.stage).toBe('build');
+      expect(buildGate!.status).toBe('pending');
+    });
   });
 
   describe('thorough process', () => {
@@ -175,6 +208,18 @@ describe('WorkflowGenerator', () => {
         makeAssessment({ processLevel: 'thorough' }),
       );
       expect(wf.approvals.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('includes ship-checklist gate for ship stage', () => {
+      const wf = generator.generate(
+        'wf-001',
+        'Add feature',
+        makeAssessment({ processLevel: 'thorough' }),
+      );
+      const shipGate = wf.qualityGates.find((g) => g.id === 'ship-checklist');
+      expect(shipGate).toBeDefined();
+      expect(shipGate!.stage).toBe('ship');
+      expect(shipGate!.status).toBe('pending');
     });
   });
 

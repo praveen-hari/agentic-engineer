@@ -234,6 +234,124 @@ describe('AdvanceStageTool', () => {
 
       expect(onWorkflowUpdated).toHaveBeenCalledTimes(1);
     });
+
+    it('does NOT change the current stage', async () => {
+      const wf = await createAndStartWorkflow();
+      const stageBefore = wf.state.currentStage;
+
+      await userTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      // Verify the saved workflow still has the same stage
+      const saved = await stateManager.load();
+      expect(saved!.state.currentStage).toBe(stageBefore);
+    });
+
+    it('workflow state remains active (not completed)', async () => {
+      await createAndStartWorkflow();
+
+      await userTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      const saved = await stateManager.load();
+      expect(saved!.state.status).toBe('active');
+    });
+  });
+
+  // ─── Agent Mode (approvalMode = 'agent') ──────────────────────────
+
+  describe('agent mode (approvalMode = agent)', () => {
+    // The default `tool` is already in agent mode (set in beforeEach)
+
+    it('auto-advances the stage', async () => {
+      const wf = await createAndStartWorkflow();
+      const stageBefore = wf.state.currentStage;
+
+      const result = await tool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+
+      expect(parsed.advanced).toBe(true);
+      expect(parsed.approvalMode).toBe('agent');
+      expect(parsed.previousStage).toBe(stageBefore);
+      expect(parsed.currentStage).not.toBe(stageBefore);
+    });
+
+    it('returns nextSteps for the new stage', async () => {
+      await createAndStartWorkflow();
+
+      const result = await tool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+
+      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+
+      expect(parsed.nextSteps).toBeDefined();
+      expect(parsed.nextSteps.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ─── Mode Switching ───────────────────────────────────────────────
+
+  describe('mode switching', () => {
+    it('same workflow behaves differently based on mode', async () => {
+      // Create workflow once
+      const wf = await createAndStartWorkflow();
+      const stageBefore = wf.state.currentStage;
+
+      // User mode: gates approved, no advance
+      const userTool = new AdvanceStageTool(
+        workflowEngine,
+        stateManager,
+        stageExecutor,
+        artifactManager,
+        vi.fn(),
+        async () => 'user',
+      );
+
+      const userResult = await userTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+      const userParsed = JSON.parse(
+        (userResult as { parts: Array<{ text: string }> }).parts[0].text,
+      );
+      expect(userParsed.advanced).toBe(false);
+
+      // Stage should still be the same
+      const afterUser = await stateManager.load();
+      expect(afterUser!.state.currentStage).toBe(stageBefore);
+
+      // Agent mode: auto-advance
+      const agentTool = new AdvanceStageTool(
+        workflowEngine,
+        stateManager,
+        stageExecutor,
+        artifactManager,
+        vi.fn(),
+        async () => 'agent',
+      );
+
+      const agentResult = await agentTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+      const agentParsed = JSON.parse(
+        (agentResult as { parts: Array<{ text: string }> }).parts[0].text,
+      );
+      expect(agentParsed.advanced).toBe(true);
+      expect(agentParsed.currentStage).not.toBe(stageBefore);
+    });
   });
 
   describe('prepareInvocation()', () => {
