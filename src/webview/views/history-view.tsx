@@ -227,7 +227,19 @@ const HistoryDetailView: FunctionalComponent<HistoryDetailProps> = ({
       ) : (
         <div class="history-artifacts-list">
           {artifacts.map((a) => (
-            <div key={a.id} class="history-artifact-row">
+            <div
+              key={a.id}
+              class="history-artifact-row history-artifact-row--clickable"
+              role="button"
+              tabIndex={0}
+              onClick={() => bridge.send({ type: 'openKnowledgeFile', fileName: `${entry.archivePath}/${a.filename}` })}
+              onKeyDown={(e: KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  bridge.send({ type: 'openKnowledgeFile', fileName: `${entry.archivePath}/${a.filename}` });
+                }
+              }}
+            >
               <Icon name="file-text" size={14} />
               <div class="history-artifact-info">
                 <span class="history-artifact-title">{a.title}</span>
@@ -235,6 +247,9 @@ const HistoryDetailView: FunctionalComponent<HistoryDetailProps> = ({
                   {a.type} · {a.stage} stage · {a.status}
                 </span>
               </div>
+              <span class="history-artifact-open">
+                <Icon name="chevron-right" size={12} />
+              </span>
             </div>
           ))}
         </div>

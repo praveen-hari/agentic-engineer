@@ -1881,6 +1881,25 @@
   border-radius: var(--radius-sm);
 }
 
+.history-artifact-row--clickable {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.history-artifact-row--clickable:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.history-artifact-row--clickable:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.history-artifact-open {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
 .history-artifact-info {
   display: flex;
   flex-direction: column;
