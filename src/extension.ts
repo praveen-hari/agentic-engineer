@@ -113,6 +113,13 @@ export function activate(context: vscode.ExtensionContext): void {
     artifactManager,
     (wf) => {
       panelProvider.postMessage({ type: 'state', workflow: wf });
+      // Agent is already working in chat — tell the UI so it shows
+      // "Agent is working..." instead of "Send to Agent"
+      panelProvider.postMessage({
+        type: 'agentStatus',
+        status: 'working',
+        message: `Working on ${wf.state.currentStage} stage...`,
+      });
     },
     readConfigLevel,
   );
