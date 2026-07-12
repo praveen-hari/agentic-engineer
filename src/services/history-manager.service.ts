@@ -230,6 +230,30 @@ export class HistoryManager {
       // Already gone
     }
 
+    // Clear objective.md
+    const objPath = `${this.rootPath}/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}/objective.md`;
+    try {
+      await this.fs.write(objPath, '');
+    } catch {
+      // Already gone
+    }
+
+    // Delete artifact content files from all subdirectories
+    const artifactDirs = ['specs', 'plans', 'reviews', 'reports'];
+    for (const dir of artifactDirs) {
+      const dirPath = `${this.rootPath}/${WORKFLOW_DIR}/${CURRENT_WORKFLOW_DIR}/artifacts/${dir}`;
+      try {
+        const files = await this.fs.readDir(dirPath);
+        for (const file of files) {
+          if (file.endsWith('.md')) {
+            await this.fs.write(`${dirPath}/${file}`, '');
+          }
+        }
+      } catch {
+        // Directory may not exist or be empty
+      }
+    }
+
     // Clear artifact manifest
     const manifestPath = `${this.rootPath}/${WORKFLOW_DIR}/${ARTIFACTS_MANIFEST}`;
     try {
