@@ -588,9 +588,10 @@ async function handleRefreshKnowledge(
    - \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
    - \`knowledge/stack.md\` — Tech stack: languages, frameworks, deps with versions
    - \`knowledge/boundaries.md\` — Always do / Ask first / Never do rules
-   - \`codestudio-instructions.md\` — Combined agent instructions
+   - \`codestudio-instructions.md\` — Update knowledge file references if paths changed; add any new project-specific rules
 
 **Important:** Base everything on the ACTUAL codebase. Read real files. Don't guess.
+**Important:** codestudio-instructions.md should reference knowledge files by path, NOT duplicate their content.
 After updating, summarize what changed.`;
 
   await deps.agentBridge.sendToChat(prompt);
@@ -745,9 +746,13 @@ Then create these files in .codestudio/ based on what you ACTUALLY find:
 - \`knowledge/conventions.md\` — Coding conventions: naming, formatting, file organization, patterns used
 - \`knowledge/stack.md\` — Tech stack: languages, frameworks, dependencies with versions, build tools
 - \`knowledge/boundaries.md\` — Rules: Always do / Ask first / Never do (based on existing patterns)
-- \`codestudio-instructions.md\` — Combined agent instructions summarizing all the above
+- \`codestudio-instructions.md\` — Agent instructions file with:
+  1. References to the knowledge files above (file paths so the agent can read them)
+  2. Project-specific rules that don't fit in the knowledge files
+  3. Any custom instructions for this project
 
 **Important:** Base everything on the ACTUAL codebase. Read real files. Don't guess or use generic templates.
+**Important:** codestudio-instructions.md should NOT duplicate content from knowledge files — just reference them by path.
 
 ### Step 3: Ask the user what they want to build
 Tell the user: "Your project is set up! What would you like to build or change?"
@@ -800,7 +805,7 @@ Based on the interview and workspace scan, create these files in .codestudio/:
 - \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
 - \`knowledge/stack.md\` — Tech stack details: languages, frameworks, deps, versions
 - \`knowledge/boundaries.md\` — Always do / Ask first / Never do rules
-- \`codestudio-instructions.md\` — Combined agent instructions
+- \`codestudio-instructions.md\` — Agent instructions: references to knowledge files + project-specific rules (do NOT duplicate knowledge content)
 
 ### Step 4: Call \`engineering_start_workflow\` tool
 YOU determine and provide these arguments based on the interview:

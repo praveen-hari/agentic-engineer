@@ -89,7 +89,7 @@ export class SetupProjectTool implements vscode.LanguageModelTool<SetupProjectIn
                 '  - knowledge/conventions.md — Coding conventions, naming rules, formatting, patterns',
                 '  - knowledge/stack.md — Detailed tech stack: languages, frameworks, deps with versions',
                 '  - knowledge/boundaries.md — Always do / Ask first / Never do rules',
-                '  - codestudio-instructions.md — Combined agent instructions for this project',
+                '  - codestudio-instructions.md — Agent instructions: reference knowledge file paths + project-specific rules (do NOT duplicate knowledge content)',
                 'Then call engineering_start_workflow with the objective, workType, complexity, and riskLevel.',
               ],
             },
