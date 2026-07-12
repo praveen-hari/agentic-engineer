@@ -58,7 +58,7 @@ export const ARCHIVE_DIR = 'archive';
 export const HISTORY_DIR = 'history';
 export const HISTORY_META_FILE = 'history/meta.json';
 
-// ─── All directories to create on initialization ────────────────────────────
+// ─── Directories created on project setup (essential) ───────────────────────
 
 export const CODESTUDIO_DIRECTORIES = [
   CURRENT_WORKFLOW_DIR,
@@ -68,12 +68,18 @@ export const CODESTUDIO_DIRECTORIES = [
   ARTIFACTS_REPORTS_DIR,
   KNOWLEDGE_DIR,
   KNOWLEDGE_ADRS_DIR,
+  ARCHIVE_DIR,
+] as const;
+
+// ─── Directories created on demand (advanced customization) ─────────────────
+// These are only created when the user configures agents, hooks, skills, etc.
+
+export const CODESTUDIO_OPTIONAL_DIRECTORIES = [
   INSTRUCTIONS_DIR,
   AGENTS_DIR,
   SKILLS_DIR,
   PROMPTS_DIR,
   HOOKS_DIR,
-  ARCHIVE_DIR,
 ] as const;
 
 export const CHAT_PARTICIPANT_ID = 'engineering-workspace.participant';

@@ -25,7 +25,8 @@ export const SettingsView: FunctionalComponent = () => {
       }
       if (msg.type === 'settingsLoaded') {
         processLevel.value = msg.settings.processLevelDefault as ProcessLevel | 'auto';
-        approvalMode.value = (msg.settings as Record<string, unknown>).approvalMode === 'agent' ? 'agent' : 'user';
+        approvalMode.value =
+          (msg.settings as Record<string, unknown>).approvalMode === 'agent' ? 'agent' : 'user';
         autoApprove.value = msg.settings.autoApproveLowRisk;
         reviewTimeout.value = msg.settings.reviewTimeoutMinutes;
         loaded.value = true;
@@ -106,8 +107,12 @@ export const SettingsView: FunctionalComponent = () => {
                 saveSettings();
               }}
             >
-              <option value="user">User controls — you click "Approve &amp; Continue" to advance each stage</option>
-              <option value="agent">Agent controls — agent auto-advances stages when requirements are met</option>
+              <option value="user">
+                User controls — you click "Approve &amp; Continue" to advance each stage
+              </option>
+              <option value="agent">
+                Agent controls — agent auto-advances stages when requirements are met
+              </option>
             </select>
           </div>
 

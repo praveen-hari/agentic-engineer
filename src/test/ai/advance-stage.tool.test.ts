@@ -227,10 +227,7 @@ describe('AdvanceStageTool', () => {
     it('notifies extension with updated workflow (gates approved)', async () => {
       await createAndStartWorkflow();
 
-      await userTool.invoke(
-        { input: {} } as never,
-        { isCancellationRequested: false } as never,
-      );
+      await userTool.invoke({ input: {} } as never, { isCancellationRequested: false } as never);
 
       expect(onWorkflowUpdated).toHaveBeenCalledTimes(1);
     });
@@ -239,10 +236,7 @@ describe('AdvanceStageTool', () => {
       const wf = await createAndStartWorkflow();
       const stageBefore = wf.state.currentStage;
 
-      await userTool.invoke(
-        { input: {} } as never,
-        { isCancellationRequested: false } as never,
-      );
+      await userTool.invoke({ input: {} } as never, { isCancellationRequested: false } as never);
 
       // Verify the saved workflow still has the same stage
       const saved = await stateManager.load();
@@ -252,10 +246,7 @@ describe('AdvanceStageTool', () => {
     it('workflow state remains active (not completed)', async () => {
       await createAndStartWorkflow();
 
-      await userTool.invoke(
-        { input: {} } as never,
-        { isCancellationRequested: false } as never,
-      );
+      await userTool.invoke({ input: {} } as never, { isCancellationRequested: false } as never);
 
       const saved = await stateManager.load();
       expect(saved!.state.status).toBe('active');

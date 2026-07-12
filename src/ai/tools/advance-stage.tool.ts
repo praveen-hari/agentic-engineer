@@ -134,7 +134,9 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
               gatesApproved: true,
               approvalMode: 'user',
               message: `Stage "${result.stage}" requirements are met. Gates have been approved. Waiting for the user to click "Approve & Continue" in the UI to advance.`,
-              nextSteps: ['Wait for the user to review and click "Approve & Continue" in the Engineering Workspace panel.'],
+              nextSteps: [
+                'Wait for the user to review and click "Approve & Continue" in the Engineering Workspace panel.',
+              ],
             },
             null,
             2,
