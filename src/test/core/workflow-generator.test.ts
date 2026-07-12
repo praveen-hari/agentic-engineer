@@ -94,14 +94,14 @@ describe('WorkflowGenerator', () => {
   });
 
   describe('standard process', () => {
-    it('generates 4 stages: plan, build, verify, review', () => {
+    it('generates 5 stages: define, plan, build, verify, review', () => {
       const wf = generator.generate(
         'wf-001',
         'Add feature',
         makeAssessment({ processLevel: 'standard' }),
       );
       const stageIds = wf.stages.map((s) => s.id);
-      expect(stageIds).toEqual(['plan', 'build', 'verify', 'review']);
+      expect(stageIds).toEqual(['define', 'plan', 'build', 'verify', 'review']);
     });
 
     it('has at least 2 approvals (spec + review)', () => {

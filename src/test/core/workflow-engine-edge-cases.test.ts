@@ -68,10 +68,10 @@ describe('WorkflowEngine — Edge Cases', () => {
       expect(stageIds).toEqual(['plan', 'build', 'verify']);
     });
 
-    it('standard process generates 4 stages', () => {
+    it('standard process generates 5 stages', () => {
       const wf = engine.create('wf-1', 'Add feature', ASSESSMENTS.standard);
       const stageIds = wf.stages.map((s) => s.id);
-      expect(stageIds).toEqual(['plan', 'build', 'verify', 'review']);
+      expect(stageIds).toEqual(['define', 'plan', 'build', 'verify', 'review']);
     });
 
     it('thorough process generates 6 stages', () => {
@@ -135,13 +135,13 @@ describe('WorkflowEngine — Edge Cases', () => {
 
     it('advance → advance works correctly through standard stages', () => {
       const wf = engine.start(engine.create('wf-1', 'Add feature', ASSESSMENTS.standard));
-      expect(wf.state.currentStage).toBe('plan');
+      expect(wf.state.currentStage).toBe('define');
 
       const afterAdvance1 = engine.advanceStage(wf);
-      expect(afterAdvance1.state.currentStage).toBe('build');
+      expect(afterAdvance1.state.currentStage).toBe('plan');
 
       const afterAdvance2 = engine.advanceStage(afterAdvance1);
-      expect(afterAdvance2.state.currentStage).toBe('verify');
+      expect(afterAdvance2.state.currentStage).toBe('build');
     });
 
     it('advancing through all stages completes the workflow', () => {

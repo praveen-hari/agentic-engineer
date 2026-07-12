@@ -83,7 +83,7 @@ export const SettingsView: FunctionalComponent = () => {
             >
               <option value="auto">Auto — agent decides based on each task (recommended)</option>
               <option value="light">Light — typo fixes, docs, config changes (3 stages)</option>
-              <option value="standard">Standard — features, bugfixes, refactors (4 stages)</option>
+              <option value="standard">Standard — features, bugfixes, refactors (5 stages)</option>
               <option value="thorough">
                 Thorough — architecture, API design, major features (6 stages)
               </option>

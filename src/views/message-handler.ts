@@ -304,7 +304,7 @@ Call \`engineering_start_workflow\` tool with:
 - riskLevel: your assessment (low/medium/high)
 - processLevel: your assessment — choose based on the task:
   • **light** (3 stages: plan→build→verify) — typo fixes, docs, config changes, simple bug fixes
-  • **standard** (4 stages: plan→build→verify→review) — normal bugs, small features, refactors
+  • **standard** (5 stages: define→plan→build→verify→review) — normal features, bugs, refactors with spec + review
   • **thorough** (6 stages: define→plan→build→verify→review→ship) — complex features, architecture, security
   • **guarded** (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
 - contextSignals: what the project touches
@@ -637,7 +637,7 @@ When they respond, call \`engineering_start_workflow\` tool with:
 - \`riskLevel\`: your assessment — "low", "medium", or "high"
 - \`processLevel\`: your assessment — choose the right level for the task:
   • "light" (3 stages) — typo fixes, docs, config changes, simple bug fixes
-  • "standard" (4 stages) — normal bugs, small features, refactors
+  • "standard" (5 stages) — normal features, bugs, refactors with spec + review
   • "thorough" (6 stages) — complex features, architecture, security
   • "guarded" (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
 - \`contextSignals\`: what the project touches — e.g. ["touches_ui", "touches_api", "touches_auth_or_input"]
@@ -689,7 +689,7 @@ YOU determine and provide these arguments based on the interview:
 - \`riskLevel\`: "low", "medium", "high"
 - \`processLevel\`: choose the right level for the task:
   • "light" (3 stages) — typo fixes, docs, config changes, simple bug fixes
-  • "standard" (4 stages) — normal bugs, small features, refactors
+  • "standard" (5 stages) — normal features, bugs, refactors with spec + review
   • "thorough" (6 stages) — complex features, architecture, security
   • "guarded" (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
 - \`contextSignals\`: what the project touches (e.g., ["touches_ui", "touches_api"])
