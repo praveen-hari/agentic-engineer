@@ -2,9 +2,11 @@
  * Plugin Registry Service — fetches, caches, and manages agent plugins.
  *
  * Reads the plugin catalog from a remote GitHub-hosted plugins.json,
- * detects installed plugins from ~/.sfcodestudio/agent-plugins/installed.json,
- * computes recommendations based on project context, and handles
- * install/uninstall via git clone.
+ * detects installed plugins via Code Studio's native plugin system
+ * (installed.json + chat.pluginLocations setting), and handles
+ * install/uninstall using Code Studio's built-in commands.
+ *
+ * @see https://code.visualstudio.com/docs/agent-customization/agent-plugins
  */
 
 import * as vscode from 'vscode';
@@ -46,12 +48,41 @@ export class PluginRegistryService {
   private cache: RegistryCache | null = null;
   private readonly registryUrl: string;
   private readonly iconBaseUrl: string;
+  private marketplaceRegistered = false;
 
   constructor() {
     // Allow override via VS Code settings
     const config = vscode.workspace.getConfiguration('engineeringWorkspace');
     this.registryUrl = config.get<string>('pluginRegistryUrl') || PLUGIN_REGISTRY_URL;
     this.iconBaseUrl = config.get<string>('pluginIconBaseUrl') || PLUGIN_ICON_BASE_URL;
+  }
+
+  /**
+   * Ensure our marketplace repo is registered in chat.plugins.marketplaces.
+   * This lets Code Studio's built-in plugin system discover our plugins.
+   */
+  async ensureMarketplaceRegistered(): Promise<void> {
+    if (this.marketplaceRegistered) return;
+
+    try {
+      const config = vscode.workspace.getConfiguration('chat.plugins');
+      const marketplaces = config.get<string[]>('marketplaces') || [];
+
+      // Extract the owner/repo from our registry URL
+      // e.g. "https://raw.githubusercontent.com/praveen-hari/agent-plugin-marketplace/main/plugins.json"
+      // → "praveen-hari/agent-plugin-marketplace"
+      const match = this.registryUrl.match(/github(?:usercontent)?\.com\/([^/]+\/[^/]+)/);
+      const marketplaceRepo = match ? match[1] : null;
+
+      if (marketplaceRepo && !marketplaces.includes(marketplaceRepo)) {
+        const updated = [...marketplaces, marketplaceRepo];
+        await config.update('marketplaces', updated, vscode.ConfigurationTarget.Global);
+      }
+
+      this.marketplaceRegistered = true;
+    } catch {
+      // Non-critical — marketplace still works via our custom fetch
+    }
   }
 
   /**
@@ -90,10 +121,15 @@ export class PluginRegistryService {
   }
 
   /**
-   * Read the list of installed plugin repo identifiers from
-   * ~/.sfcodestudio/agent-plugins/installed.json
+   * Read the list of installed plugin repo identifiers from multiple sources:
+   * 1. ~/.sfcodestudio/agent-plugins/installed.json (native plugin registry)
+   * 2. chat.pluginLocations setting (locally registered plugins)
+   * 3. Scan ~/.sfcodestudio/agent-plugins/github.com/ directory
    */
   async getInstalledRepos(): Promise<string[]> {
+    const repos = new Set<string>();
+
+    // Source 1: installed.json
     try {
       const homedir = process.env.HOME || process.env.USERPROFILE || '';
       const installedPath = vscode.Uri.file(
@@ -102,19 +138,53 @@ export class PluginRegistryService {
       const content = await vscode.workspace.fs.readFile(installedPath);
       const data = JSON.parse(Buffer.from(content).toString('utf-8')) as InstalledJson;
 
-      // Extract repo identifiers from pluginUri paths
-      // e.g. "file:///.../.sfcodestudio/agent-plugins/github.com/addyosmani/agent-skills"
-      // → "addyosmani/agent-skills"
-      return data.installed.map((entry) => {
+      for (const entry of data.installed) {
         const uri = entry.pluginUri;
         const match = uri.match(/github\.com\/(.+?)(?:\/plugins\/.*)?$/);
-        if (match) return match[1];
-        // Fallback: use marketplace field
-        return entry.marketplace;
-      });
+        if (match) {
+          repos.add(match[1]);
+        } else {
+          repos.add(entry.marketplace);
+        }
+      }
     } catch {
-      return [];
+      // installed.json not found or corrupt
     }
+
+    // Source 2: chat.pluginLocations setting
+    try {
+      const pluginLocations =
+        vscode.workspace.getConfiguration('chat').get<Record<string, boolean>>('pluginLocations') ||
+        {};
+      for (const path of Object.keys(pluginLocations)) {
+        const match = path.match(/github\.com\/(.+?)(?:\/plugins\/.*)?$/);
+        if (match) {
+          repos.add(match[1]);
+        }
+      }
+    } catch {
+      // Setting not available
+    }
+
+    // Source 3: Scan the agent-plugins directory for cloned repos
+    try {
+      const homedir = process.env.HOME || process.env.USERPROFILE || '';
+      const baseDir = vscode.Uri.file(`${homedir}/.sfcodestudio/agent-plugins/github.com`);
+      const orgs = await vscode.workspace.fs.readDirectory(baseDir);
+      for (const [orgName, orgType] of orgs) {
+        if (orgType !== vscode.FileType.Directory) continue;
+        const orgDir = vscode.Uri.joinPath(baseDir, orgName);
+        const repoEntries = await vscode.workspace.fs.readDirectory(orgDir);
+        for (const [repoName, repoType] of repoEntries) {
+          if (repoType !== vscode.FileType.Directory) continue;
+          repos.add(`${orgName}/${repoName}`);
+        }
+      }
+    } catch {
+      // Directory doesn't exist
+    }
+
+    return [...repos];
   }
 
   /**
@@ -188,29 +258,42 @@ export class PluginRegistryService {
   }
 
   /**
-   * Install a plugin by cloning its git repo into the agent-plugins directory.
+   * Install a plugin using Code Studio's native install mechanism.
+   *
+   * Strategy (in order of preference):
+   * 1. Try Code Studio's built-in command `chat.installPluginFromSource`
+   * 2. Fallback: git clone + register via `chat.pluginLocations` setting
+   *
+   * Both approaches make the plugin visible in the Agent Customization panel.
    */
   async installPlugin(plugin: PluginInfo): Promise<void> {
     const repo = plugin.installSource.repo;
+    const repoUrl = `https://github.com/${repo}`;
+
+    // Ensure our marketplace is registered
+    await this.ensureMarketplaceRegistered();
+
+    // Strategy 1: Use Code Studio's native install command
+    try {
+      await vscode.commands.executeCommand('chat.installPluginFromSource', repoUrl);
+      // If the command succeeds, Code Studio handles everything:
+      // cloning, installed.json, plugin discovery, etc.
+      return;
+    } catch {
+      // Command not available or failed — fall back to manual install
+    }
+
+    // Strategy 2: Manual git clone + register via chat.pluginLocations
     const homedir = process.env.HOME || process.env.USERPROFILE || '';
     const targetDir = `${homedir}/.sfcodestudio/agent-plugins/github.com/${repo}`;
 
-    // Clone the repo
-    const terminal = vscode.window.createTerminal({
-      name: `Install: ${plugin.name}`,
-      hideFromUser: true,
-    });
-
     try {
-      // Use git clone
-      const cloneUrl = `https://github.com/${repo}.git`;
-
-      // Execute git clone via child_process for reliability
+      const cloneUrl = `${repoUrl}.git`;
       const { exec } = await import('child_process');
+
       await new Promise<void>((resolve, reject) => {
         exec(`git clone --depth 1 "${cloneUrl}" "${targetDir}"`, { timeout: 60_000 }, (error) => {
           if (error) {
-            // If directory already exists, try git pull instead
             if (error.message.includes('already exists')) {
               exec(`cd "${targetDir}" && git pull`, { timeout: 30_000 }, (pullError) => {
                 if (pullError) reject(pullError);
@@ -225,13 +308,16 @@ export class PluginRegistryService {
         });
       });
 
-      // Ensure .github/plugin/plugin.json exists so Code Studio discovers skills
+      // Ensure plugin.json manifest exists for skill discovery
       await this.ensurePluginManifest(plugin, targetDir);
 
-      // Update installed.json
+      // Register via chat.pluginLocations so Agent Customization panel sees it
+      await this.registerPluginLocation(targetDir);
+
+      // Also update installed.json as a secondary record
       await this.addToInstalledJson(repo, targetDir);
-    } finally {
-      terminal.dispose();
+    } catch (err) {
+      throw err;
     }
   }
 
@@ -295,23 +381,63 @@ export class PluginRegistryService {
   }
 
   /**
-   * Uninstall a plugin by removing its directory and updating installed.json.
+   * Uninstall a plugin by removing it from all registration points.
    */
   async uninstallPlugin(plugin: PluginInfo): Promise<void> {
     const repo = plugin.installSource.repo;
     const homedir = process.env.HOME || process.env.USERPROFILE || '';
     const targetDir = `${homedir}/.sfcodestudio/agent-plugins/github.com/${repo}`;
 
-    // Remove directory
+    // Remove from chat.pluginLocations setting
+    await this.unregisterPluginLocation(targetDir);
+
+    // Remove from installed.json
+    await this.removeFromInstalledJson(repo);
+
+    // Remove the cloned directory
     try {
       const uri = vscode.Uri.file(targetDir);
       await vscode.workspace.fs.delete(uri, { recursive: true });
     } catch {
       // Directory might not exist — that's fine
     }
+  }
 
-    // Update installed.json
-    await this.removeFromInstalledJson(repo);
+  /**
+   * Register a plugin path in the chat.pluginLocations setting.
+   * This makes the plugin visible in Code Studio's Agent Customization panel.
+   *
+   * @see https://code.visualstudio.com/docs/agent-customization/agent-plugins#_use-local-plugins
+   */
+  private async registerPluginLocation(pluginPath: string): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration('chat');
+      const locations = config.get<Record<string, boolean>>('pluginLocations') || {};
+
+      if (!(pluginPath in locations)) {
+        locations[pluginPath] = true; // true = enabled
+        await config.update('pluginLocations', locations, vscode.ConfigurationTarget.Global);
+      }
+    } catch {
+      // Non-critical
+    }
+  }
+
+  /**
+   * Remove a plugin path from the chat.pluginLocations setting.
+   */
+  private async unregisterPluginLocation(pluginPath: string): Promise<void> {
+    try {
+      const config = vscode.workspace.getConfiguration('chat');
+      const locations = config.get<Record<string, boolean>>('pluginLocations') || {};
+
+      if (pluginPath in locations) {
+        delete locations[pluginPath];
+        await config.update('pluginLocations', locations, vscode.ConfigurationTarget.Global);
+      }
+    } catch {
+      // Non-critical
+    }
   }
 
   /**
