@@ -229,7 +229,7 @@ const ActiveState: FunctionalComponent = () => {
       {/* Objective + Progress Header */}
       <div class="tasks-header">
         <div class="tasks-header-top">
-          <h3>{wf.objective}</h3>
+          <h3 title={wf.objective}>{wf.objective}</h3>
           <div class="tasks-header-actions">
             {wf.state.status === 'active' && (
               <button
