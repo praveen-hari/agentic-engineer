@@ -11,6 +11,7 @@
 
 import type { LifecycleStage, MessageToHost } from '../../core/types';
 import type { HandlerRegistration, MessageHandlerDeps, ReplyFn } from '../message-handler-types';
+import { DEFAULT_PIPELINE, isApprovalForStage } from '../../core/pipeline-config';
 
 export const approvalHandlers: HandlerRegistration = {
   approve: handleApprove,
@@ -93,26 +94,12 @@ async function handleRequestGateStatus(
 // ─── Shared Utilities ───────────────────────────────────────────────────────
 
 /**
- * Approval → Stage mapping.
- * Maps approval artifact names to the lifecycle stage they belong to.
- * Used by stage.handlers (executeStage) to scope auto-approval.
+ * Check if an approval artifact belongs to the current stage.
+ * Delegates to the pipeline config's approvalStageMap — single source of truth.
  */
-const APPROVAL_STAGE_MAP: Readonly<Record<string, LifecycleStage>> = {
-  spec: 'define',
-  plan: 'plan',
-  'code-review': 'review',
-  review: 'review',
-  'security-review': 'review',
-  architecture: 'review',
-  integration: 'review',
-  'schema-migration': 'ship',
-  deployment: 'ship',
-};
-
 export function isApprovalForCurrentStage(
   artifactName: string,
   stage: LifecycleStage | null,
 ): boolean {
-  if (!stage) return false;
-  return APPROVAL_STAGE_MAP[artifactName] === stage;
+  return isApprovalForStage(DEFAULT_PIPELINE, artifactName, stage);
 }

@@ -4,6 +4,7 @@ import type { StateManager } from '../../core/state-manager';
 import type { StageExecutor } from '../../core/stage-executor';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
 import type { ApprovalMode, LifecycleStage, WorkflowDefinition } from '../../core/types';
+import { DEFAULT_PIPELINE, getNextStepForStage, isApprovalForStage } from '../../core/pipeline-config';
 
 /** Reads the approvalMode from config. Returns 'user' by default. */
 export type ApprovalModeReader = () => Promise<ApprovalMode>;
@@ -75,7 +76,7 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
     const approved = await this.stateManager.update((current) => {
       const stage = current.state.currentStage;
       const stageApprovals = current.approvals.filter(
-        (a) => a.status === 'pending' && isApprovalForStage(a.artifact, stage),
+        (a) => a.status === 'pending' && isApprovalForCurrentStage(a.artifact, stage),
       );
       const stageGates = current.qualityGates.filter(
         (g) => g.status === 'pending' && g.stage === stage,
@@ -193,7 +194,7 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
                     'The workflow is complete. Summarize what was accomplished.',
                     'Check if this workflow changed the architecture, tech stack, conventions, or boundaries. If so, update the relevant knowledge files in .codestudio/knowledge/. Since approvalMode is "agent", you can update them directly.',
                   ]
-                : [getNextStepForStage(updated.state.currentStage)],
+                : [getNextStep(updated.state.currentStage)],
           },
           null,
           2,
@@ -203,42 +204,12 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
   }
 }
 
-// ─── Shared stage → next-step mapping ───────────────────────────────────────
+// ─── Helpers (delegated to PipelineConfig) ──────────────────────────────────
 
-const STAGE_NEXT_STEPS: Readonly<Record<string, string>> = {
-  define:
-    'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
-  plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
-  build:
-    'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD. When all tasks are done, call engineering_advance_stage.',
-  verify: 'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
-  review:
-    'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
-  ship: 'Follow the shipping-and-launch skill. Complete the pre-launch checklist. Then call engineering_save_artifact with type="report".',
-};
-
-function getNextStepForStage(stage: string | null): string {
-  if (!stage) return 'Workflow has no active stage.';
-  return STAGE_NEXT_STEPS[stage] ?? `Complete the ${stage} stage.`;
+function getNextStep(stage: string | null): string {
+  return getNextStepForStage(DEFAULT_PIPELINE, stage);
 }
 
-// ─── Approval → Stage mapping ───────────────────────────────────────────────
-// Maps approval artifact names to the stage they belong to.
-// Used to scope auto-approval to only the current stage's approvals.
-
-const APPROVAL_STAGE_MAP: Readonly<Record<string, LifecycleStage>> = {
-  spec: 'define',
-  plan: 'plan',
-  'code-review': 'review',
-  review: 'review',
-  'security-review': 'review',
-  architecture: 'review',
-  integration: 'review',
-  'schema-migration': 'ship',
-  deployment: 'ship',
-};
-
-function isApprovalForStage(artifactName: string, stage: LifecycleStage | null): boolean {
-  if (!stage) return false;
-  return APPROVAL_STAGE_MAP[artifactName] === stage;
+function isApprovalForCurrentStage(artifactName: string, stage: LifecycleStage | null): boolean {
+  return isApprovalForStage(DEFAULT_PIPELINE, artifactName, stage);
 }

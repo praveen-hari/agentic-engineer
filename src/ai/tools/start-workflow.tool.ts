@@ -12,6 +12,7 @@ import type {
   WorkType,
 } from '../../core/types';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
+import { DEFAULT_PIPELINE, getNextStepForStage } from '../../core/pipeline-config';
 
 /**
  * Reads the processLevelDefault from .codestudio/config.json.
@@ -169,19 +170,6 @@ export class StartWorkflowTool implements vscode.LanguageModelTool<StartWorkflow
   private getNextSteps(wf: WorkflowDefinition): string[] {
     const stage = wf.state.currentStage;
     if (!stage) return ['Workflow has no active stage.'];
-
-    const stageSkillMap: Record<string, string> = {
-      define:
-        'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
-      plan: 'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
-      build:
-        'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD. When all tasks are done, call engineering_advance_stage.',
-      verify: 'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
-      review:
-        'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
-      ship: 'Follow the shipping-and-launch skill. Complete the pre-launch checklist. Then call engineering_save_artifact with type="report".',
-    };
-
-    return [stageSkillMap[stage] ?? `Complete the ${stage} stage.`];
+    return [getNextStepForStage(DEFAULT_PIPELINE, stage)];
   }
 }

@@ -98,6 +98,8 @@ export interface StageDefinition {
   readonly skippableAt: readonly ProcessLevel[];
   /** Whether the stage auto-advances when all requirements are met. */
   readonly autoAdvance: boolean;
+  /** Hint shown to the agent about what to do next after entering this stage. */
+  readonly nextStepHint: string;
 }
 
 /** Configuration for a process level. */
@@ -153,6 +155,8 @@ export const DEFAULT_PIPELINE: PipelineConfig = {
       ],
       skippableAt: [],
       autoAdvance: false,
+      nextStepHint:
+        'Follow the spec-driven-development skill to generate a specification. Scan the workspace first. Then call engineering_save_artifact with type="spec".',
     },
     plan: {
       name: 'Plan',
@@ -174,6 +178,8 @@ export const DEFAULT_PIPELINE: PipelineConfig = {
       ],
       skippableAt: [],
       autoAdvance: false,
+      nextStepHint:
+        'Follow the planning-and-task-breakdown skill to create a task plan from the spec. Then call engineering_save_artifact with type="plan".',
     },
     build: {
       name: 'Build',
@@ -194,6 +200,8 @@ export const DEFAULT_PIPELINE: PipelineConfig = {
       ],
       skippableAt: [],
       autoAdvance: false,
+      nextStepHint:
+        'Follow the incremental-implementation and test-driven-development skills. Implement tasks one at a time with TDD. When all tasks are done, call engineering_advance_stage.',
     },
     verify: {
       name: 'Verify',
@@ -223,6 +231,8 @@ export const DEFAULT_PIPELINE: PipelineConfig = {
       ],
       skippableAt: [],
       autoAdvance: false,
+      nextStepHint:
+        'Run tests, build, and lint. Then call engineering_save_artifact with type="report".',
     },
     review: {
       name: 'Review',
@@ -243,6 +253,8 @@ export const DEFAULT_PIPELINE: PipelineConfig = {
       ],
       skippableAt: ['light', 'standard', 'thorough'],
       autoAdvance: false,
+      nextStepHint:
+        'Follow the code-review-and-quality skill for a 5-axis review. Then call engineering_save_artifact with type="review".',
     },
     ship: {
       name: 'Ship',
@@ -266,6 +278,8 @@ export const DEFAULT_PIPELINE: PipelineConfig = {
       ],
       skippableAt: [],
       autoAdvance: false,
+      nextStepHint:
+        'Follow the shipping-and-launch skill. Complete the pre-launch checklist. Then call engineering_save_artifact with type="report".',
     },
   },
 
@@ -464,4 +478,42 @@ export function getRequiredGates(
   return Object.entries(stageDef.gates)
     .filter(([, req]) => meetsMinLevel(level, req.minLevel))
     .map(([id]) => id);
+}
+
+/**
+ * Get the next-step hint for a stage. Used by AI tools to tell the
+ * agent what to do after entering a stage.
+ */
+export function getNextStepForStage(
+  config: PipelineConfig,
+  stageId: string | null,
+): string {
+  if (!stageId) return 'Workflow has no active stage.';
+  const stageDef = config.stages[stageId as LifecycleStage];
+  return stageDef?.nextStepHint ?? `Complete the ${stageId} stage.`;
+}
+
+/**
+ * Get the primary skill for a stage (first skill in the list).
+ * Used by the UI to show which skill is active.
+ */
+export function getPrimarySkillForStage(
+  config: PipelineConfig,
+  stageId: LifecycleStage,
+): string | null {
+  const stageDef = config.stages[stageId];
+  return stageDef?.skills[0] ?? null;
+}
+
+/**
+ * Check if an approval artifact belongs to a given stage.
+ * Uses the approvalStageMap from the pipeline config.
+ */
+export function isApprovalForStage(
+  config: PipelineConfig,
+  artifactName: string,
+  stage: LifecycleStage | null,
+): boolean {
+  if (!stage) return false;
+  return config.approvalStageMap[artifactName] === stage;
 }

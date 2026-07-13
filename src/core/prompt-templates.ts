@@ -1,4 +1,5 @@
 import type { LifecycleStage, ProcessLevel, ProjectContext, RiskSignal } from './types';
+import { DEFAULT_PIPELINE, getPrimarySkillForStage } from './pipeline-config';
 
 /**
  * Prompt templates for each SDLC stage.
@@ -235,15 +236,7 @@ Call \`engineering_update_status\` frequently to report progress (e.g., "Checkin
    * Used by the UI to show which skill is active.
    */
   getSkillForStage(stage: LifecycleStage): string | null {
-    const mapping: Record<LifecycleStage, string | null> = {
-      define: 'spec-driven-development',
-      plan: 'planning-and-task-breakdown',
-      build: 'incremental-implementation',
-      verify: 'test-driven-development',
-      review: 'code-review-and-quality',
-      ship: 'shipping-and-launch',
-    };
-    return mapping[stage] ?? null;
+    return getPrimarySkillForStage(DEFAULT_PIPELINE, stage);
   }
 }
 
