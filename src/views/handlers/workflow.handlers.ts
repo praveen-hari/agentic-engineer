@@ -23,6 +23,7 @@ export const workflowHandlers: HandlerRegistration = {
   resumeWorkflow: handleResumeWorkflow,
   cancelWorkflow: handleCancelWorkflow,
   deleteWorkflow: handleDeleteWorkflow,
+  refreshWorkflow: handleRefreshWorkflow,
 };
 
 // ─── Handlers ───────────────────────────────────────────────────────────────
@@ -299,4 +300,44 @@ async function handleDeleteWorkflow(
 
   // Reset UI
   reply({ type: 'state', workflow: null });
+}
+
+/**
+ * Refresh workflow state from disk and reset agent status.
+ *
+ * Used when the UI gets out of sync — e.g., the user stopped the agent
+ * via the chat panel's Stop button (which doesn't notify the extension),
+ * or after a Code Studio restart where the agent context was lost.
+ *
+ * Reloads workflow.json, resets agentStatus to idle, and refreshes
+ * the stage detail so the UI reflects the true on-disk state.
+ */
+async function handleRefreshWorkflow(
+  _msg: MessageToHost,
+  deps: MessageHandlerDeps,
+  reply: ReplyFn,
+): Promise<void> {
+  // 1. Reload workflow state from disk
+  const workflow = await deps.stateManager.load();
+  reply({ type: 'state', workflow });
+
+  // 2. Reset agent status to idle — clears any stale "working" state
+  reply({ type: 'agentStatus', status: 'idle' });
+
+  // 3. Refresh stage detail if workflow exists
+  if (workflow) {
+    const action = deps.stageExecutor.getStageAction(workflow);
+    const artifacts = await deps.artifactManager.listAll();
+    const completion = deps.stageExecutor.evaluateStageCompletion(workflow, artifacts);
+    const instructions = deps.stageExecutor.getStageInstructions(workflow);
+
+    reply({
+      type: 'stageDetail',
+      stage: workflow.state.currentStage,
+      action,
+      completion,
+      instructions,
+      artifacts,
+    });
+  }
 }

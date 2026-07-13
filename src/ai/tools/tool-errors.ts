@@ -84,8 +84,7 @@ export function noActiveWorkflowError(
     message: 'No active workflow exists.',
     recoverable: true,
     retryable: false,
-    suggestedAction:
-      'Call engineering_start_workflow to create and start a workflow first.',
+    suggestedAction: 'Call engineering_start_workflow to create and start a workflow first.',
   });
 }
 
@@ -94,8 +93,10 @@ export function workflowNotActiveError(
   currentStatus: string,
 ): InstanceType<typeof vscodeModule.LanguageModelToolResult> {
   const actions: Record<string, string> = {
-    paused: 'The workflow is paused. Ask the user to resume it from the Engineering Workspace panel.',
-    completed: 'The workflow is already completed. Start a new workflow with engineering_start_workflow.',
+    paused:
+      'The workflow is paused. Ask the user to resume it from the Engineering Workspace panel.',
+    completed:
+      'The workflow is already completed. Start a new workflow with engineering_start_workflow.',
     failed: 'The workflow has failed. Start a new workflow with engineering_start_workflow.',
     idle: 'The workflow has not been started yet. It should auto-start — this may be a bug.',
   };
@@ -105,7 +106,8 @@ export function workflowNotActiveError(
     message: `Workflow is "${currentStatus}", not "active". Cannot perform this operation.`,
     recoverable: currentStatus === 'paused',
     retryable: false,
-    suggestedAction: actions[currentStatus] ?? `Workflow is in unexpected state "${currentStatus}".`,
+    suggestedAction:
+      actions[currentStatus] ?? `Workflow is in unexpected state "${currentStatus}".`,
     details: { currentStatus },
   });
 }

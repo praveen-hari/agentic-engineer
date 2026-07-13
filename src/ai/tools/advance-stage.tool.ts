@@ -4,7 +4,11 @@ import type { StateManager } from '../../core/state-manager';
 import type { StageExecutor } from '../../core/stage-executor';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
 import type { ApprovalMode, LifecycleStage, WorkflowDefinition } from '../../core/types';
-import { DEFAULT_PIPELINE, getNextStepForStage, isApprovalForStage } from '../../core/pipeline-config';
+import {
+  DEFAULT_PIPELINE,
+  getNextStepForStage,
+  isApprovalForStage,
+} from '../../core/pipeline-config';
 import { noActiveWorkflowError, workflowNotActiveError } from './tool-errors';
 
 /** Reads the approvalMode from config. Returns 'user' by default. */

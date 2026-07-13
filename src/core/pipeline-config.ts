@@ -484,10 +484,7 @@ export function getRequiredGates(
  * Get the next-step hint for a stage. Used by AI tools to tell the
  * agent what to do after entering a stage.
  */
-export function getNextStepForStage(
-  config: PipelineConfig,
-  stageId: string | null,
-): string {
+export function getNextStepForStage(config: PipelineConfig, stageId: string | null): string {
   if (!stageId) return 'Workflow has no active stage.';
   const stageDef = config.stages[stageId as LifecycleStage];
   return stageDef?.nextStepHint ?? `Complete the ${stageId} stage.`;

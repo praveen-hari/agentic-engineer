@@ -241,6 +241,15 @@ const ActiveState: FunctionalComponent = () => {
               </button>
             )}
             <button
+              class="btn btn-secondary btn-sm"
+              title="Refresh workflow state — use if the UI is out of sync"
+              onClick={() => {
+                bridge.send({ type: 'refreshWorkflow' });
+              }}
+            >
+              <Icon name="refresh" size={12} />
+            </button>
+            <button
               class="btn btn-secondary btn-sm tasks-delete-btn"
               title="Delete this task permanently"
               onClick={() => {

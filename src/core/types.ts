@@ -301,6 +301,7 @@ export type MessageToHost =
   | { readonly type: 'pauseWorkflow' }
   | { readonly type: 'resumeWorkflow' }
   | { readonly type: 'deleteWorkflow' }
+  | { readonly type: 'refreshWorkflow' }
   | { readonly type: 'requestPlugins' }
   | { readonly type: 'installPlugin'; readonly pluginId: string }
   | { readonly type: 'uninstallPlugin'; readonly pluginId: string }
