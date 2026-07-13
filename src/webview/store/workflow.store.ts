@@ -121,6 +121,16 @@ export interface StageDetailData {
 
 export const stageDetailStore = signal<StageDetailData | null>(null);
 
+/** Todo progress for Build stage task tracking. */
+export interface TodoProgressView {
+  readonly tasks: readonly { id: number; title: string; status: 'pending' | 'done' | 'skipped' }[];
+  readonly completed: number;
+  readonly total: number;
+  readonly percentage: number;
+  readonly currentTask: number | null;
+}
+export const todoProgressStore = signal<TodoProgressView | null>(null);
+
 /** Agent activity status — idle, working, or waiting for approval. */
 export const agentStatus = signal<AgentActivityStatus>('idle');
 export const agentStatusMessage = signal<string | null>(null);

@@ -13,6 +13,8 @@
 import type { LifecycleStage, MessageToHost } from '../../core/types';
 import type { HandlerRegistration, MessageHandlerDeps, ReplyFn } from '../message-handler-types';
 import { isApprovalForCurrentStage } from './approval.handlers';
+import { WORKFLOW_DIR, ARTIFACTS_TODO_FILE } from '../../constants';
+import { parseTodoMd, generateTodoSummary } from '../../core/todo-parser';
 
 export const stageHandlers: HandlerRegistration = {
   requestStageActions: handleRequestStageActions,
@@ -222,6 +224,26 @@ async function sendStageToAgent(
     planPath = artifacts.find((a) => a.type === 'plan')?.path;
   }
 
+  // For Build stage: read todo.md to include progress in the prompt
+  let todoSummary: string | undefined;
+  if (stage === 'build') {
+    const root = deps.workspaceService.getWorkspaceRoot();
+    if (root) {
+      try {
+        const todoPath = `${root}/${WORKFLOW_DIR}/${ARTIFACTS_TODO_FILE}`;
+        if (await deps.fileSystem.exists(todoPath)) {
+          const todoContent = await deps.fileSystem.read(todoPath);
+          const progress = parseTodoMd(todoContent);
+          if (progress.total > 0) {
+            todoSummary = generateTodoSummary(progress);
+          }
+        }
+      } catch {
+        // todo.md not found — agent will create it
+      }
+    }
+  }
+
   const prompt = deps.promptTemplates.getPromptForStage(stage, {
     objective: wf.objective,
     context: null,
@@ -229,6 +251,7 @@ async function sendStageToAgent(
     processLevel: wf.processLevel,
     specPath,
     planPath,
+    todoSummary,
   });
 
   if (!prompt) {

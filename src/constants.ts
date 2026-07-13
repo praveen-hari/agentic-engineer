@@ -36,6 +36,7 @@ export const ARTIFACTS_SPECS_DIR = 'workflows/current/artifacts/specs';
 export const ARTIFACTS_PLANS_DIR = 'workflows/current/artifacts/plans';
 export const ARTIFACTS_REVIEWS_DIR = 'workflows/current/artifacts/reviews';
 export const ARTIFACTS_REPORTS_DIR = 'workflows/current/artifacts/reports';
+export const ARTIFACTS_TODO_FILE = 'workflows/current/artifacts/plans/todo.md';
 
 // ─── Knowledge (DD-021: project-level, persistent) ──────────────────────────
 

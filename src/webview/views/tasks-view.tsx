@@ -26,6 +26,7 @@ import {
   stageDetailStore,
   agentStatus as agentStatusSignal,
   agentStatusMessage,
+  todoProgressStore,
 } from '../store/workflow.store';
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
@@ -402,6 +403,7 @@ const StagesTab: FunctionalComponent<StagesTabProps> = ({ wf, detail, agentSt, a
             onApprove={(id) => bridge.send({ type: 'approve', approvalId: id })}
             onReject={(id) => bridge.send({ type: 'reject', approvalId: id })}
             onViewArtifact={(id) => bridge.send({ type: 'openArtifact', artifactId: id })}
+            todoProgress={isActive && stage.id === 'build' ? todoProgressStore.value : null}
           />
         );
       })}

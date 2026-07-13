@@ -393,7 +393,29 @@ export type MessageToWebview =
       readonly pluginId: string;
       readonly success: boolean;
       readonly error?: string;
+    }
+  | {
+      readonly type: 'todoProgress';
+      readonly progress: TodoProgress;
     };
+
+// ─── Todo Progress (Build stage task tracking) ────────────────────────────
+
+export type TodoTaskStatus = 'pending' | 'done' | 'skipped';
+
+export interface TodoTask {
+  readonly id: number;
+  readonly title: string;
+  readonly status: TodoTaskStatus;
+}
+
+export interface TodoProgress {
+  readonly tasks: readonly TodoTask[];
+  readonly completed: number;
+  readonly total: number;
+  readonly percentage: number;
+  readonly currentTask: number | null;
+}
 
 // ─── Agent Activity ────────────────────────────────────────────────────────
 
@@ -481,11 +503,11 @@ export interface WorkspaceConfig {
 
 export type ProjectType = 'greenfield' | 'brownfield';
 
-export type OnboardingStatus = 'welcome' | 'setup-existing' | 'setup-new' | 'scanning' | 'setup-active' | 'ready';
+export type OnboardingStatus = 'welcome' | 'setup-existing' | 'setup-new' | 'scanning' | 'ready';
 
 // ─── Stage Execution ───────────────────────────────────────────────────────
 
-export type ArtifactType = 'spec' | 'plan' | 'adr' | 'review' | 'report';
+export type ArtifactType = 'spec' | 'plan' | 'adr' | 'review' | 'report' | 'todo';
 
 export type ArtifactStatus = 'draft' | 'pending-review' | 'approved' | 'rejected';
 

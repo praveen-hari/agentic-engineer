@@ -888,6 +888,95 @@
   text-align: center;
 }
 
+/* ─── Todo Checklist (Build stage task tracking) ───────────────── */
+
+.todo-checklist {
+  margin-bottom: var(--space-md);
+}
+
+.todo-checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.todo-checklist-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.todo-checklist-pct {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.todo-checklist-bar {
+  height: 4px;
+  background: var(--color-bg-elevated);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+}
+
+.todo-checklist-bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.todo-checklist-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.todo-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 3px 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.todo-task--done {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.todo-task--current {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.todo-task-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-task--done-summary,
+.todo-task--more {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  padding: 3px 0;
+}
+
+.todo-task--done-summary:hover,
+.todo-task--more:hover {
+  color: var(--color-accent);
+}
+
 .analyze-section {
   margin-bottom: var(--space-xl);
 }

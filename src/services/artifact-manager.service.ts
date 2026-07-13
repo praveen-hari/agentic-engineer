@@ -239,6 +239,8 @@ export class ArtifactManager {
       case 'report':
       case 'adr':
         return ARTIFACTS_REPORTS_DIR;
+      case 'todo':
+        return ARTIFACTS_PLANS_DIR;
       default:
         return ARTIFACTS_REPORTS_DIR;
     }

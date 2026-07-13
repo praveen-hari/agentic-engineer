@@ -26,7 +26,13 @@ import { ChatParticipantHandler } from './chat/chat-participant';
 // NavigationTreeProvider removed — navigation is now in-webview
 import { EngineeringWorkspacePanelProvider } from './views/panel-provider';
 import { handleWebviewMessage } from './views/message-handler';
-import { WORKFLOW_DIR, CURRENT_WORKFLOW_DIR, WORKFLOW_FILE } from './constants';
+import {
+  WORKFLOW_DIR,
+  CURRENT_WORKFLOW_DIR,
+  WORKFLOW_FILE,
+  ARTIFACTS_TODO_FILE,
+} from './constants';
+import { parseTodoMd } from './core/todo-parser';
 
 /**
  * Extension entry point — Engineering Workspace.
@@ -242,6 +248,24 @@ export function activate(context: vscode.ExtensionContext): void {
       // Trigger a knowledge refresh by sending requestKnowledge through the handler
       void messageHandler({ type: 'requestKnowledge' });
     });
+
+    // ─── Todo Progress Watcher (Build stage task tracking) ────────
+    // Watches todo.md for changes and sends progress to the webview.
+    // The agent creates/updates this file during the Build stage.
+    const todoPattern = `${workspaceRoot}/${WORKFLOW_DIR}/${ARTIFACTS_TODO_FILE}`;
+    const todoWatcher = vscodeApi.workspace.createFileSystemWatcher(todoPattern);
+    const handleTodoChange = async (uri: { fsPath: string }) => {
+      try {
+        const content = await fsService.read(uri.fsPath);
+        const progress = parseTodoMd(content);
+        panelProvider.postMessage({ type: 'todoProgress', progress });
+      } catch {
+        // todo.md not readable — ignore
+      }
+    };
+    todoWatcher.onDidCreate(handleTodoChange);
+    todoWatcher.onDidChange(handleTodoChange);
+    context.subscriptions.push(todoWatcher);
 
     // ─── Branch-Change Watcher (Phase 5) ──────────────────────────
     // Detects git branch switches and reloads workflow state so the

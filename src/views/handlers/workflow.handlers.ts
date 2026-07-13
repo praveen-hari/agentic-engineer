@@ -10,8 +10,9 @@
 import type { MessageToHost, RiskAssessment } from '../../core/types';
 import type { HandlerRegistration, MessageHandlerDeps, ReplyFn } from '../message-handler-types';
 import { extractListValues, extractSingleValue } from '../helpers/context-parser';
-import { WORKFLOW_DIR, STACK_FILE, CONVENTIONS_FILE } from '../../constants';
+import { WORKFLOW_DIR, STACK_FILE, CONVENTIONS_FILE, ARTIFACTS_TODO_FILE } from '../../constants';
 import { cancelAgent } from './agent.handlers';
+import { parseTodoMd, generateTodoSummary } from '../../core/todo-parser';
 
 export const workflowHandlers: HandlerRegistration = {
   requestState: handleRequestState,
@@ -284,6 +285,27 @@ async function handleResumeWorkflow(
       const artifacts = await deps.artifactManager.listAll();
       const specPath = artifacts.find((a) => a.type === 'spec')?.path;
       const planPath = artifacts.find((a) => a.type === 'plan')?.path;
+
+      // For Build stage: read todo.md to include progress in the prompt
+      let todoSummary: string | undefined;
+      if (stage === 'build') {
+        const root = deps.workspaceService.getWorkspaceRoot();
+        if (root) {
+          try {
+            const todoPath = `${root}/${WORKFLOW_DIR}/${ARTIFACTS_TODO_FILE}`;
+            if (await deps.fileSystem.exists(todoPath)) {
+              const todoContent = await deps.fileSystem.read(todoPath);
+              const progress = parseTodoMd(todoContent);
+              if (progress.total > 0) {
+                todoSummary = generateTodoSummary(progress);
+              }
+            }
+          } catch {
+            // todo.md not found or unreadable — agent will create it
+          }
+        }
+      }
+
       const prompt = deps.promptTemplates.getPromptForStage(stage, {
         objective: updated.objective,
         context: null,
@@ -291,6 +313,7 @@ async function handleResumeWorkflow(
         processLevel: updated.processLevel,
         specPath,
         planPath,
+        todoSummary,
       });
 
       await deps.agentBridge.sendToChat(

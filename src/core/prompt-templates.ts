@@ -89,26 +89,58 @@ Call \`engineering_update_status\` frequently to report progress (e.g., "Reading
    * BUILD stage — sent to agent to implement the plan.
    * References: incremental-implementation + test-driven-development skills
    */
-  getBuildPrompt(objective: string, planPath: string): string {
+  getBuildPrompt(objective: string, planPath: string, todoSummary?: string): string {
+    // If resuming with existing todo progress, include it
+    const resumeBlock = todoSummary
+      ? `\n## Current Progress (from todo.md)\n${todoSummary}\n\n**Continue from the next incomplete task.** Do NOT redo completed tasks.\n`
+      : '';
+
     return `Implement the plan for:
 ${fenceUserInput(objective)}
 
 ## Plan
 Read the implementation plan at: \`${planPath}\`
+${resumeBlock}
+## Step 1: Create or verify todo.md
+${
+  todoSummary
+    ? 'A todo.md already exists with progress above. Skip creation and continue from the next incomplete task.'
+    : `Create a task checklist by calling \`engineering_save_artifact\` with:
+- type: "todo"
+- title: "Implementation Tasks"
+- stage: "build"
+- content: a markdown checklist in this **exact format**:
 
-## Instructions
-Call \`engineering_update_status\` frequently to report progress (e.g., "Task 1/5: Writing failing test...", "Task 1/5: Implementing...", "Task 1/5: Tests passing, committing...", "Task 2/5: Starting...").
+\`\`\`markdown
+# Tasks
 
-1. Read the plan file first to understand all tasks.
-2. Follow the **incremental-implementation** skill — implement one task at a time.
-3. For each task, follow the **test-driven-development** skill:
-   - **RED** — Write a failing test
-   - **GREEN** — Write minimal code to pass
-   - **REFACTOR** — Clean up without changing behavior
-4. Run the full test suite after each task.
-5. Commit with a descriptive message after each task.
-6. Move to the next task until all are done.
-7. When all tasks are complete, call \`engineering_advance_stage\` to move to the Verify stage.`;
+- [ ] 1. First task title (size)
+- [ ] 2. Second task title (size)
+- [ ] 3. Third task title (size)
+...
+\`\`\`
+
+Extract ALL tasks from the plan. Use the exact format above — \`- [ ]\` for pending, \`- [x]\` for done.`
+}
+
+## Step 2: Implement tasks one at a time
+Follow the **incremental-implementation** skill — implement one task at a time.
+For each task, follow the **test-driven-development** skill:
+- **RED** — Write a failing test
+- **GREEN** — Write minimal code to pass
+- **REFACTOR** — Clean up without changing behavior
+
+## Step 3: After completing EACH task
+1. **Update todo.md** — change \`- [ ]\` to \`- [x]\` for the completed task
+2. **Call \`engineering_update_status\`** with progress: "Task 3/12: Building KPI cards..."
+3. **Run the full test suite**
+4. **Commit** with a descriptive message
+5. **Move to the next task**
+
+## Step 4: When all tasks are done
+Call \`engineering_advance_stage\` to move to the Verify stage.
+
+**IMPORTANT:** Update todo.md after EVERY task. This tracks your progress so you can resume if interrupted.`;
   }
 
   /**
@@ -206,6 +238,7 @@ Call \`engineering_update_status\` frequently to report progress (e.g., "Checkin
       processLevel: ProcessLevel;
       specPath?: string;
       planPath?: string;
+      todoSummary?: string;
     },
   ): string | null {
     switch (stage) {
@@ -219,7 +252,11 @@ Call \`engineering_update_status\` frequently to report progress (e.g., "Checkin
       case 'plan':
         return this.getPlanPrompt(params.objective, params.specPath ?? '', params.processLevel);
       case 'build':
-        return this.getBuildPrompt(params.objective, params.planPath ?? params.specPath ?? '');
+        return this.getBuildPrompt(
+          params.objective,
+          params.planPath ?? params.specPath ?? '',
+          params.todoSummary,
+        );
       case 'verify':
         return this.getVerifyPrompt(params.objective);
       case 'review':

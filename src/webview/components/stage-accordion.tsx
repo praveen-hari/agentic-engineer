@@ -26,6 +26,7 @@ import type {
   StageExecutionResult,
   Stage,
 } from '../../core/types';
+import type { TodoProgressView } from '../store/workflow.store';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,8 @@ export interface StageAccordionProps {
   readonly onApprove?: (approvalId: string) => void;
   readonly onReject?: (approvalId: string) => void;
   readonly onViewArtifact?: (artifactId: string) => void;
+  /** Todo progress for Build stage task tracking. */
+  readonly todoProgress?: TodoProgressView | null;
 }
 
 // ─── Status Helpers ─────────────────────────────────────────────────────────
@@ -91,6 +94,7 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
   onApprove,
   onReject,
   onViewArtifact,
+  todoProgress,
 }) => {
   const expanded = useSignal(isActive);
 
@@ -160,6 +164,9 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
           {isActive && agentSt && agentSt !== 'idle' && (
             <AgentStatusBanner status={agentSt} message={agentMessage} />
           )}
+
+          {/* Todo Task Checklist (Build stage only) */}
+          {todoProgress && todoProgress.total > 0 && <TodoChecklist progress={todoProgress} />}
 
           {/* Documents — clickable artifact cards (primary content) */}
           {stageArtifacts.length > 0 && (
@@ -319,6 +326,112 @@ export const StageAccordion: FunctionalComponent<StageAccordionProps> = ({
           {!isActive && action && <div class="stage-description">{action.description}</div>}
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Todo Checklist (Build stage task tracking) ─────────────────────────────
+
+/** Max visible tasks before collapsing. Shows current + 2 upcoming. */
+const MAX_VISIBLE_PENDING = 3;
+
+interface TodoChecklistProps {
+  readonly progress: NonNullable<StageAccordionProps['todoProgress']>;
+}
+
+const TodoChecklist: FunctionalComponent<TodoChecklistProps> = ({ progress }) => {
+  const showAll = useSignal(false);
+
+  const doneTasks = progress.tasks.filter((t) => t.status === 'done');
+  const pendingTasks = progress.tasks.filter((t) => t.status !== 'done');
+  const shouldCollapse = progress.total > 8;
+  const isExpanded = showAll.value || !shouldCollapse;
+
+  // When collapsed: show completed summary + current + next 2
+  const visiblePending = isExpanded ? pendingTasks : pendingTasks.slice(0, MAX_VISIBLE_PENDING);
+  const hiddenPendingCount = pendingTasks.length - visiblePending.length;
+
+  return (
+    <div class="todo-checklist">
+      <div class="todo-checklist-header">
+        <span class="todo-checklist-label">
+          Tasks: {progress.completed}/{progress.total}
+        </span>
+        <span class="todo-checklist-pct">{progress.percentage}%</span>
+      </div>
+      <div class="todo-checklist-bar">
+        <div class="todo-checklist-bar-fill" style={{ width: `${progress.percentage}%` }} />
+      </div>
+      <div class="todo-checklist-tasks">
+        {/* Completed tasks — collapsed summary or full list */}
+        {doneTasks.length > 0 && !isExpanded && (
+          <button
+            class="todo-task todo-task--done-summary"
+            onClick={() => {
+              showAll.value = true;
+            }}
+          >
+            <Icon name="pass-filled" size={12} class="task-card-icon--completed" />
+            <span class="todo-task-title">
+              {doneTasks.length} task{doneTasks.length !== 1 ? 's' : ''} completed
+            </span>
+            <Icon name="chevron-right" size={10} />
+          </button>
+        )}
+        {isExpanded &&
+          doneTasks.map((task) => (
+            <div key={task.id} class="todo-task todo-task--done">
+              <Icon name="pass-filled" size={12} class="task-card-icon--completed" />
+              <span class="todo-task-title">
+                {task.id}. {task.title}
+              </span>
+            </div>
+          ))}
+
+        {/* Pending/current tasks */}
+        {visiblePending.map((task) => (
+          <div
+            key={task.id}
+            class={`todo-task ${task.id === progress.currentTask ? 'todo-task--current' : ''}`}
+          >
+            <Icon
+              name={task.id === progress.currentTask ? 'loading' : 'circle-outline'}
+              size={12}
+              spin={task.id === progress.currentTask}
+              class="task-card-icon--pending"
+            />
+            <span class="todo-task-title">
+              {task.id}. {task.title}
+            </span>
+          </div>
+        ))}
+
+        {/* Hidden count */}
+        {hiddenPendingCount > 0 && (
+          <button
+            class="todo-task todo-task--more"
+            onClick={() => {
+              showAll.value = true;
+            }}
+          >
+            <Icon name="chevron-right" size={10} style="transform: rotate(90deg)" />
+            <span class="todo-task-title">{hiddenPendingCount} more remaining</span>
+          </button>
+        )}
+
+        {/* Collapse button when expanded */}
+        {shouldCollapse && isExpanded && (
+          <button
+            class="todo-task todo-task--more"
+            onClick={() => {
+              showAll.value = false;
+            }}
+          >
+            <Icon name="chevron-right" size={10} style="transform: rotate(-90deg)" />
+            <span class="todo-task-title">Show less</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };

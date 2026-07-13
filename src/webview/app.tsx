@@ -25,6 +25,7 @@ import {
   historyDetailWorkflow,
   historyDetailArtifacts,
   pluginStore,
+  todoProgressStore,
 } from './store/workflow.store';
 import { bridge } from './bridge';
 import { OnboardingView } from './views/onboarding-view';
@@ -168,6 +169,9 @@ export const App: FunctionalComponent = () => {
             installingIds: pluginStore.value.installingIds.filter((id) => id !== msg.pluginId),
             error: msg.success ? null : (msg.error ?? 'Install failed'),
           };
+          break;
+        case 'todoProgress':
+          todoProgressStore.value = msg.progress;
           break;
       }
     });
