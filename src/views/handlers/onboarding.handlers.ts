@@ -47,22 +47,24 @@ Then create these files in .codestudio/ based on what you ACTUALLY find:
 **Important:** Base everything on the ACTUAL codebase. Read real files. Don't guess or use generic templates.
 **Important:** codestudio-instructions.md should NOT duplicate content from knowledge files — just reference them by path.
 
-### Step 3: Ask the user what they want to build
-Tell the user: "Your project is set up! What would you like to build or change?"
+### Step 3: Setup complete — guide the user to the Tasks view
+Once all knowledge files and codestudio-instructions.md are created, tell the user:
 
-When they respond, call \`engineering_start_workflow\` tool with:
-- \`objective\`: what the user described
-- \`workType\`: your assessment — "feature", "bugfix", "refactor", "infrastructure", "documentation", or "security"
-- \`complexity\`: your assessment — "trivial", "simple", "moderate", "complex", or "critical"
-- \`riskLevel\`: your assessment — "low", "medium", or "high"
-- \`processLevel\`: your assessment — choose the right level for the task:
-  • "light" (3 stages) — typo fixes, docs, config changes, simple bug fixes
-  • "standard" (5 stages) — normal features, bugs, refactors with spec + review
-  • "thorough" (6 stages) — complex features, architecture, security
-  • "guarded" (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
-- \`contextSignals\`: what the project touches — e.g. ["touches_ui", "touches_api", "touches_auth_or_input"]
+"✅ **Project setup complete!** I've analyzed your codebase and created the following knowledge files:
+- architecture.md — [brief summary of what was found]
+- stack.md — [languages, frameworks detected]
+- conventions.md — [key patterns found]
+- boundaries.md — [rules established]
 
-Then follow the SDLC stages using the skills and tools as instructed by the start_workflow response.`;
+📋 **Next step:** Open the **Tasks view** in the Engineering Workspace panel and describe what you want to build or change. You can also select plugins to use before starting.
+
+Here's a suggested objective based on what I see in the project:
+
+> [Write a specific, actionable objective based on the codebase — e.g., 'Add unit tests for the auth module' or 'Refactor the API layer to use async/await']
+
+Copy this into the Tasks view, modify it, or write your own!"
+
+**IMPORTANT:** Do NOT call \`engineering_start_workflow\`. Setup is done. The user will start a task from the Tasks view when ready.`;
 
   await deps.agentBridge.sendToChat(prompt);
 }
@@ -77,18 +79,14 @@ async function handleSetupNewProject(
   const fencedName = projectName.replace(/```/g, '` ` `');
   const fencedObjective = objective.replace(/```/g, '` ` `');
 
-  const prompt = `Start the engineering workflow for the following project:
+  const prompt = `Set up the Engineering Workspace for a new project.
 
 \`\`\`user-input
-${fencedName}
+Project: ${fencedName}
+Description: ${fencedObjective}
 \`\`\`
 
 **Important:** Call \`engineering_update_status\` frequently to report your progress (e.g., "Interviewing user...", "Creating architecture.md..."). The user sees these messages in real-time.
-
-## Objective
-\`\`\`user-input
-${fencedObjective}
-\`\`\`
 
 ## Steps — follow these in order:
 
@@ -96,37 +94,38 @@ ${fencedObjective}
 Creates .codestudio/ directory structure and config.json.
 
 ### Step 2: Use the **interview-me** skill
-Ask the user clarifying questions to understand:
-- What exactly they want to build
+The workspace may be empty or minimal. Ask the user 3-5 clarifying questions (one at a time) to understand:
+- What exactly they want to build (features, pages, components)
 - Target users and use cases
-- Technical preferences (if any)
-- Constraints and requirements
+- Technical preferences (languages, frameworks, libraries)
+- Constraints and requirements (performance, accessibility, etc.)
+
+Use the project name and description above as starting context — don't re-ask what they already told you.
 
 ### Step 3: Create project context files in .codestudio/
-Based on the interview and workspace scan, create these files in .codestudio/:
-- \`knowledge/architecture.md\` — Architecture decisions, module boundaries, data flow
-- \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns
-- \`knowledge/stack.md\` — Tech stack details: languages, frameworks, deps, versions
+Based on the interview answers and any existing files in the workspace, create:
+- \`knowledge/architecture.md\` — Planned architecture, module boundaries, data flow
+- \`knowledge/conventions.md\` — Coding conventions, naming, formatting, patterns to follow
+- \`knowledge/stack.md\` — Tech stack: languages, frameworks, deps with versions
 - \`knowledge/boundaries.md\` — Always do / Ask first / Never do rules
 - \`codestudio-instructions.md\` — Agent instructions: references to knowledge files + project-specific rules (do NOT duplicate knowledge content)
 
-### Step 4: Call \`engineering_start_workflow\` tool
-YOU determine and provide these arguments based on the interview:
-- \`objective\`: the refined objective from the interview
-- \`workType\`: "feature", "bugfix", "refactor", "infrastructure", "documentation", or "security"
-- \`complexity\`: "trivial", "simple", "moderate", "complex", "critical"
-- \`riskLevel\`: "low", "medium", "high"
-- \`processLevel\`: choose the right level for the task:
-  • "light" (3 stages) — typo fixes, docs, config changes, simple bug fixes
-  • "standard" (5 stages) — normal features, bugs, refactors with spec + review
-  • "thorough" (6 stages) — complex features, architecture, security
-  • "guarded" (6 stages + extra gates) — DB migrations, auth/payment, breaking changes
-- \`contextSignals\`: what the project touches (e.g., ["touches_ui", "touches_api"])
+**Important:** codestudio-instructions.md should reference knowledge files by path, NOT duplicate their content.
 
-### Step 5: Follow the SDLC stages
-The start_workflow tool returns which stage is active and which skill to use.
-Follow each skill, save artifacts with \`engineering_save_artifact\`, and advance
-with \`engineering_advance_stage\`.`;
+### Step 4: Setup complete — suggest an objective and guide the user
+Once all files are created, tell the user:
+
+"✅ **Project setup complete!** Based on our conversation, I've created the project knowledge files.
+
+📋 **Next step:** Open the **Tasks view** in the Engineering Workspace panel to start building. You can also select plugins to use before starting.
+
+Here's a suggested objective to get started:
+
+> [Write a specific, actionable first objective based on the interview — e.g., 'Build the landing page with hero section, feature cards, and responsive navigation' or 'Set up the Express API with user authentication endpoints']
+
+Copy this into the Tasks view, modify it, or write your own!"
+
+**IMPORTANT:** Do NOT call \`engineering_start_workflow\`. Setup is done. The user will start a task from the Tasks view when ready.`;
 
   await deps.agentBridge.sendToChat(prompt);
 }
