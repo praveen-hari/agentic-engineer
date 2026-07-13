@@ -21,9 +21,13 @@ export const agentHandlers: HandlerRegistration = {
 async function handleCancelAgent(
   _msg: MessageToHost,
   _deps: MessageHandlerDeps,
-  _reply: ReplyFn,
+  reply: ReplyFn,
 ): Promise<void> {
   await cancelAgent();
+  // Reset agent status so the UI becomes interactive again.
+  // Without this, the UI stays stuck on "Agent is working..." forever
+  // when the user stops the agent via the chat panel or cancel button.
+  reply({ type: 'agentStatus', status: 'idle' });
 }
 
 // ─── Shared Utility ─────────────────────────────────────────────────────────

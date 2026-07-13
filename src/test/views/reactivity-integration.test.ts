@@ -265,4 +265,41 @@ describe('Reactivity Integration — Tasks 6+7', () => {
       expect(detailMsg).toBeDefined();
     });
   });
+
+  // ─── cancelAgent resets agentStatus (Edge Case 1) ─────────────────
+
+  describe('cancelAgent resets agentStatus to idle', () => {
+    it('sends agentStatus idle when agent is cancelled', async () => {
+      // Step 1: Agent is working
+      await handler({ type: 'sendToAgent', stage: 'define' });
+      const workingMsg = replies.find((r) => r.type === 'agentStatus') as Extract<
+        MessageToWebview,
+        { type: 'agentStatus' }
+      >;
+      expect(workingMsg.status).toBe('working');
+
+      // Step 2: User cancels the agent
+      replies.length = 0;
+      await handler({ type: 'cancelAgent' });
+
+      const idleMsg = replies.find((r) => r.type === 'agentStatus') as Extract<
+        MessageToWebview,
+        { type: 'agentStatus' }
+      >;
+      expect(idleMsg).toBeDefined();
+      expect(idleMsg.status).toBe('idle');
+    });
+
+    it('UI is not stuck after cancel — agentStatus is idle', async () => {
+      // Directly cancel without prior sendToAgent
+      await handler({ type: 'cancelAgent' });
+
+      const idleMsg = replies.find((r) => r.type === 'agentStatus') as Extract<
+        MessageToWebview,
+        { type: 'agentStatus' }
+      >;
+      expect(idleMsg).toBeDefined();
+      expect(idleMsg.status).toBe('idle');
+    });
+  });
 });
