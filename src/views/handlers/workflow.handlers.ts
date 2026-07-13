@@ -127,11 +127,25 @@ async function handleAnalyzeObjective(
       const catalog = await deps.pluginRegistry.fetchCatalog();
       const selected = catalog.filter((p) => plugins.includes(p.id));
       if (selected.length > 0) {
-        pluginBlock = `\n## Plugins to Use\nThe user has selected these plugins. **Use their skills when relevant to the objective:**\n`;
+        const homedir = process.env.HOME || process.env.USERPROFILE || '';
+        const pluginsBase = `${homedir}/.sfcodestudio/agent-plugins/github.com`;
+
+        pluginBlock = `\n## Plugins to Use — IMPORTANT\n`;
+        pluginBlock += `The user has selected these plugins. You **MUST explore their skills** before writing the spec or plan.\n\n`;
+
         for (const p of selected) {
-          pluginBlock += `- **${p.name}** (${p.skillCount} skills) — ${p.description}\n`;
+          const pluginPath = `${pluginsBase}/${p.installSource.repo}`;
+          pluginBlock += `### ${p.name} (${p.skillCount} skills)\n`;
+          pluginBlock += `${p.description}\n`;
+          pluginBlock += `**Skills location:** \`${pluginPath}/skills/\`\n\n`;
         }
-        pluginBlock += `\nThese plugins provide SKILL.md files that are available to you. Reference and follow them by name during implementation.\n`;
+
+        pluginBlock += `### How to use plugin skills\n`;
+        pluginBlock += `1. **Explore first:** List the \`skills/\` directory of each selected plugin to discover available component/feature skills.\n`;
+        pluginBlock += `2. **Read relevant skills:** For each skill that matches the user's objective, read its \`SKILL.md\` file. It contains setup instructions, API patterns, code examples, and configuration details.\n`;
+        pluginBlock += `3. **Reference in spec:** When writing the specification, explicitly mention which plugin skills to use and why.\n`;
+        pluginBlock += `4. **Follow during build:** During implementation, follow the patterns and APIs from the SKILL.md files — don't guess or use generic approaches when a skill provides specific guidance.\n`;
+        pluginBlock += `5. **Include setup:** If a skill requires package installation, imports, or configuration (e.g., license registration, theme CSS), include those in the plan.\n\n`;
       }
     } catch {
       // Plugin catalog unavailable — continue without plugin context
