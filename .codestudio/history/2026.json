@@ -1,0 +1,21 @@
+{
+  "year": 2026,
+  "entries": [
+    {
+      "id": "hist_mrjacq0a_ahqdqj",
+      "workflowId": "wf-1783950653558",
+      "objective": "Fix icons not displaying after build and install — codicon font files are excluded from the .vsix package because .vscodeignore has `node_modules/**`, which strips `@vscode/codicons` CSS and font files. Need to either: (a) copy codicon assets into the `out/` directory during build, or (b) whitelist the codicons path in .vscodeignore. The panel-provider.ts references `node_modules/@vscode/codicons/dist/` for localResourceRoots and codicon.css.",
+      "workType": "bugfix",
+      "processLevel": "light",
+      "startedAt": "2026-07-13T13:50:53.559Z",
+      "completedAt": "2026-07-13T13:56:20.214Z",
+      "archivePath": "archive/2026/07/wf-1783950653558",
+      "stats": {
+        "stagesCompleted": 3,
+        "stagesSkipped": 0,
+        "approvalsGranted": 0,
+        "approvalsRejected": 0
+      }
+    }
+  ]
+}

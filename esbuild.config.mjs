@@ -5,6 +5,8 @@
 //   node esbuild.config.mjs --production → minified, no sourcemaps
 
 import { build, context } from 'esbuild';
+import { copyFileSync, mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const isWatch = process.argv.includes('--watch');
 const isProduction = process.argv.includes('--production');
@@ -43,14 +45,30 @@ const webviewOptions = {
   logLevel: 'info',
 };
 
+/**
+ * Copy @vscode/codicons CSS + font into out/codicons/ so they are
+ * included in the .vsix package. node_modules/ is excluded by
+ * .vscodeignore, so the webview can't load them from there after install.
+ */
+function copyCodiconAssets() {
+  const src = resolve('node_modules', '@vscode', 'codicons', 'dist');
+  const dest = resolve('out', 'codicons');
+  mkdirSync(dest, { recursive: true });
+  copyFileSync(resolve(src, 'codicon.css'), resolve(dest, 'codicon.css'));
+  copyFileSync(resolve(src, 'codicon.ttf'), resolve(dest, 'codicon.ttf'));
+  console.log('[esbuild] copied codicon assets → out/codicons/');
+}
+
 async function main() {
   if (isWatch) {
     const extCtx = await context(extensionOptions);
     const webCtx = await context(webviewOptions);
     await Promise.all([extCtx.watch(), webCtx.watch()]);
+    copyCodiconAssets();
     console.log('[esbuild] watching extension + webview...');
   } else {
     await Promise.all([build(extensionOptions), build(webviewOptions)]);
+    copyCodiconAssets();
     console.log('[esbuild] build complete');
   }
 }

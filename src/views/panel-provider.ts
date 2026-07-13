@@ -40,13 +40,7 @@ export class EngineeringWorkspacePanelProvider {
 
     // Create a new panel
     const distPath = vscode.Uri.joinPath(this.context.extensionUri, 'out');
-    const codiconsUri = vscode.Uri.joinPath(
-      this.context.extensionUri,
-      'node_modules',
-      '@vscode',
-      'codicons',
-      'dist',
-    );
+    const codiconsUri = vscode.Uri.joinPath(this.context.extensionUri, 'out', 'codicons');
 
     this.panel = vscode.window.createWebviewPanel(
       'engineeringWorkspace.panel',

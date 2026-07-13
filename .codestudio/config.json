@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "processLevelDefault": "auto",
+  "autoApproveLowRisk": false,
+  "reviewTimeoutMinutes": 5,
+  "autoRefreshContext": true
+}
