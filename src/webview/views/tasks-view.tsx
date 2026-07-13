@@ -38,8 +38,8 @@ import { selectedPluginIds } from '../store/workflow.store';
 
 // ─── Tasks View ─────────────────────────────────────────────────────────
 
-/** Timeout for the analyzing spinner (60 seconds). */
-const ANALYZE_TIMEOUT_MS = 60_000;
+/** Timeout for the analyzing spinner (3 minutes). */
+const ANALYZE_TIMEOUT_MS = 180_000;
 
 export const TasksView: FunctionalComponent = () => {
   const objective = objectiveInput;
