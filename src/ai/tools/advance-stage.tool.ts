@@ -5,6 +5,7 @@ import type { StageExecutor } from '../../core/stage-executor';
 import type { ArtifactManager } from '../../services/artifact-manager.service';
 import type { ApprovalMode, LifecycleStage, WorkflowDefinition } from '../../core/types';
 import { DEFAULT_PIPELINE, getNextStepForStage, isApprovalForStage } from '../../core/pipeline-config';
+import { noActiveWorkflowError, workflowNotActiveError } from './tool-errors';
 
 /** Reads the approvalMode from config. Returns 'user' by default. */
 export type ApprovalModeReader = () => Promise<ApprovalMode>;
@@ -60,13 +61,11 @@ export class AdvanceStageTool implements vscode.LanguageModelTool<AdvanceStageIn
 
     const wf = await this.stateManager.load();
     if (!wf) {
-      throw new Error(
-        'No active workflow. Start a workflow first using engineering_start_workflow.',
-      );
+      return noActiveWorkflowError(vscodeModule);
     }
 
     if (wf.state.status !== 'active') {
-      throw new Error(`Workflow is ${wf.state.status}, not active. Cannot advance.`);
+      return workflowNotActiveError(vscodeModule, wf.state.status);
     }
 
     // Step 1: Auto-approve ONLY current-stage approvals and gates via update().

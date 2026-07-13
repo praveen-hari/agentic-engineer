@@ -1,6 +1,7 @@
 import type * as vscode from 'vscode';
 import type { FileIO } from '../../core/types';
 import { CODESTUDIO_DIRECTORIES, WORKFLOW_DIR } from '../../constants';
+import { filesystemError } from './tool-errors';
 
 /**
  * Input for the engineering_setup_project tool.
@@ -99,8 +100,10 @@ export class SetupProjectTool implements vscode.LanguageModelTool<SetupProjectIn
         ),
       ]);
     } catch (err) {
-      throw new Error(
-        `Failed to create .codestudio/: ${err instanceof Error ? err.message : 'unknown error'}`,
+      return filesystemError(
+        vscodeModule,
+        'Create .codestudio/ directory structure',
+        err instanceof Error ? err.message : 'unknown error',
       );
     }
   }

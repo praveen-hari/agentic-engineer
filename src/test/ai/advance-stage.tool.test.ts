@@ -145,13 +145,21 @@ describe('AdvanceStageTool', () => {
       expect(parsed.instructions).toBeDefined();
     });
 
-    it('throws when no workflow exists', async () => {
-      await expect(
-        tool.invoke({ input: {} } as never, { isCancellationRequested: false } as never),
-      ).rejects.toThrow(/No active workflow/);
+    it('returns structured error when no workflow exists', async () => {
+      const result = await tool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+      expect(parsed.success).toBe(false);
+      expect(parsed.errorCode).toBe('NO_ACTIVE_WORKFLOW');
+      expect(parsed.recoverable).toBe(true);
+      expect(parsed.retryable).toBe(false);
+      expect(parsed.suggestedAction).toBeTruthy();
     });
 
-    it('throws when workflow is completed', async () => {
+    it('returns structured error when workflow is completed', async () => {
       // Create, start, and complete a workflow
       const wf = await createAndStartWorkflow();
       let current = wf;
@@ -160,9 +168,15 @@ describe('AdvanceStageTool', () => {
       }
       await stateManager.save(current);
 
-      await expect(
-        tool.invoke({ input: {} } as never, { isCancellationRequested: false } as never),
-      ).rejects.toThrow(/not active/);
+      const result = await tool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+      expect(parsed.success).toBe(false);
+      expect(parsed.errorCode).toBe('WORKFLOW_NOT_ACTIVE');
+      expect(parsed.details.currentStatus).toBe('completed');
     });
 
     it('detects workflow completion on last stage advance', async () => {

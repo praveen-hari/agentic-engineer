@@ -100,16 +100,23 @@ describe('SetupProjectTool', () => {
       expect(stepsText).toContain('boundaries.md');
     });
 
-    it('throws when filesystem fails', async () => {
+    it('returns structured error when filesystem fails', async () => {
       const failingFs: InMemoryFileIO = {
         ...fs,
         mkdir: vi.fn().mockRejectedValue(new Error('Permission denied')),
       } as unknown as InMemoryFileIO;
       const failTool = new SetupProjectTool(failingFs, '/workspace', onComplete);
 
-      await expect(
-        failTool.invoke({ input: {} } as never, { isCancellationRequested: false } as never),
-      ).rejects.toThrow(/Permission denied/);
+      const result = await failTool.invoke(
+        { input: {} } as never,
+        { isCancellationRequested: false } as never,
+      );
+      const text = (result as { parts: Array<{ text: string }> }).parts[0].text;
+      const parsed = JSON.parse(text);
+      expect(parsed.success).toBe(false);
+      expect(parsed.errorCode).toBe('FILESYSTEM_ERROR');
+      expect(parsed.recoverable).toBe(false);
+      expect(parsed.details.originalError).toContain('Permission denied');
     });
   });
 
