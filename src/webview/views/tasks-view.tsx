@@ -103,7 +103,9 @@ export const TasksView: FunctionalComponent = () => {
         {showStart.value && !analyzing.value && (
           <PluginSelector
             selected={selectedPluginIds.value}
-            onSelectionChange={(ids) => { selectedPluginIds.value = ids; }}
+            onSelectionChange={(ids) => {
+              selectedPluginIds.value = ids;
+            }}
           />
         )}
 

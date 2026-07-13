@@ -266,7 +266,11 @@ export interface PluginStoreState {
 export type MessageToHost =
   | { readonly type: 'requestState' }
   | { readonly type: 'requestContext' }
-  | { readonly type: 'analyzeObjective'; readonly objective: string; readonly plugins?: readonly string[] }
+  | {
+      readonly type: 'analyzeObjective';
+      readonly objective: string;
+      readonly plugins?: readonly string[];
+    }
   | {
       readonly type: 'startWorkflow';
       readonly objective: string;
