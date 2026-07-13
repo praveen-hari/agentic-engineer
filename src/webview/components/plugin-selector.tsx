@@ -16,7 +16,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { useSignal } from '@preact/signals';
 import { Icon } from './icon';
 import { bridge } from '../bridge';
-import { pluginStore, type PluginInfoView } from '../store/workflow.store';
+import { pluginStore } from '../store/workflow.store';
 
 export interface PluginSelectorProps {
   /** Currently selected plugin IDs. */
