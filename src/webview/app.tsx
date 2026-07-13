@@ -175,34 +175,10 @@ export const App: FunctionalComponent = () => {
     return unsub;
   }, []);
 
-  // ─── Onboarding Gate ───────────────────────────────────────────
-  // Show onboarding until the project is set up (no side nav)
-  if (!isOnboarded.value) {
-    const onboardingError = error.value;
-    return (
-      <div class="app-panel app-panel--onboarding">
-        {onboardingError && (
-          <div class="error-banner" role="alert" aria-live="assertive">
-            <span class="error-banner-text">{onboardingError}</span>
-            <button
-              class="error-banner-dismiss"
-              onClick={() => {
-                error.value = null;
-              }}
-              aria-label="Dismiss error"
-            >
-              ×
-            </button>
-          </div>
-        )}
-        <main class="panel-content">
-          <OnboardingView />
-        </main>
-      </div>
-    );
-  }
-
-  // ─── Normal Views (with side navigation) ─────────────────────────
+  // ─── Views (always with side navigation) ─────────────────────────
+  // Side nav is always visible — even during onboarding. The user can
+  // browse plugins, settings, knowledge, and history before or during
+  // project setup. Onboarding shows as the Tasks view content.
   const view = activeView.value;
   const currentError = error.value;
 
@@ -226,7 +202,7 @@ export const App: FunctionalComponent = () => {
           </div>
         )}
         <main class="panel-content">
-          {view === 'tasks' && <TasksView />}
+          {view === 'tasks' && (isOnboarded.value ? <TasksView /> : <OnboardingView />)}
           {view === 'capabilities' && <CapabilitiesView />}
           {view === 'knowledge' && <KnowledgeView />}
           {view === 'history' && <HistoryView />}
