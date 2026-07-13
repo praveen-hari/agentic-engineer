@@ -97,31 +97,27 @@ export const PLUGIN_ICON_BASE_URL =
   'https://raw.githubusercontent.com/praveen-hari/agent-plugin-marketplace/main/icons/';
 export const PLUGIN_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-/** Process level → minimum number of approvals (DD-010). */
-export const MIN_APPROVALS: Readonly<Record<ProcessLevel, number>> = {
-  light: 0,
-  standard: 2,
-  thorough: 3,
-  guarded: 4,
-};
+// ─── Pipeline-Derived Constants (backward compatibility) ────────────────────
+// These are now derived from the unified PipelineConfig.
+// Kept as re-exports so existing imports continue to work.
 
-/** Process level → base stages (DD-014). */
-export const BASE_STAGES: Readonly<Record<ProcessLevel, readonly LifecycleStage[]>> = {
-  light: ['plan', 'build', 'verify'],
-  standard: ['define', 'plan', 'build', 'verify', 'review'],
-  thorough: ['define', 'plan', 'build', 'verify', 'review', 'ship'],
-  guarded: ['define', 'plan', 'build', 'verify', 'review', 'ship'],
-};
+import { DEFAULT_PIPELINE } from './core/pipeline-config';
 
-/** Stage display names. */
-export const STAGE_NAMES: Readonly<Record<LifecycleStage, string>> = {
-  define: 'Define',
-  plan: 'Plan',
-  build: 'Build',
-  verify: 'Verify',
-  review: 'Review',
-  ship: 'Ship',
-};
+/** Process level → minimum number of approvals (DD-010). Derived from PipelineConfig. */
+export const MIN_APPROVALS: Readonly<Record<ProcessLevel, number>> = Object.fromEntries(
+  Object.entries(DEFAULT_PIPELINE.processLevels).map(([level, def]) => [level, def.minApprovals]),
+) as Record<ProcessLevel, number>;
+
+/** Process level → base stages (DD-014). Derived from PipelineConfig. */
+export const BASE_STAGES: Readonly<Record<ProcessLevel, readonly LifecycleStage[]>> =
+  Object.fromEntries(
+    Object.entries(DEFAULT_PIPELINE.processLevels).map(([level, def]) => [level, def.stages]),
+  ) as Record<ProcessLevel, readonly LifecycleStage[]>;
+
+/** Stage display names. Derived from PipelineConfig. */
+export const STAGE_NAMES: Readonly<Record<LifecycleStage, string>> = Object.fromEntries(
+  Object.entries(DEFAULT_PIPELINE.stages).map(([id, def]) => [id, def.name]),
+) as Record<LifecycleStage, string>;
 
 // ─── Default Config (DD-027) ────────────────────────────────────────────────
 

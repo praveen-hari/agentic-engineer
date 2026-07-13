@@ -1,5 +1,7 @@
 import type { SkillRegistry } from './skill-registry';
 import type { ProcessLevel, RiskAssessment, SkillDefinition, SkillId } from './types';
+import type { PipelineConfig } from './pipeline-config';
+import { DEFAULT_PIPELINE, PROCESS_LEVEL_ORDER } from './pipeline-config';
 
 /**
  * Skill activation rule engine (DD-007, DD-010).
@@ -12,13 +14,20 @@ import type { ProcessLevel, RiskAssessment, SkillDefinition, SkillId } from './t
  *   1. Always-active skills (background policies)
  *   2. Task-type skills (triggered by work type)
  *   3. Context skills (triggered by workspace context signals)
- *   4. Process-level skills (additive — higher levels include lower)
+ *   4. Process-level skills (additive — from PipelineConfig)
  *
  * Skills are deduplicated — a skill activated by multiple rules
  * appears once, with the first matching reason.
  */
 export class SkillEngine {
-  constructor(private readonly registry: SkillRegistry) {}
+  private readonly pipeline: PipelineConfig;
+
+  constructor(
+    private readonly registry: SkillRegistry,
+    pipeline?: PipelineConfig,
+  ) {
+    this.pipeline = pipeline ?? DEFAULT_PIPELINE;
+  }
 
   /**
    * Compute the set of active skills for a given risk assessment.
@@ -63,7 +72,7 @@ export class SkillEngine {
       }
     }
 
-    // 4. Process-level skills (additive)
+    // 4. Process-level skills (additive — from PipelineConfig)
     this.addProcessLevelSkills(assessment.processLevel, activeSkills, reasons);
 
     // 5. Quality-gate skills (activated at standard+ process)
@@ -105,6 +114,7 @@ export class SkillEngine {
 
   /**
    * Add process-level skills (additive — higher levels include lower).
+   * Reads from PipelineConfig instead of a hardcoded constant.
    */
   private addProcessLevelSkills(
     level: ProcessLevel,
@@ -116,7 +126,7 @@ export class SkillEngine {
     for (const lvl of levels) {
       if (PROCESS_LEVEL_ORDER[lvl] > PROCESS_LEVEL_ORDER[level]) break;
 
-      const levelSkills = PROCESS_LEVEL_SKILLS[lvl];
+      const levelSkills = this.pipeline.processLevels[lvl]?.skills ?? [];
       for (const skillId of levelSkills) {
         if (!activeSkills.has(skillId)) {
           activeSkills.add(skillId);
@@ -126,25 +136,3 @@ export class SkillEngine {
     }
   }
 }
-
-// ─── Process Level Ordering ──────────────────────────────────────────────
-
-const PROCESS_LEVEL_ORDER: Readonly<Record<ProcessLevel, number>> = {
-  light: 0,
-  standard: 1,
-  thorough: 2,
-  guarded: 3,
-};
-
-// ─── Process-Level Skill Additions ────────────────────────────────────────
-//
-// Additive: each level includes the skills from all lower levels.
-// These are skills that are activated purely by process level,
-// not by task type or context (those are handled separately above).
-
-const PROCESS_LEVEL_SKILLS: Readonly<Record<ProcessLevel, readonly SkillId[]>> = {
-  light: [],
-  standard: ['code-review-and-quality'],
-  thorough: ['shipping-and-launch', 'security-and-hardening', 'documentation-and-adrs'],
-  guarded: [],
-};

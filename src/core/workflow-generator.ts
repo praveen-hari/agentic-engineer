@@ -3,6 +3,7 @@ import type {
   Approval,
   ApprovalLevel,
   ContextSignal,
+  LifecycleStage,
   ProcessLevel,
   QualityGate,
   RiskAssessment,
@@ -10,7 +11,8 @@ import type {
   WorkflowDefinition,
   WorkflowStateStatus,
 } from './types';
-import { MIN_APPROVALS } from '../constants';
+import type { PipelineConfig } from './pipeline-config';
+import { DEFAULT_PIPELINE, meetsMinLevel } from './pipeline-config';
 import { generateStagesForLevel } from './workflow-engine';
 
 /**
@@ -20,11 +22,18 @@ import { generateStagesForLevel } from './workflow-engine';
  * generates a {@link WorkflowDefinition} with appropriate stages,
  * quality gates, and approval requirements.
  *
- * The active skills determine which conditional gates are inserted
- * (e.g., security gate only if `security-and-hardening` is active).
+ * All gate/approval generation is data-driven from {@link PipelineConfig}.
+ * No if/else chains for process levels — the config declares everything.
  */
 export class WorkflowGenerator {
-  constructor(private readonly skillEngine: SkillEngine) {}
+  private readonly pipeline: PipelineConfig;
+
+  constructor(
+    private readonly skillEngine: SkillEngine,
+    pipeline?: PipelineConfig,
+  ) {
+    this.pipeline = pipeline ?? DEFAULT_PIPELINE;
+  }
 
   /**
    * Generate a workflow definition from a risk assessment.
@@ -63,41 +72,26 @@ export class WorkflowGenerator {
   // ─── Stage Generation (delegates to shared helper) ─────────────────────
 
   private generateStages(processLevel: ProcessLevel): Stage[] {
-    return generateStagesForLevel(processLevel);
+    return generateStagesForLevel(processLevel, this.pipeline);
   }
 
-  // ─── Quality Gate Generation ───────────────────────────────────────────
+  // ─── Quality Gate Generation (data-driven from PipelineConfig) ─────────
 
   private generateGates(assessment: RiskAssessment): QualityGate[] {
     const gates: QualityGate[] = [];
+    const level = assessment.processLevel;
+    const activeStageIds = new Set(this.pipeline.processLevels[level]?.stages ?? []);
 
-    // Base gates for all process levels
-    gates.push(this.makeGate('build-complete', 'Build Complete', 'approval', 'build', false));
+    // Iterate all stages in the pipeline config and collect gates
+    // that meet the current process level AND belong to an active stage.
+    for (const [stageId, stageDef] of Object.entries(this.pipeline.stages)) {
+      if (!activeStageIds.has(stageId as LifecycleStage)) continue;
 
-    // Standard+ gates
-    if (assessment.processLevel !== 'light') {
-      gates.push(this.makeGate('tests-pass', 'Tests Pass', 'automated', 'verify', false));
-      gates.push(this.makeGate('spec-approved', 'Spec Approved', 'approval', 'define', false));
-      gates.push(this.makeGate('plan-approved', 'Plan Approved', 'approval', 'plan', false));
-      gates.push(this.makeGate('code-review', 'Code Review', 'review', 'review', false));
-    }
-
-    // Thorough+ gates (ship stage only exists at thorough/guarded)
-    if (assessment.processLevel === 'thorough' || assessment.processLevel === 'guarded') {
-      gates.push(this.makeGate('ship-checklist', 'Ship Checklist', 'approval', 'ship', false));
-      gates.push(this.makeGate('security-review', 'Security Review', 'review', 'review', false));
-      gates.push(
-        this.makeGate('performance-budget', 'Performance Budget', 'automated', 'verify', false),
-      );
-      gates.push(this.makeGate('docs-complete', 'Documentation Complete', 'review', 'ship', false));
-    }
-
-    // Guarded-only gates
-    if (assessment.processLevel === 'guarded') {
-      gates.push(this.makeGate('rollback-tested', 'Rollback Tested', 'automated', 'ship', false));
-      gates.push(
-        this.makeGate('data-integrity', 'Data Integrity Check', 'automated', 'verify', false),
-      );
+      for (const [gateId, gateDef] of Object.entries(stageDef.gates)) {
+        if (meetsMinLevel(level, gateDef.minLevel)) {
+          gates.push(this.makeGate(gateId, gateDef.name, gateDef.type, stageId, false));
+        }
+      }
     }
 
     // Conditional gates based on context signals
@@ -107,46 +101,11 @@ export class WorkflowGenerator {
   }
 
   private addConditionalGates(gates: QualityGate[], signals: readonly ContextSignal[]): void {
-    const signalGateMap: Readonly<
-      Record<ContextSignal, { id: string; name: string; reason: string }>
-    > = {
-      touches_auth_or_input: {
-        id: 'security-review',
-        name: 'Security Review',
-        reason: 'Task touches authentication or user input — security review required',
-      },
-      touches_ui: {
-        id: 'accessibility-check',
-        name: 'Accessibility Check',
-        reason: 'Task touches UI — accessibility verification required',
-      },
-      touches_api: {
-        id: 'api-contract-review',
-        name: 'API Contract Review',
-        reason: 'Task touches API — contract review required',
-      },
-      touches_external_services: {
-        id: 'integration-test',
-        name: 'Integration Test',
-        reason: 'Task touches external services — integration test required',
-      },
-      performance_sensitive: {
-        id: 'performance-budget',
-        name: 'Performance Budget',
-        reason: 'Task is performance-sensitive — performance budget check required',
-      },
-      high_risk_decision: {
-        id: 'architecture-review',
-        name: 'Architecture Review',
-        reason: 'Task involves high-risk decision — architecture review required',
-      },
-    };
-
     for (const signal of signals) {
-      const gateDef = signalGateMap[signal];
+      const gateDef = this.pipeline.conditionalGates[signal];
       if (gateDef && !gates.find((g) => g.id === gateDef.id)) {
         gates.push(
-          this.makeGate(gateDef.id, gateDef.name, 'review', 'review', true, gateDef.reason),
+          this.makeGate(gateDef.id, gateDef.name, 'review', gateDef.stage, true, gateDef.reason),
         );
       }
     }
@@ -172,79 +131,35 @@ export class WorkflowGenerator {
     };
   }
 
-  // ─── Approval Generation ───────────────────────────────────────────────
+  // ─── Approval Generation (data-driven from PipelineConfig) ─────────────
 
   private generateApprovals(assessment: RiskAssessment): Approval[] {
     const approvals: Approval[] = [];
-    const minCount = MIN_APPROVALS[assessment.processLevel] ?? 0;
+    const level = assessment.processLevel;
+    const minCount = this.pipeline.processLevels[level]?.minApprovals ?? 0;
 
     if (minCount === 0) return approvals;
 
-    // Standard: spec + code review
-    approvals.push(
-      this.makeApproval('approval-spec', 'explicit', 'spec', 'Spec requires explicit approval'),
-    );
-    approvals.push(
-      this.makeApproval(
-        'approval-review',
-        'review',
-        'code-review',
-        'Code review required before merge',
-      ),
-    );
-
-    // Thorough: + architecture
-    if (assessment.processLevel === 'thorough' || assessment.processLevel === 'guarded') {
-      approvals.push(
-        this.makeApproval(
-          'approval-architecture',
-          'review',
-          'architecture',
-          'Architecture review required for thorough process',
-        ),
-      );
-    }
-
-    // Guarded: + restricted approvals
-    if (assessment.processLevel === 'guarded') {
-      approvals.push(
-        this.makeApproval(
-          'approval-restricted-1',
-          'restricted',
-          'schema-migration',
-          'Restricted approval: schema migration',
-        ),
-      );
-      approvals.push(
-        this.makeApproval(
-          'approval-restricted-2',
-          'restricted',
-          'deployment',
-          'Restricted approval: production deployment',
-        ),
-      );
+    // Base approvals from the pipeline config
+    for (const req of this.pipeline.approvals) {
+      if (meetsMinLevel(level, req.minLevel)) {
+        approvals.push(this.makeApproval(req.id, req.level, req.artifact, req.reason));
+      }
     }
 
     // Conditional approvals based on context signals
-    if (assessment.contextSignals.includes('touches_auth_or_input')) {
-      approvals.push(
-        this.makeApproval(
-          'approval-security',
-          'explicit',
-          'security-review',
-          'Security review required for auth/input changes',
-        ),
-      );
-    }
-    if (assessment.contextSignals.includes('touches_external_services')) {
-      approvals.push(
-        this.makeApproval(
-          'approval-integration',
-          'review',
-          'integration',
-          'Integration review required for external service changes',
-        ),
-      );
+    for (const signal of assessment.contextSignals) {
+      const approvalDef = this.pipeline.conditionalApprovals[signal];
+      if (approvalDef && !approvals.find((a) => a.id === approvalDef.id)) {
+        approvals.push(
+          this.makeApproval(
+            approvalDef.id,
+            approvalDef.level,
+            approvalDef.artifact,
+            approvalDef.reason,
+          ),
+        );
+      }
     }
 
     return approvals;

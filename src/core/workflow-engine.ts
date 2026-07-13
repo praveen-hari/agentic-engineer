@@ -7,7 +7,8 @@ import type {
   WorkflowDefinition,
   WorkflowStateStatus,
 } from './types';
-import { BASE_STAGES, STAGE_NAMES } from '../constants';
+import type { PipelineConfig } from './pipeline-config';
+import { DEFAULT_PIPELINE, getStagesForLevel, isStageSkippable } from './pipeline-config';
 
 /**
  * Pure state machine for workflow lifecycle (DD-014, DD-015).
@@ -17,8 +18,16 @@ import { BASE_STAGES, STAGE_NAMES } from '../constants';
  *
  * No side effects — returns new state objects. Persistence is the
  * caller's responsibility (via StateManager).
+ *
+ * Reads stage definitions from {@link PipelineConfig}.
  */
 export class WorkflowEngine {
+  private readonly pipeline: PipelineConfig;
+
+  constructor(pipeline?: PipelineConfig) {
+    this.pipeline = pipeline ?? DEFAULT_PIPELINE;
+  }
+
   /**
    * Create a new workflow from a risk assessment.
    * Workflow starts in 'idle' state — call {@link start} to activate it.
@@ -233,42 +242,40 @@ export class WorkflowEngine {
     };
   }
 
-  // ─── Stage Generation (delegates to shared helpers) ─────────────────────
+  // ─── Stage Generation ───────────────────────────────────────────────
 
   private generateStages(processLevel: ProcessLevel): Stage[] {
-    return generateStagesForLevel(processLevel);
+    return generateStagesForLevel(processLevel, this.pipeline);
   }
 }
 
 // ─── Shared Stage Generation Helpers ────────────────────────────────────────
 // Exported so WorkflowGenerator can reuse the same logic without duplication.
 
-export function generateStagesForLevel(processLevel: ProcessLevel): Stage[] {
-  const stageIds = BASE_STAGES[processLevel] ?? BASE_STAGES.standard;
+export function generateStagesForLevel(
+  processLevel: ProcessLevel,
+  pipeline: PipelineConfig = DEFAULT_PIPELINE,
+): Stage[] {
+  const stageIds = getStagesForLevel(pipeline, processLevel);
 
   return stageIds.map((id) => ({
     id,
-    name: STAGE_NAMES[id] ?? id,
+    name: pipeline.stages[id]?.name ?? id,
     status: 'pending' as StageStatus,
-    skippable: isStageSkippableAtLevel(id, processLevel),
+    skippable: isStageSkippable(pipeline, id, processLevel),
     entryConditions: [],
     exitConditions: [],
     artifacts: [],
   }));
 }
 
+/**
+ * @deprecated Use `isStageSkippable` from pipeline-config.ts instead.
+ * Kept for backward compatibility with tests that import it directly.
+ */
 export function isStageSkippableAtLevel(
   stage: LifecycleStage,
   processLevel: ProcessLevel,
 ): boolean {
-  // Guarded: nothing is skippable
-  if (processLevel === 'guarded') return false;
-
-  // Light: review is optional
-  if (processLevel === 'light') {
-    return stage === 'review';
-  }
-
-  // Standard/Thorough: review is skippable
-  return stage === 'review';
+  return isStageSkippable(DEFAULT_PIPELINE, stage, processLevel);
 }
