@@ -11,11 +11,11 @@ Engineering Workspace automatically calibrates engineering rigor (specs, plans, 
 - **Adaptive Process Depth** — Four process levels (Light → Standard → Thorough → Guarded) that auto-detect the right amount of ceremony for each task
 - **Risk Assessment Engine** — Analyzes work requests for risk signals (auth, payment, database, security) and recommends the appropriate process level
 - **Dynamic Workflow Generation** — Generates workflows with stages, quality gates, and approvals tailored to the specific task
-- **Skill Auto-Activation** — 28 engineering skills that activate automatically based on task type, context, and process level
+- **12 Bundled Skills** — Engineering skills that activate automatically based on task type, context, and process level
 - **AI-Enhanced Analysis** — Uses the Language Model API for enriched risk assessment with deterministic fallback
 - **Chat Participant** — `@engineering` with `/status`, `/analyze`, `/history` commands
-- **Language Model Tools** — Three tools (`analyze_work_request`, `get_workflow_status`, `get_project_context`) that agent mode invokes automatically
-- **5-View Sidebar** — Tasks, Capabilities, Knowledge, History, Settings
+- **Language Model Tools** — Five tools (`engineering_setup_project`, `engineering_start_workflow`, `engineering_save_artifact`, `engineering_advance_stage`, `engineering_update_status`) that agent mode invokes automatically
+- **6-View Editor Panel** — Onboarding, Tasks, Capabilities, Knowledge, History, Settings
 - **Git-Tracked State** — All workflow state in `.codestudio/` directory, tracked by git
 
 ## Installation
@@ -36,15 +36,16 @@ sfcode --install-extension engineering-workspace-0.1.0.vsix
 
 ## Usage
 
-### Sidebar
+### Editor Panel
 
-The Engineering Workspace sidebar has 5 views:
+The Engineering Workspace opens as a full-width editor panel with 6 views:
 
-1. **Tasks** — Start a new work request, track workflow progress, approve/reject artifacts
-2. **Capabilities** — Context-aware recommendations, current setup summary, Syncfusion skill pack marketplace
-3. **Knowledge** — Project context, ADRs, conventions, boundaries
-4. **History** — Three-tier history (hot/warm/cold) of completed workflows
-5. **Settings** — Process defaults, history management
+1. **Onboarding** — Welcome flow, project setup (detects existing `.codestudio/` or creates new)
+2. **Tasks** — Start a new work request, track workflow progress, approve/reject artifacts
+3. **Capabilities** — Context-aware recommendations, current setup summary, Syncfusion skill pack marketplace
+4. **Knowledge** — Project context, ADRs, conventions, boundaries
+5. **History** — Three-tier history (hot/warm/cold) of completed workflows
+6. **Settings** — Process defaults, history management
 
 ### Chat
 
@@ -58,53 +59,107 @@ Use `@engineering` in the chat panel:
 
 ### Agent Mode
 
-The extension contributes three tools that agent mode invokes automatically:
+The extension contributes five Language Model Tools that agent mode invokes automatically:
 
-- `analyze_work_request` — Analyzes a task description for type, risk, and process level
-- `get_workflow_status` — Returns current workflow state
-- `get_project_context` — Returns detected tech stack and conventions
+- `engineering_setup_project` — Initialize `.codestudio/` directory with project context
+- `engineering_start_workflow` — Start a structured SDLC workflow from a risk assessment
+- `engineering_save_artifact` — Save specs, plans, reviews, reports, and todo checklists
+- `engineering_advance_stage` — Check stage requirements and advance to the next stage
+- `engineering_update_status` — Report progress to the Engineering Workspace UI
 
 ## Architecture
 
 ```
 src/
-├── core/           # Pure TypeScript, no VS Code deps
-│   ├── types.ts              # All type definitions (DD-015)
-│   ├── event-stream.ts       # JSONL event sourcing (DD-008)
-│   ├── state-manager.ts      # workflow.json read/write (DD-002)
-│   ├── risk-engine.ts        # Deterministic risk assessment (DD-001)
-│   ├── workflow-engine.ts    # State machine (DD-014)
-│   ├── skill-registry.ts     # 28-skill catalog (DD-007)
-│   ├── skill-engine.ts       # Skill activation rules (DD-010)
-│   ├── workflow-generator.ts # Dynamic workflow builder (DD-014)
-│   ├── project-detector.ts   # Tech stack detection
-│   ├── context-analyzer.ts   # Context markdown generation
-│   ├── context-signal-detector.ts # Context signal detection
-│   ├── capability-recommender.ts  # Capabilities recommendations
-│   └── skill-pack-catalog.ts # 14 Syncfusion skill packs
-├── ai/             # AI layer (LLM + deterministic fallback)
-│   ├── model-access.ts       # ModelAccess interface
-│   ├── risk-analyzer.ts      # LLM risk analysis with fallback
-│   └── tools/                # Language Model Tools
-├── services/       # VS Code API integration
-├── chat/           # Chat participant
-├── views/          # Webview provider + message handler
-├── webview/        # Preact UI (5 views)
-└── extension.ts    # Entry point
+├── core/               # Pure TypeScript, no VS Code deps
+│   ├── types.ts              # All type definitions
+│   ├── pipeline-config.ts    # Single source of truth for SDLC pipeline
+│   ├── state-manager.ts      # workflow.json read/write with mutex
+│   ├── workflow-engine.ts    # Pure state machine
+│   ├── workflow-generator.ts # Dynamic workflow builder
+│   ├── skill-registry.ts     # 12-skill catalog
+│   ├── skill-engine.ts       # Skill activation rules
+│   ├── stage-executor.ts     # Stage action planning
+│   ├── prompt-templates.ts   # Agent prompt generation
+│   └── todo-parser.ts        # Build-stage task tracking
+├── ai/
+│   └── tools/                # 5 Language Model Tools
+│       ├── setup-project.tool.ts
+│       ├── start-workflow.tool.ts
+│       ├── save-artifact.tool.ts
+│       ├── advance-stage.tool.ts
+│       └── update-status.tool.ts
+├── services/           # VS Code API integration
+│   ├── file-system.service.ts
+│   ├── git.service.ts
+│   ├── workspace.service.ts
+│   ├── notification.service.ts
+│   ├── artifact-manager.service.ts
+│   ├── artifact-watcher.service.ts
+│   ├── branch-watcher.service.ts
+│   ├── history-manager.service.ts
+│   ├── agent-bridge.service.ts
+│   └── plugin-registry.service.ts
+├── chat/               # Chat participant (@engineering)
+│   └── chat-participant.ts
+├── views/              # Webview message handling
+│   ├── panel-provider.ts     # Editor-area WebviewPanel
+│   ├── message-handler.ts    # Thin router
+│   └── handlers/             # 10 domain handler modules
+├── webview/            # Preact UI (6 views)
+│   ├── app.tsx               # Root component
+│   ├── bridge.ts             # postMessage bridge
+│   ├── store/                # Preact Signals state
+│   ├── views/                # 6 view components
+│   ├── components/           # Reusable UI components
+│   └── styles/               # CSS custom properties
+├── constants.ts        # .codestudio/ path constants
+└── extension.ts        # Entry point
+```
+
+### Build Output
+
+esbuild produces a dual bundle plus codicon assets:
+
+```
+out/
+├── extension.js        # CJS/Node (extension host)
+├── webview.js          # ESM/browser (Preact UI)
+├── webview.css         # Extracted CSS
+└── codicons/           # Copied from @vscode/codicons
+    ├── codicon.css
+    └── codicon.ttf
 ```
 
 ## Testing
 
 ```bash
-npm test              # Run all tests
-npm run test:coverage # Run with coverage report
-npm run typecheck     # Type check both configs
-npm run build         # Build both bundles
+npm test              # Run all tests (652 tests, vitest)
+npm run test:coverage # Run with coverage report (80% thresholds)
+npm run typecheck     # Type check both tsconfigs
+npm run build         # Build both bundles + copy codicon assets
+npm run lint          # ESLint
+npm run package       # Package as .vsix
 ```
 
-## Design Decisions
+## Skills
 
-See `DESIGN_DECISIONS.md` for the full record (DD-001 through DD-027).
+The extension bundles 12 engineering skills as `SKILL.md` files in `skills/`:
+
+| Skill                      | Category     | Activates During    |
+| -------------------------- | ------------ | ------------------- |
+| Context Engineering        | Always       | Define, Plan, Build |
+| Git Workflow & Versioning  | Always       | Build, Review, Ship |
+| Incremental Implementation | Always       | Plan, Build         |
+| Spec-Driven Development    | By task type | Define, Plan        |
+| Planning & Task Breakdown  | By task type | Plan                |
+| Test-Driven Development    | By task type | Build, Verify       |
+| Code Review & Quality      | Quality gate | Review              |
+| Documentation & ADRs       | By task type | Ship                |
+| Security & Hardening       | By context   | Build, Review       |
+| Debugging & Error Recovery | By task type | Build               |
+| Interview Me               | Interactive  | Define              |
+| Shipping & Launch          | By task type | Ship                |
 
 ## License
 
