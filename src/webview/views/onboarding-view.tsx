@@ -10,8 +10,8 @@ import {
 import { bridge } from '../bridge';
 import { Icon } from '../components/icon';
 
-/** Timeout for the scanning screen (60 seconds). */
-const SCANNING_TIMEOUT_MS = 60_000;
+/** Timeout for the scanning screen (3 minutes). */
+const SCANNING_TIMEOUT_MS = 180_000;
 
 // ─── Main Onboarding View ───────────────────────────────────────────────────
 
@@ -103,8 +103,11 @@ const ScanningScreen: FunctionalComponent = () => {
   const timedOut = useSignal(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-timeout after SCANNING_TIMEOUT_MS
+  // Auto-timeout after SCANNING_TIMEOUT_MS.
+  // Resets whenever the agent sends a status update (proving it's alive).
+  const statusMsg = agentStatusMessage.value;
   useEffect(() => {
+    if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       timedOut.value = true;
     }, SCANNING_TIMEOUT_MS);
@@ -112,7 +115,7 @@ const ScanningScreen: FunctionalComponent = () => {
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, []);
+  }, [statusMsg]);
 
   // Timed out or error state
   if (timedOut.value) {
