@@ -481,7 +481,7 @@ export interface WorkspaceConfig {
 
 export type ProjectType = 'greenfield' | 'brownfield';
 
-export type OnboardingStatus = 'welcome' | 'setup-existing' | 'setup-new' | 'scanning' | 'ready';
+export type OnboardingStatus = 'welcome' | 'setup-existing' | 'setup-new' | 'scanning' | 'setup-active' | 'ready';
 
 // ─── Stage Execution ───────────────────────────────────────────────────────
 

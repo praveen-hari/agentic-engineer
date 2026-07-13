@@ -25,6 +25,8 @@ export const OnboardingView: FunctionalComponent = () => {
       return <SetupNewScreen />;
     case 'scanning':
       return <ScanningScreen />;
+    case 'setup-active':
+      return <SetupActiveScreen />;
     default:
       return <WelcomeScreen />;
   }
@@ -211,6 +213,55 @@ const ScanningScreen: FunctionalComponent = () => {
   );
 };
 
+// ─── Setup Active Screen (new project — no timeout, agent is interviewing) ──
+
+const SetupActiveScreen: FunctionalComponent = () => {
+  return (
+    <div class="onboarding">
+      <div class="onboarding__hero">
+        <div class="onboarding__icon">
+          <Icon name="gear" size={32} />
+        </div>
+        <h2 class="onboarding__title">Setting Up New Project...</h2>
+        <p class="onboarding__subtitle">
+          The agent is interviewing you and creating project knowledge files.
+          <br />
+          Answer the questions in the <strong>Chat panel</strong>.
+        </p>
+      </div>
+
+      <div class="onboarding__progress">
+        <div class="onboarding__progress-item onboarding__progress-item--done">
+          <Icon name="pass-filled" size={14} /> Prompt sent to agent
+        </div>
+        <div class="onboarding__progress-item">
+          <Icon name="loading" size={14} spin />{' '}
+          {agentStatusMessage.value || 'Agent is interviewing you — check the Chat panel…'}
+        </div>
+      </div>
+
+      <div class="onboarding__actions">
+        <button
+          class="btn btn-secondary"
+          onClick={() => {
+            agentStatusMessage.value = null;
+            bridge.send({ type: 'cancelAgent' });
+            actions.setOnboardingStatus('welcome');
+          }}
+        >
+          <Icon name="close" size={14} /> Cancel Setup
+        </button>
+      </div>
+
+      <div class="onboarding__footer">
+        Answer the agent's questions in the <strong>Chat panel</strong>.
+        <br />
+        This screen closes automatically when setup completes.
+      </div>
+    </div>
+  );
+};
+
 // ─── Start New Project Screen ───────────────────────────────────────────────
 
 const SetupNewScreen: FunctionalComponent = () => {
@@ -275,7 +326,7 @@ const SetupNewScreen: FunctionalComponent = () => {
           onClick={() => {
             if (starting.value) return;
             starting.value = true;
-            actions.setOnboardingStatus('scanning');
+            actions.setOnboardingStatus('setup-active');
             bridge.send({
               type: 'setupNewProject',
               projectName: newProjectName.value.trim(),
