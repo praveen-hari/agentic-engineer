@@ -131,7 +131,7 @@ export const HistoryView: FunctionalComponent = () => {
               >
                 <td class="history-td history-td--objective">
                   <Icon name="pass-filled" size={14} class="task-card-icon--completed" />
-                  <span class="history-objective-text">{entry.objective}</span>
+                  <span class="history-objective-text" title={entry.objective}>{entry.objective}</span>
                 </td>
                 <td class="history-td">{entry.workType ?? '—'}</td>
                 <td class="history-td">
