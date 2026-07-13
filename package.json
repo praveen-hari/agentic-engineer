@@ -217,9 +217,10 @@
                 "spec",
                 "plan",
                 "review",
-                "report"
+                "report",
+                "todo"
               ],
-              "description": "Artifact type: spec (specification), plan (task breakdown), review (code review), report (verification report)"
+              "description": "Artifact type: spec (specification), plan (task breakdown), review (code review), report (verification report), todo (build task checklist)"
             },
             "title": {
               "type": "string",
@@ -272,7 +273,8 @@
         "name": "engineering_update_status",
         "displayName": "Update Status",
         "modelDescription": "Report your current progress to the user's UI. Call this frequently during long operations (setup, build, verify, etc.) to keep the user informed. Example: engineering_update_status({ message: 'Reading package.json...' }) or engineering_update_status({ message: 'Task 2/5: Writing tests...' }). This is lightweight — call it often.",
-        "canBeReferencedInPrompt": false,
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "updateStatus",
         "icon": "$(pulse)",
         "userDescription": "Report progress to the Engineering Workspace UI",
         "inputSchema": {
