@@ -690,9 +690,9 @@
 .plugin-selector-label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  gap: 5px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
   font-weight: 600;
   white-space: nowrap;
 }
