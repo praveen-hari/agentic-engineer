@@ -173,6 +173,7 @@ export interface WorkflowDefinition {
   readonly approvals: readonly Approval[];
   readonly activeSkills: readonly SkillId[];
   readonly skillActivationReason: Readonly<Record<string, string>>;
+  readonly selectedPlugins?: readonly string[];
   readonly state: WorkflowState;
 }
 
@@ -265,7 +266,7 @@ export interface PluginStoreState {
 export type MessageToHost =
   | { readonly type: 'requestState' }
   | { readonly type: 'requestContext' }
-  | { readonly type: 'analyzeObjective'; readonly objective: string }
+  | { readonly type: 'analyzeObjective'; readonly objective: string; readonly plugins?: readonly string[] }
   | {
       readonly type: 'startWorkflow';
       readonly objective: string;

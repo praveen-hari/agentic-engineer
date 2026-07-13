@@ -47,6 +47,7 @@ export const error = signal<string | null>(null);
 export const objectiveInput = signal<string>('');
 export const isAnalyzing = signal<boolean>(false);
 export const tasksActiveTab = signal<'stages' | 'artifacts'>('stages');
+export const selectedPluginIds = signal<string[]>([]);
 
 // ─── Assessment State ──────────────────────────────────────────────────────
 

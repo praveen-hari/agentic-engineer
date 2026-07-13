@@ -33,6 +33,8 @@ import { ProgressBar } from '../components/progress-bar';
 import { RiskBadge } from '../components/risk-badge';
 import { StageAccordion } from '../components/stage-accordion';
 import { ConfirmDialog } from '../components/confirm-dialog';
+import { PluginSelector } from '../components/plugin-selector';
+import { selectedPluginIds } from '../store/workflow.store';
 
 // ─── Tasks View ─────────────────────────────────────────────────────────
 
@@ -97,6 +99,14 @@ export const TasksView: FunctionalComponent = () => {
           </div>
         </div>
 
+        {/* Plugin selector — shown when objective is long enough */}
+        {showStart.value && !analyzing.value && (
+          <PluginSelector
+            selected={selectedPluginIds.value}
+            onSelectionChange={(ids) => { selectedPluginIds.value = ids; }}
+          />
+        )}
+
         {/* Start in Chat button */}
         {showStart.value && !analyzing.value && (
           <div class="analyze-section">
@@ -107,6 +117,7 @@ export const TasksView: FunctionalComponent = () => {
                 bridge.send({
                   type: 'analyzeObjective',
                   objective: objective.value.trim(),
+                  plugins: selectedPluginIds.value.length > 0 ? selectedPluginIds.value : undefined,
                 });
               }}
             >

@@ -116,9 +116,28 @@ async function handleAnalyzeObjective(
   deps: MessageHandlerDeps,
   _reply: ReplyFn,
 ): Promise<void> {
-  const { objective } = msg as Extract<MessageToHost, { type: 'analyzeObjective' }>;
+  const { objective, plugins } = msg as Extract<MessageToHost, { type: 'analyzeObjective' }>;
   // Fence user input to prevent prompt injection
   const fencedObjective = objective.replace(/```/g, '` ` `');
+
+  // Build plugin context block if plugins are selected
+  let pluginBlock = '';
+  if (plugins?.length && deps.pluginRegistry) {
+    try {
+      const catalog = await deps.pluginRegistry.fetchCatalog();
+      const selected = catalog.filter((p) => plugins.includes(p.id));
+      if (selected.length > 0) {
+        pluginBlock = `\n## Plugins to Use\nThe user has selected these plugins. **Use their skills when relevant to the objective:**\n`;
+        for (const p of selected) {
+          pluginBlock += `- **${p.name}** (${p.skillCount} skills) — ${p.description}\n`;
+        }
+        pluginBlock += `\nThese plugins provide SKILL.md files that are available to you. Reference and follow them by name during implementation.\n`;
+      }
+    } catch {
+      // Plugin catalog unavailable — continue without plugin context
+    }
+  }
+
   const prompt = `The user wants to work on the following objective:
 
 \`\`\`user-input
@@ -126,7 +145,7 @@ ${fencedObjective}
 \`\`\`
 
 Call \`engineering_update_status\` to report progress as you work.
-
+${pluginBlock}
 ## Step 1: Evaluate clarity
 
 First, assess whether the objective is clear enough to start work:
